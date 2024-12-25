@@ -7,6 +7,8 @@
 
 void Engine::Initialize() 
 {
+	mInstance = std::make_unique<Instance>();
+	mInstance->Initialize("Editor");
 }
 
 void Engine::Run()

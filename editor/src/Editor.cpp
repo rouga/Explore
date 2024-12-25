@@ -24,6 +24,6 @@ int main()
 			wEngine.Run();
 		}
 
-    std::cout << "Editor closed successfully." << std::endl;
+    std::cout << "Closing Editor." << std::endl;
     return EXIT_SUCCESS;
 }

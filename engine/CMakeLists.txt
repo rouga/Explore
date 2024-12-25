@@ -2,7 +2,10 @@
 add_library(Engine STATIC src/Engine.cpp
 						  src/Engine.h
 						  src/Window.cpp
-						  src/Window.h)
+						  src/Window.h
+						  src/vulkan/Instance.cpp
+						  src/vulkan/Instance.h
+						  src/vulkan/Utils.h)
 
 # Include Vulkan
 find_package(Vulkan REQUIRED)
