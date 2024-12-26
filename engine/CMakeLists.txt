@@ -5,6 +5,8 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/Window.h
 						  src/graphics/VulkanInstance.cpp
 						  src/graphics/VulkanInstance.h
+						  src/graphics/RenderContext.cpp
+						  src/graphics/RenderContext.h
 						  src/graphics/Utils.h)
 
 # Include Vulkan
