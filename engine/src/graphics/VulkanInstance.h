@@ -13,5 +13,5 @@ public:
 	VkInstance GetInstance() const { return mInstance; }
 
 private:
-	VkInstance mInstance = nullptr;
+	VkInstance mInstance = VK_NULL_HANDLE;
 };

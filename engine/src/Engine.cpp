@@ -5,10 +5,14 @@
 #include <vulkan/vulkan.h>
 #include <glfw/glfw3.h>
 
-void Engine::Initialize() 
+Engine::Engine()
 {
-	mInstance = std::make_unique<VulkanInstance>();
-	mInstance->Initialize("Editor");
+	mContext = std::make_unique<RenderContext>();
+}
+
+void Engine::Initialize()
+{
+	mContext->Initialize();
 }
 
 void Engine::Run()

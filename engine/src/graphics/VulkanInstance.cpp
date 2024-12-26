@@ -19,7 +19,9 @@ void VulkanInstance::Initialize(const char* iAppName)
 {
 	 std::vector<const char*> wLayers =
 	 {
+#if defined(_DEBUG)
 		 "VK_LAYER_KHRONOS_validation"
+#endif
 	 };
 
 	 std::vector<const char*> wExtensions =
@@ -35,7 +37,6 @@ void VulkanInstance::Initialize(const char* iAppName)
 		 "VK_KHR_xcb_surface",
 #endif
 		 VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-		 VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
 	 };
 
 	 const VkApplicationInfo wAppInfo = 
