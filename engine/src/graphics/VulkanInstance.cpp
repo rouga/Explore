@@ -1,21 +1,21 @@
-#include "Instance.h"
+#include "VulkanInstance.h"
 
 #include <vector>
 #include <iostream>
 
 #include "Utils.h"
 
-Instance::Instance()
+VulkanInstance::VulkanInstance()
 {
 }
 
-Instance::~Instance()
+VulkanInstance::~VulkanInstance()
 {
 	vkDestroyInstance(mInstance, nullptr);
 	std::cout << "Vulkan Instance Destroyed." << std::endl;
 }
 
-void Instance::Initialize(const char* iAppName)
+void VulkanInstance::Initialize(const char* iAppName)
 {
 	 std::vector<const char*> wLayers =
 	 {

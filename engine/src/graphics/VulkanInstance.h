@@ -2,11 +2,11 @@
 
 #include <vulkan/vulkan.h>
 
-class Instance
+class VulkanInstance
 {
 public:
-	Instance();
-	~Instance();
+	VulkanInstance();
+	~VulkanInstance();
 
 	void Initialize(const char* iAppName);
 

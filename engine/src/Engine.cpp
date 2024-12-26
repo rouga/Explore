@@ -7,7 +7,7 @@
 
 void Engine::Initialize() 
 {
-	mInstance = std::make_unique<Instance>();
+	mInstance = std::make_unique<VulkanInstance>();
 	mInstance->Initialize("Editor");
 }
 

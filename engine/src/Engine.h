@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "vulkan/Instance.h"
+#include "graphics/VulkanInstance.h"
 
 class Engine 
 {
@@ -11,5 +11,5 @@ public:
 		void Run();
 
 private:
-	std::unique_ptr<Instance> mInstance;
+	std::unique_ptr<VulkanInstance> mInstance;
 };
