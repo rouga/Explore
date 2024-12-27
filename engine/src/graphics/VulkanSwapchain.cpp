@@ -21,7 +21,7 @@ VulkanSwapchain::~VulkanSwapchain()
 	}
 
 	vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
-	spdlog::error("GLFW Window Surface Destroyed.");
+	spdlog::info("GLFW Window Surface Destroyed.");
 }
 
 void VulkanSwapchain::Initialize(VkInstance iInstance, Window* iWindow)

@@ -6,6 +6,7 @@
 #include "VulkanInstance.h"
 #include "VulkanDebugCallback.h"
 #include "VulkanSwapchain.h"
+#include "VulkanPhysicalDevice.h"
 
 class Window;
 
@@ -20,4 +21,5 @@ public:
 	std::unique_ptr<VulkanInstance> mInstance = nullptr;
 	std::unique_ptr<VulkanDebugCallback> mDebugCallback = nullptr;
 	std::unique_ptr<VulkanSwapchain> mSwapchain = nullptr;
+	std::unique_ptr<VulkanPhysicalDevice> mPhysicalDevice = nullptr;
 };
