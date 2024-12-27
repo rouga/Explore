@@ -2,11 +2,14 @@
 #include "Engine.h"
 #include "Window.h"
 
+#define FMT_UNICODE 0
+#include "spdlog/spdlog.h"
+
 int main() 
 {
-    std::cout << "Launching Editor..." << std::endl;
-    Engine wEngine;
+		spdlog::info("Launching Editor...");
 		Window wWnd;
+		Engine wEngine{&wWnd};
 
     try 
 		{
@@ -15,7 +18,7 @@ int main()
     } 
 		catch (const std::exception& e) 
 		{
-        std::cerr << "Error: " << e.what() << std::endl;
+			spdlog::error("Error: {:s}", e.what());
         return EXIT_FAILURE;
     }
 
@@ -24,6 +27,7 @@ int main()
 			wEngine.Run();
 		}
 
-    std::cout << "Closing Editor." << std::endl;
+		spdlog::info("Closing Editor.");
+
     return EXIT_SUCCESS;
 }

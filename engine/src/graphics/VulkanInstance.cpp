@@ -1,7 +1,9 @@
 #include "VulkanInstance.h"
 
 #include <vector>
-#include <iostream>
+
+#define FMT_UNICODE 0
+#include <spdlog/spdlog.h>
 
 #include "Utils.h"
 
@@ -12,7 +14,7 @@ VulkanInstance::VulkanInstance()
 VulkanInstance::~VulkanInstance()
 {
 	vkDestroyInstance(mInstance, nullptr);
-	std::cout << "Vulkan Instance Destroyed." << std::endl;
+	spdlog::info("Vulkan Instance Destroyed.");
 }
 
 void VulkanInstance::Initialize(const char* iAppName)
@@ -64,5 +66,5 @@ void VulkanInstance::Initialize(const char* iAppName)
 
 	 VkResult wResult = vkCreateInstance(&wCreateInfo, nullptr, &mInstance);
 	 CHECK_VK_RESULT(wResult, "Instance Creation");
-	 std::cout << "Vulkan Instance Created." << std::endl;
+	 spdlog::info("Vulkan Instance Created.");
 }

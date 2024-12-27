@@ -5,14 +5,17 @@
 #include <vulkan/vulkan.h>
 #include <glfw/glfw3.h>
 
-Engine::Engine()
+#include "Window.h"
+
+Engine::Engine(Window* iWindow)
+	:mWindow(iWindow)
 {
 	mContext = std::make_unique<RenderContext>();
 }
 
 void Engine::Initialize()
 {
-	mContext->Initialize();
+	mContext->Initialize(mWindow);
 }
 
 void Engine::Run()
