@@ -14,7 +14,9 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/graphics/VulkanSwapchain.h 
 						  src/graphics/VulkanSwapchain.cpp
 						  src/graphics/VulkanPhysicalDevice.h 
-						  src/graphics/VulkanPhysicalDevice.cpp)
+						  src/graphics/VulkanPhysicalDevice.cpp
+						  src/graphics/VulkanLogicalDevice.h
+						  src/graphics/VulkanLogicalDevice.cpp)
 
 # Include Vulkan
 find_package(Vulkan REQUIRED)
