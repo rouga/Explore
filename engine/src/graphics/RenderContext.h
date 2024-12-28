@@ -24,4 +24,10 @@ public:
 	std::unique_ptr<VulkanPhysicalDevice> mPhysicalDevice = nullptr;
 	std::unique_ptr<VulkanLogicalDevice> mLogicalDevice = nullptr;
 	std::unique_ptr<VulkanSwapchain> mSwapchain = nullptr;
+
+	VkCommandPool mCmdPool = VK_NULL_HANDLE;
+	std::vector<VkCommandBuffer> mCmds;
+
+private:
+	void CreateCommandBuffers();
 };
