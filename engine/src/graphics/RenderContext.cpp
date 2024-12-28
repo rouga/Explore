@@ -6,9 +6,9 @@ RenderContext::RenderContext()
 {
 	mInstance = std::make_unique<VulkanInstance>();
 	mDebugCallback = std::make_unique<VulkanDebugCallback>();
-	mSwapchain = std::make_unique<VulkanSwapchain>();
 	mPhysicalDevice = std::make_unique<VulkanPhysicalDevice>();
 	mLogicalDevice = std::make_unique<VulkanLogicalDevice>();
+	mSwapchain = std::make_unique<VulkanSwapchain>();
 }
 
 RenderContext::~RenderContext()
@@ -23,6 +23,6 @@ void RenderContext::Initialize(Window* iWindow)
 #endif
 	mPhysicalDevice->Initialize(mInstance->GetInstance());
 	mLogicalDevice->Initialize(mPhysicalDevice.get());
-	mSwapchain->Initialize(mInstance->GetInstance(), iWindow);
+	mSwapchain->Initialize(mInstance->GetInstance(), mLogicalDevice.get(), iWindow, 2);
 
 }

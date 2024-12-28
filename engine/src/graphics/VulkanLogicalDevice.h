@@ -13,4 +13,5 @@ public:
 	void Initialize(VulkanPhysicalDevice* iPhysicalDevice);
 
 	VkDevice mDevice = VK_NULL_HANDLE;
+	VulkanPhysicalDevice* mPhysicalDevice = nullptr;
 };

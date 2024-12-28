@@ -20,6 +20,8 @@ VulkanLogicalDevice::~VulkanLogicalDevice()
 
 void VulkanLogicalDevice::Initialize(VulkanPhysicalDevice* iPhysicalDevice)
 {
+	mPhysicalDevice = iPhysicalDevice;
+
 	float wQueuePriorities[] = { 1.f };
 
 	VkDeviceQueueCreateInfo wQueueCreateInfo =

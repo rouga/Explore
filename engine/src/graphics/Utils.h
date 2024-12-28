@@ -12,5 +12,7 @@
 		exit(1); \
 	} \
 
+VkImageView CreateImageView(VkDevice iDevice, VkImage iImage, VkFormat iFormat, VkImageAspectFlags iAspect,
+	VkImageViewType iViewType, uint32_t iLayerCount, uint32_t iMipCount);
 const char* GetDebugSeverityStr(VkDebugUtilsMessageSeverityFlagBitsEXT iSeverity);
 const char* GetDebugTypeStr(VkDebugUtilsMessageTypeFlagsEXT iType);

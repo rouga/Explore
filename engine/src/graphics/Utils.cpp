@@ -1,5 +1,39 @@
 #include "Utils.h"
 
+VkImageView CreateImageView(VkDevice iDevice, VkImage iImage, VkFormat iFormat, VkImageAspectFlags iAspect, VkImageViewType iViewType, uint32_t iLayerCount, uint32_t iMipCount)
+{
+	VkImageViewCreateInfo wImageViewCreateInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.image = iImage,
+		.viewType = iViewType,
+		.format = iFormat,
+		.components =
+		{
+			.r = VK_COMPONENT_SWIZZLE_IDENTITY,
+			.g = VK_COMPONENT_SWIZZLE_IDENTITY,
+			.b = VK_COMPONENT_SWIZZLE_IDENTITY,
+			.a = VK_COMPONENT_SWIZZLE_IDENTITY,
+		},
+		.subresourceRange =
+		{
+			.aspectMask = iAspect,
+			.baseMipLevel = 0,
+			.levelCount = iMipCount,
+			.baseArrayLayer = 0,
+			.layerCount = iLayerCount,
+		},
+	};
+
+	VkImageView wImageView = VK_NULL_HANDLE;
+	VkResult wResult = vkCreateImageView(iDevice, &wImageViewCreateInfo, nullptr, &wImageView);
+	CHECK_VK_RESULT(wResult, "Image View Creation");
+
+	return wImageView;
+}
+
 const char* GetDebugSeverityStr(VkDebugUtilsMessageSeverityFlagBitsEXT iSeverity)
 {
 	switch (iSeverity)
