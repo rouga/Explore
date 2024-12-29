@@ -3,6 +3,8 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/Engine.h
 						  src/Window.cpp
 						  src/Window.h
+						  src/Renderer.cpp
+						  src/Renderer.h
 						  src/graphics/VulkanInstance.cpp
 						  src/graphics/VulkanInstance.h
 						  src/graphics/RenderContext.cpp
@@ -16,7 +18,13 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/graphics/VulkanPhysicalDevice.h 
 						  src/graphics/VulkanPhysicalDevice.cpp
 						  src/graphics/VulkanLogicalDevice.h
-						  src/graphics/VulkanLogicalDevice.cpp)
+						  src/graphics/VulkanLogicalDevice.cpp
+						  src/graphics/VulkanSemaphore.h
+						  src/graphics/VulkanSemaphore.cpp
+						  src/graphics/VulkanCommandBuffer.h
+						  src/graphics/VulkanCommandBuffer.cpp
+						  src/graphics/VulkanQueue.h
+						  src/graphics/VulkanQueue.cpp)
 
 # Include Vulkan
 find_package(Vulkan REQUIRED)

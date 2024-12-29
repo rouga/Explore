@@ -17,6 +17,10 @@ public:
 
 	uint32_t GetNumImages() const { return mNumSwapchainImages; }
 
+	std::vector<VkImage> mImages;
+	std::vector<VkImageView> mImageViews;
+
+	VkSwapchainKHR mSwapchain = VK_NULL_HANDLE;
 private:
 	void CreateSurface();
 	void CreateSwapchain();
@@ -24,12 +28,8 @@ private:
 	uint32_t mNumSwapchainImages = 0;
 
 	VkSurfaceKHR mSurface = VK_NULL_HANDLE;
-	VkSwapchainKHR mSwapchain = VK_NULL_HANDLE;
 	VkInstance mInstance = VK_NULL_HANDLE;
 
 	Window* mWindow = nullptr;
 	VulkanLogicalDevice* mLogicalDevice = nullptr;
-
-	std::vector<VkImage> mImages;
-	std::vector<VkImageView> mImageViews;
 };

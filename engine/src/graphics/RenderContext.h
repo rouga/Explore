@@ -8,6 +8,8 @@
 #include "VulkanSwapchain.h"
 #include "VulkanPhysicalDevice.h"
 #include "VulkanLogicalDevice.h"
+#include "VulkanCommandBuffer.h"
+#include "VulkanQueue.h"
 
 class Window;
 
@@ -24,10 +26,12 @@ public:
 	std::unique_ptr<VulkanPhysicalDevice> mPhysicalDevice = nullptr;
 	std::unique_ptr<VulkanLogicalDevice> mLogicalDevice = nullptr;
 	std::unique_ptr<VulkanSwapchain> mSwapchain = nullptr;
+	std::unique_ptr<VulkanQueue> mQueue = nullptr;
 
 	VkCommandPool mCmdPool = VK_NULL_HANDLE;
-	std::vector<VkCommandBuffer> mCmds;
+	std::vector<VulkanCommandBuffer> mCmds;
 
 private:
 	void CreateCommandBuffers();
+	void RecordCommandBuffers();
 };

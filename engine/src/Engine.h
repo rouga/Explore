@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include "graphics/RenderContext.h"
+#include "Renderer.h"
 
 class Window;
 
@@ -16,5 +16,5 @@ public:
 
 private:
 	Window* mWindow = nullptr;
-	std::unique_ptr<RenderContext> mContext = nullptr;
+	std::unique_ptr<Renderer> mRenderer = nullptr;
 };

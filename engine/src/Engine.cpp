@@ -10,15 +10,16 @@
 Engine::Engine(Window* iWindow)
 	:mWindow(iWindow)
 {
-	mContext = std::make_unique<RenderContext>();
+	mRenderer = std::make_unique<Renderer>();
 }
 
 void Engine::Initialize()
 {
-	mContext->Initialize(mWindow);
+	mRenderer->Initialize(mWindow);
 }
 
 void Engine::Run()
 {
 	glfwPollEvents();
+	mRenderer->Render();
 }
