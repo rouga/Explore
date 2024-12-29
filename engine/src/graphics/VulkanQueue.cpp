@@ -12,7 +12,6 @@ VulkanQueue::VulkanQueue()
 
 VulkanQueue::~VulkanQueue()
 {
-	vkDestroySemaphore(mDevice, mPresentSemaphore->mSemaphore, nullptr);
 }
 
 void VulkanQueue::Initialize(VkDevice iDevice, VkSwapchainKHR iSwapchain, uint32_t iQueueFamily, uint32_t iQueueIndex)
