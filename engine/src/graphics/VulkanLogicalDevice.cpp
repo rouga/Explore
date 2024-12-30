@@ -40,10 +40,16 @@ void VulkanLogicalDevice::Initialize(VulkanPhysicalDevice* iPhysicalDevice)
 		VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME
 	};
 
+	auto Core_1_3 = VkPhysicalDeviceVulkan13Features{
+		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+		.pNext = nullptr,
+		.dynamicRendering = VK_TRUE
+	};
+
 	VkDeviceCreateInfo wCreateInfo = 
 	{
 		.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-		.pNext = nullptr,
+		.pNext = &Core_1_3,
 		.flags = 0,
 		.queueCreateInfoCount = 1,
 		.pQueueCreateInfos = &wQueueCreateInfo,
@@ -51,7 +57,6 @@ void VulkanLogicalDevice::Initialize(VulkanPhysicalDevice* iPhysicalDevice)
 		.ppEnabledLayerNames = nullptr,
 		.enabledExtensionCount = (uint32_t)wDeviceExtensions.size(),
 		.ppEnabledExtensionNames = wDeviceExtensions.data(),
-		.pEnabledFeatures = nullptr
 	};
 
 	VkResult wResult = vkCreateDevice(iPhysicalDevice->GetDevice(), &wCreateInfo, nullptr, &mDevice);

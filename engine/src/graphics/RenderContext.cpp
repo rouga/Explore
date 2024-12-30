@@ -16,6 +16,7 @@ RenderContext::RenderContext()
 	mLogicalDevice = std::make_unique<VulkanLogicalDevice>();
 	mSwapchain = std::make_unique<VulkanSwapchain>();
 	mQueue = std::make_unique<VulkanQueue>();
+	mShader = std::make_unique<VulkanShader>();
 }
 
 RenderContext::~RenderContext()
@@ -26,6 +27,8 @@ RenderContext::~RenderContext()
 
 void RenderContext::Initialize(Window* iWindow)
 {
+	mWindow = iWindow;
+
 	mInstance->Initialize("Explore Editor");
 #if defined(_DEBUG)
 	mDebugCallback->Initialize(mInstance.get());
@@ -33,7 +36,8 @@ void RenderContext::Initialize(Window* iWindow)
 	mPhysicalDevice->Initialize(mInstance->GetInstance());
 	mLogicalDevice->Initialize(mPhysicalDevice.get());
 	mSwapchain->Initialize(mInstance->GetInstance(), mLogicalDevice.get(), iWindow, 2);
-	mQueue->Initialize(mLogicalDevice->mDevice, mSwapchain->mSwapchain, mLogicalDevice->mPhysicalDevice->GetQueueFamilyIndex(), 0);\
+	mQueue->Initialize(mLogicalDevice->mDevice, mSwapchain->mSwapchain, mLogicalDevice->mPhysicalDevice->GetQueueFamilyIndex(), 0);
+	mShader->Initialize(mLogicalDevice->mDevice, "shaders/bin/basic.vert.spv");
 	CreateCommandBuffers();
 	RecordCommandBuffers();
 	mQueue->Flush();
@@ -115,7 +119,34 @@ void RenderContext::RecordCommandBuffers()
 			0, nullptr,
 			1, &wPresentToClear);
 
-		vkCmdClearColorImage(mCmds[i].mCmd, mSwapchain->mImages[i], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &wClearColor, 1, &wSubresourceRange);
+		const VkRenderingAttachmentInfo wColorAttachmentInfo = 
+		{
+		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+		.imageView = mSwapchain->mImageViews[i],
+		.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+		.clearValue = wClearColor,
+		};
+
+		VkRect2D wRenderArea = 
+		{
+			.offset = { 0, 0},
+			.extent = { (uint32_t)mWindow->GetWidth(), (uint32_t)mWindow->GetHeight() }
+		};
+
+		const VkRenderingInfo render_info
+		{
+				.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+				.renderArea = wRenderArea,
+				.layerCount = 1,
+				.colorAttachmentCount = 1,
+				.pColorAttachments = &wColorAttachmentInfo
+		};
+
+		vkCmdBeginRendering(mCmds[i].mCmd, &render_info);
+
+		vkCmdEndRendering(mCmds[i].mCmd);
 
 		vkCmdPipelineBarrier(mCmds[i].mCmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
 			0,

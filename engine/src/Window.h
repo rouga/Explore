@@ -14,7 +14,12 @@ public:
 	bool ShouldClose() const;
 
 	GLFWwindow* GetGLFWWindow() const { return mWindow;}
+	int GetWidth() const { return mWidth; }
+	int GetHeight() const { return mHeight; }
 
 private:
+	int mWidth;
+	int mHeight;
+
 	GLFWwindow* mWindow = nullptr;
 };

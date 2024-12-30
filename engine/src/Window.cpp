@@ -25,6 +25,9 @@ Window::~Window()
 
 void Window::Initialize(int iWidth, int iHeight, std::string iTitle)
 {
+	mWidth = iWidth;
+	mHeight = iHeight;
+
 	if(!glfwInit())
 	{
 		throw std::exception("Failed to Initialize GLFW !");

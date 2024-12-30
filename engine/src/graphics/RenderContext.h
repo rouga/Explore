@@ -10,6 +10,7 @@
 #include "VulkanLogicalDevice.h"
 #include "VulkanCommandBuffer.h"
 #include "VulkanQueue.h"
+#include "VulkanShader.h"
 
 class Window;
 
@@ -30,6 +31,10 @@ public:
 
 	VkCommandPool mCmdPool = VK_NULL_HANDLE;
 	std::vector<VulkanCommandBuffer> mCmds;
+
+	Window* mWindow = nullptr;
+
+	std::unique_ptr<VulkanShader> mShader;
 
 private:
 	void CreateCommandBuffers();
