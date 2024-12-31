@@ -16,7 +16,9 @@ RenderContext::RenderContext()
 	mLogicalDevice = std::make_unique<VulkanLogicalDevice>();
 	mSwapchain = std::make_unique<VulkanSwapchain>();
 	mQueue = std::make_unique<VulkanQueue>();
-	mShader = std::make_unique<VulkanShader>();
+	mVS = std::make_unique<VulkanShader>();
+	mFS = std::make_unique<VulkanShader>();
+	mPipeline = std::make_unique<VulkanGraphicsPipeline>();
 }
 
 RenderContext::~RenderContext()
@@ -37,7 +39,9 @@ void RenderContext::Initialize(Window* iWindow)
 	mLogicalDevice->Initialize(mPhysicalDevice.get());
 	mSwapchain->Initialize(mInstance->GetInstance(), mLogicalDevice.get(), iWindow, 2);
 	mQueue->Initialize(mLogicalDevice->mDevice, mSwapchain->mSwapchain, mLogicalDevice->mPhysicalDevice->GetQueueFamilyIndex(), 0);
-	mShader->Initialize(mLogicalDevice->mDevice, "shaders/bin/basic.vert.spv");
+	mVS->Initialize(mLogicalDevice->mDevice, "shaders/bin/basic.vert.spv");
+	mFS->Initialize(mLogicalDevice->mDevice, "shaders/bin/basic.frag.spv");
+	mPipeline->Initialize(mLogicalDevice->mDevice, iWindow, mSwapchain->mColorFormat, mVS->mShader, mFS->mShader);
 	CreateCommandBuffers();
 	RecordCommandBuffers();
 	mQueue->Flush();
@@ -79,6 +83,30 @@ void RenderContext::RecordCommandBuffers()
 		.levelCount = 1,
 		.baseArrayLayer = 0,
 		.layerCount = 1
+	};
+
+	VkViewport wViewport =
+	{
+		.x = 0.0f,
+		.y = 0.0f,
+		.width = (float)mWindow->GetWidth(),
+		.height = (float)mWindow->GetHeight(),
+		.minDepth = 0.0f,
+		.maxDepth = 1.0f
+	};
+
+	VkRect2D wScissor =
+	{
+		.offset =
+		{
+			.x = 0,
+			.y = 0
+		},
+		.extent =
+		{
+			.width = (uint32_t)mWindow->GetWidth(),
+			.height = (uint32_t)mWindow->GetHeight()
+		}
 	};
 
 	for (uint32_t i = 0; i < mCmds.size(); i++)
@@ -145,6 +173,12 @@ void RenderContext::RecordCommandBuffers()
 		};
 
 		vkCmdBeginRendering(mCmds[i].mCmd, &render_info);
+
+		vkCmdBindPipeline(mCmds[i].mCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipeline->mPipeline);
+		vkCmdSetViewport(mCmds[i].mCmd, 0, 1, &wViewport);
+		vkCmdSetScissor(mCmds[i].mCmd, 0, 1, &wScissor);
+
+		vkCmdDraw(mCmds[i].mCmd, 3, 1, 0, 0);
 
 		vkCmdEndRendering(mCmds[i].mCmd);
 

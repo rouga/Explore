@@ -21,6 +21,9 @@ public:
 	std::vector<VkImageView> mImageViews;
 
 	VkSwapchainKHR mSwapchain = VK_NULL_HANDLE;
+
+	const VkFormat mColorFormat = VK_FORMAT_B8G8R8A8_SRGB;
+
 private:
 	void CreateSurface();
 	void CreateSwapchain();

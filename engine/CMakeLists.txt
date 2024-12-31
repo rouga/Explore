@@ -26,7 +26,9 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/graphics/VulkanQueue.h
 						  src/graphics/VulkanQueue.cpp
 						  src/graphics/VulkanShader.h
-						  src/graphics/VulkanShader.cpp)
+						  src/graphics/VulkanShader.cpp
+						  src/graphics/VulkanGraphicsPipeline.h
+						  src/graphics/VulkanGraphicsPipeline.cpp)
 
 # Include Vulkan
 find_package(Vulkan REQUIRED)

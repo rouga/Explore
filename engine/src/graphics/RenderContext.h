@@ -11,6 +11,7 @@
 #include "VulkanCommandBuffer.h"
 #include "VulkanQueue.h"
 #include "VulkanShader.h"
+#include "VulkanGraphicsPipeline.h"
 
 class Window;
 
@@ -34,7 +35,9 @@ public:
 
 	Window* mWindow = nullptr;
 
-	std::unique_ptr<VulkanShader> mShader;
+	std::unique_ptr<VulkanShader> mVS = nullptr;
+	std::unique_ptr<VulkanShader> mFS = nullptr;
+	std::unique_ptr<VulkanGraphicsPipeline> mPipeline = nullptr;
 
 private:
 	void CreateCommandBuffers();
