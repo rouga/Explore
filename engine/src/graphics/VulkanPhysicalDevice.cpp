@@ -40,15 +40,19 @@ void VulkanPhysicalDevice::QueryDevice()
 	// A Simple logic is implemented to selected the first Discrete GPU encountered.
 	VkPhysicalDevice wPotentialDevice = VK_NULL_HANDLE;
 	VkPhysicalDeviceProperties wPotentialDeviceProperties;
+	VkPhysicalDeviceMemoryProperties wPotentialMemProperties;
+
 	for (uint32_t i = 0; i < wNumDevices; i++)
 	{
 		wPotentialDevice = wDevices[i];
 		vkGetPhysicalDeviceProperties(wPotentialDevice, &wPotentialDeviceProperties);
+		vkGetPhysicalDeviceMemoryProperties(wPotentialDevice, &wPotentialMemProperties);
 
 		if (wPotentialDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 		{
 			mDevice = wPotentialDevice;
 			mDeviceProperties = wPotentialDeviceProperties;
+			mMemProperties = wPotentialMemProperties;
 		}
 
 		break;
@@ -56,7 +60,7 @@ void VulkanPhysicalDevice::QueryDevice()
 
 	if (!wPotentialDevice)
 	{
-		spdlog::error("No suitable Physical Device was found.");
+		spdlog::error("No Physical Device was found.");
 		exit(EXIT_FAILURE);
 	}
 
@@ -64,6 +68,7 @@ void VulkanPhysicalDevice::QueryDevice()
 	{
 		mDevice = wPotentialDevice;
 		mDeviceProperties = wPotentialDeviceProperties;
+		mMemProperties = wPotentialMemProperties;
 	}
 }
 

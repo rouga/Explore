@@ -12,7 +12,7 @@ public:
 
 	VkPhysicalDevice GetDevice() const { return mDevice; }
 	int							 GetQueueFamilyIndex() const { return mQueueFamilyIndex; }
-
+	const VkPhysicalDeviceMemoryProperties& GetMemProperties() const { return mMemProperties; }
 private:
 	void QueryDevice();
 	void QueryQueueFamily();
@@ -21,5 +21,6 @@ private:
 	VkInstance mInstance = VK_NULL_HANDLE;
 	VkPhysicalDevice mDevice = VK_NULL_HANDLE;
 	VkPhysicalDeviceProperties mDeviceProperties;
+	VkPhysicalDeviceMemoryProperties mMemProperties;
 	int mQueueFamilyIndex = -1;
 };

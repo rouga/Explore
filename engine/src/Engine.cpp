@@ -13,9 +13,26 @@ Engine::Engine(Window* iWindow)
 	mRenderer = std::make_unique<Renderer>();
 }
 
+Engine::~Engine()
+{
+	mMesh.Destroy();
+}
+
 void Engine::Initialize()
 {
 	mRenderer->Initialize(mWindow);
+
+	std::vector<Vertex> wVertices =
+	{
+		Vertex({-1.f, -1.f, 0.f}, {0.f, 0.f}),
+		Vertex({1.f, -1.f, 0.f}, {0.f, 1.f}),
+		Vertex({0.f, 1.f, 0.f}, {1.f, 1.f})
+	};
+
+	mMesh.SetName("Triangle");
+	mMesh.Initialize(wVertices);
+
+	mRenderer->UploadMesh(&mMesh);
 }
 
 void Engine::Run()

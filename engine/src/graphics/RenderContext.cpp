@@ -19,6 +19,7 @@ RenderContext::RenderContext()
 	mVS = std::make_unique<VulkanShader>();
 	mFS = std::make_unique<VulkanShader>();
 	mPipeline = std::make_unique<VulkanGraphicsPipeline>();
+	mStagingBuffer = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 }
 
 RenderContext::~RenderContext()
@@ -44,6 +45,7 @@ void RenderContext::Initialize(Window* iWindow)
 	mPipeline->Initialize(mLogicalDevice->mDevice, iWindow, mSwapchain->mColorFormat, mVS->mShader, mFS->mShader);
 	CreateCommandBuffers();
 	RecordCommandBuffers();
+	CreateStagingBuffer();
 	mQueue->Flush();
 }
 
@@ -69,7 +71,9 @@ void RenderContext::CreateCommandBuffers()
 		mCmds[i] = VulkanCommandBuffer{mCmdPool, mLogicalDevice->mDevice};
 	}
 
-	spdlog::info("Command Pool Created with {:d} Command buffers.", mSwapchain->GetNumImages());
+	mCopyCmd = VulkanCommandBuffer{ mCmdPool, mLogicalDevice->mDevice };
+
+	spdlog::info("Command Pool Created with {:d} Command buffers.", mSwapchain->GetNumImages() + 1);
 }
 
 void RenderContext::RecordCommandBuffers()
@@ -149,12 +153,12 @@ void RenderContext::RecordCommandBuffers()
 
 		const VkRenderingAttachmentInfo wColorAttachmentInfo = 
 		{
-		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-		.imageView = mSwapchain->mImageViews[i],
-		.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
-		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-		.clearValue = wClearColor,
+			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+			.imageView = mSwapchain->mImageViews[i],
+			.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+			.clearValue = wClearColor,
 		};
 
 		VkRect2D wRenderArea = 
@@ -165,11 +169,11 @@ void RenderContext::RecordCommandBuffers()
 
 		const VkRenderingInfo render_info
 		{
-				.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
-				.renderArea = wRenderArea,
-				.layerCount = 1,
-				.colorAttachmentCount = 1,
-				.pColorAttachments = &wColorAttachmentInfo
+			.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+			.renderArea = wRenderArea,
+			.layerCount = 1,
+			.colorAttachmentCount = 1,
+			.pColorAttachments = &wColorAttachmentInfo
 		};
 
 		vkCmdBeginRendering(mCmds[i].mCmd, &render_info);
@@ -192,4 +196,9 @@ void RenderContext::RecordCommandBuffers()
 	}
 
 	spdlog::info("Command Buffers Recorded.");
+}
+
+void RenderContext::CreateStagingBuffer()
+{
+	mStagingBuffer->Initialize(mLogicalDevice.get(), 1024*1024*4);
 }

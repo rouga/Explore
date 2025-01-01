@@ -57,6 +57,21 @@ void VulkanQueue::SubmitAsync(VulkanCommandBuffer* iCmd)
 
 void VulkanQueue::SubmitSync(VulkanCommandBuffer* iCmd)
 {
+	VkSubmitInfo wSubmitInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		.pNext = nullptr,
+		.waitSemaphoreCount = 0,
+		.pWaitSemaphores = VK_NULL_HANDLE,
+		.pWaitDstStageMask = VK_NULL_HANDLE,
+		.commandBufferCount = 1,
+		.pCommandBuffers = &iCmd->mCmd,
+		.signalSemaphoreCount = 0,
+		.pSignalSemaphores = VK_NULL_HANDLE
+	};
+
+	VkResult wResult = vkQueueSubmit(mQueue, 1, &wSubmitInfo, nullptr);
+	CHECK_VK_RESULT(wResult, "Command Queue Submit");
 }
 
 void VulkanQueue::Present(uint32_t iImageIndex, VkSemaphore iSemaphore)

@@ -5,6 +5,8 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/Window.h
 						  src/Renderer.cpp
 						  src/Renderer.h
+						  src/StaticMesh.cpp
+						  src/StaticMesh.h
 						  src/graphics/VulkanInstance.cpp
 						  src/graphics/VulkanInstance.h
 						  src/graphics/RenderContext.cpp
@@ -28,7 +30,9 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/graphics/VulkanShader.h
 						  src/graphics/VulkanShader.cpp
 						  src/graphics/VulkanGraphicsPipeline.h
-						  src/graphics/VulkanGraphicsPipeline.cpp)
+						  src/graphics/VulkanGraphicsPipeline.cpp
+						  src/graphics/VulkanGPUBuffer.h
+						  src/graphics/VulkanGPUBuffer.cpp)
 
 # Include Vulkan
 find_package(Vulkan REQUIRED)

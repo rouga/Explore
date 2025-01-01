@@ -12,6 +12,7 @@
 #include "VulkanQueue.h"
 #include "VulkanShader.h"
 #include "VulkanGraphicsPipeline.h"
+#include "VulkanGPUBuffer.h"
 
 class Window;
 
@@ -32,6 +33,7 @@ public:
 
 	VkCommandPool mCmdPool = VK_NULL_HANDLE;
 	std::vector<VulkanCommandBuffer> mCmds;
+	VulkanCommandBuffer mCopyCmd;
 
 	Window* mWindow = nullptr;
 
@@ -39,7 +41,11 @@ public:
 	std::unique_ptr<VulkanShader> mFS = nullptr;
 	std::unique_ptr<VulkanGraphicsPipeline> mPipeline = nullptr;
 
+	std::unique_ptr<VulkanGPUBuffer> mStagingBuffer = nullptr;
+
 private:
 	void CreateCommandBuffers();
 	void RecordCommandBuffers();
+
+	void CreateStagingBuffer();
 };
