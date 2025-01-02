@@ -13,7 +13,8 @@ public:
 
 	void Begin(VkCommandBufferUsageFlags iFlags);
 	void End();
+	void Reset(VkCommandBufferResetFlags iFlags);
 
 	VkCommandBuffer mCmd = VK_NULL_HANDLE;
-	std::unique_ptr<VulkanSemaphore> mCmdFinishSemaphore = nullptr;
+	std::unique_ptr<VulkanSemaphore> mCmdSubmitSemaphore = nullptr;
 };

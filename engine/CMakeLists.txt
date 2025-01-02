@@ -23,6 +23,8 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/graphics/VulkanLogicalDevice.cpp
 						  src/graphics/VulkanSemaphore.h
 						  src/graphics/VulkanSemaphore.cpp
+						  src/graphics/VulkanFence.h
+						  src/graphics/VulkanFence.cpp
 						  src/graphics/VulkanCommandBuffer.h
 						  src/graphics/VulkanCommandBuffer.cpp
 						  src/graphics/VulkanQueue.h
@@ -32,7 +34,11 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/graphics/VulkanGraphicsPipeline.h
 						  src/graphics/VulkanGraphicsPipeline.cpp
 						  src/graphics/VulkanGPUBuffer.h
-						  src/graphics/VulkanGPUBuffer.cpp)
+						  src/graphics/VulkanGPUBuffer.cpp
+						  src/graphics/VulkanDescriptorPool.h
+						  src/graphics/VulkanDescriptorPool.cpp
+						  src/graphics/VulkanDescriptorSet.h
+						  src/graphics/VulkanDescriptorSet.cpp)
 
 # Include Vulkan
 find_package(Vulkan REQUIRED)

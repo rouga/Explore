@@ -40,13 +40,31 @@ void RenderContext::Initialize(Window* iWindow)
 	mLogicalDevice->Initialize(mPhysicalDevice.get());
 	mSwapchain->Initialize(mInstance->GetInstance(), mLogicalDevice.get(), iWindow, 2);
 	mQueue->Initialize(mLogicalDevice->mDevice, mSwapchain->mSwapchain, mLogicalDevice->mPhysicalDevice->GetQueueFamilyIndex(), 0);
+	mFence = std::make_unique<VulkanFence>(mLogicalDevice->mDevice);
+	CreateDescriptorSets();
 	mVS->Initialize(mLogicalDevice->mDevice, "shaders/bin/basic.vert.spv");
 	mFS->Initialize(mLogicalDevice->mDevice, "shaders/bin/basic.frag.spv");
 	mPipeline->Initialize(mLogicalDevice->mDevice, iWindow, mSwapchain->mColorFormat, mVS->mShader, mFS->mShader);
 	CreateCommandBuffers();
-	RecordCommandBuffers();
 	CreateStagingBuffer();
 	mQueue->Flush();
+}
+
+void RenderContext::CreateDescriptorSets()
+{
+	mDescriptorPool = std::make_unique<VulkanDescriptorPool>(mLogicalDevice->mDevice, mSwapchain->GetNumImages());
+	mDescriptorSets.resize(mSwapchain->GetNumImages());
+
+	std::vector<VulkanDescriptorSet::Binding> wBinding =
+	{
+		{0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE}
+	};
+
+	for(uint32_t i = 0; i < mSwapchain->GetNumImages(); i++)
+	{
+		mDescriptorSets[i] = std::make_unique<VulkanDescriptorSet>(mLogicalDevice->mDevice, wBinding);
+		mDescriptorSets[i]->Allocate(mDescriptorPool->getHandle());
+	}
 }
 
 void RenderContext::CreateCommandBuffers()
@@ -56,7 +74,7 @@ void RenderContext::CreateCommandBuffers()
 	{
 		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
 		.pNext = nullptr,
-		.flags = 0,
+		.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
 		.queueFamilyIndex = (uint32_t)mPhysicalDevice->GetQueueFamilyIndex()
 	};
 
@@ -74,128 +92,6 @@ void RenderContext::CreateCommandBuffers()
 	mCopyCmd = VulkanCommandBuffer{ mCmdPool, mLogicalDevice->mDevice };
 
 	spdlog::info("Command Pool Created with {:d} Command buffers.", mSwapchain->GetNumImages() + 1);
-}
-
-void RenderContext::RecordCommandBuffers()
-{
-	VkClearColorValue wClearColor = {1.f, 0.0f, 0.0f, 1.f};
-
-	VkImageSubresourceRange wSubresourceRange =
-	{
-		.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-		.baseMipLevel = 0,
-		.levelCount = 1,
-		.baseArrayLayer = 0,
-		.layerCount = 1
-	};
-
-	VkViewport wViewport =
-	{
-		.x = 0.0f,
-		.y = 0.0f,
-		.width = (float)mWindow->GetWidth(),
-		.height = (float)mWindow->GetHeight(),
-		.minDepth = 0.0f,
-		.maxDepth = 1.0f
-	};
-
-	VkRect2D wScissor =
-	{
-		.offset =
-		{
-			.x = 0,
-			.y = 0
-		},
-		.extent =
-		{
-			.width = (uint32_t)mWindow->GetWidth(),
-			.height = (uint32_t)mWindow->GetHeight()
-		}
-	};
-
-	for (uint32_t i = 0; i < mCmds.size(); i++)
-	{
-		VkImageMemoryBarrier wPresentToClear = 
-		{
-			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-			.pNext = nullptr,
-			.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-			.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-			.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-			.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-			.image = mSwapchain->mImages[i],
-			.subresourceRange = wSubresourceRange
-		};
-
-		VkImageMemoryBarrier wToPresent =
-		{
-			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-			.pNext = nullptr,
-			.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-			.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-			.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-			.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-			.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-			.image = mSwapchain->mImages[i],
-			.subresourceRange = wSubresourceRange
-		};
-
-		mCmds[i].Begin(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
-
-		vkCmdPipelineBarrier(mCmds[i].mCmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-			0,
-			0, nullptr,
-			0, nullptr,
-			1, &wPresentToClear);
-
-		const VkRenderingAttachmentInfo wColorAttachmentInfo = 
-		{
-			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-			.imageView = mSwapchain->mImageViews[i],
-			.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
-			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-			.clearValue = wClearColor,
-		};
-
-		VkRect2D wRenderArea = 
-		{
-			.offset = { 0, 0},
-			.extent = { (uint32_t)mWindow->GetWidth(), (uint32_t)mWindow->GetHeight() }
-		};
-
-		const VkRenderingInfo render_info
-		{
-			.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
-			.renderArea = wRenderArea,
-			.layerCount = 1,
-			.colorAttachmentCount = 1,
-			.pColorAttachments = &wColorAttachmentInfo
-		};
-
-		vkCmdBeginRendering(mCmds[i].mCmd, &render_info);
-
-		vkCmdBindPipeline(mCmds[i].mCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipeline->mPipeline);
-		vkCmdSetViewport(mCmds[i].mCmd, 0, 1, &wViewport);
-		vkCmdSetScissor(mCmds[i].mCmd, 0, 1, &wScissor);
-
-		vkCmdDraw(mCmds[i].mCmd, 3, 1, 0, 0);
-
-		vkCmdEndRendering(mCmds[i].mCmd);
-
-		vkCmdPipelineBarrier(mCmds[i].mCmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-			0,
-			0, nullptr,
-			0, nullptr,
-			1, &wToPresent);
-
-		mCmds[i].End();
-	}
-
-	spdlog::info("Command Buffers Recorded.");
 }
 
 void RenderContext::CreateStagingBuffer()

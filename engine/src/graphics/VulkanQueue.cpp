@@ -34,7 +34,7 @@ uint32_t VulkanQueue::AcquireNextImage()
 	return wImageIndex;
 }
 
-void VulkanQueue::SubmitAsync(VulkanCommandBuffer* iCmd)
+void VulkanQueue::SubmitAsync(VulkanCommandBuffer* iCmd, VkFence iFence)
 {
 	VkPipelineStageFlags wWaitFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
@@ -48,10 +48,10 @@ void VulkanQueue::SubmitAsync(VulkanCommandBuffer* iCmd)
 		.commandBufferCount = 1,
 		.pCommandBuffers = &iCmd->mCmd,
 		.signalSemaphoreCount = 1,
-		.pSignalSemaphores = &(iCmd->mCmdFinishSemaphore->mSemaphore)
+		.pSignalSemaphores = &(iCmd->mCmdSubmitSemaphore->mSemaphore)
 	};
 
-	VkResult wResult = vkQueueSubmit(mQueue, 1, &wSubmitInfo, nullptr);
+	VkResult wResult = vkQueueSubmit(mQueue, 1, &wSubmitInfo, iFence);
 	CHECK_VK_RESULT(wResult, "Command Queue Submit");
 }
 

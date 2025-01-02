@@ -16,7 +16,7 @@ VulkanCommandBuffer::VulkanCommandBuffer(VkCommandPool iCmdPool, VkDevice iDevic
 	VkResult wResult = vkAllocateCommandBuffers(iDevice, &wCmdAllocateInfo, &mCmd);
 	CHECK_VK_RESULT(wResult, "Command Buffer Allocation");
 
-	mCmdFinishSemaphore = std::make_unique<VulkanSemaphore>(iDevice);
+	mCmdSubmitSemaphore = std::make_unique<VulkanSemaphore>(iDevice);
 }
 
 void VulkanCommandBuffer::Begin(VkCommandBufferUsageFlags iFlags)
@@ -37,4 +37,10 @@ void VulkanCommandBuffer::End()
 {
 	VkResult wResult = vkEndCommandBuffer(mCmd);
 	CHECK_VK_RESULT(wResult, "Command Buffer End");
+}
+
+void VulkanCommandBuffer::Reset(VkCommandBufferResetFlags iFlags)
+{
+	VkResult wResult = vkResetCommandBuffer(mCmd, iFlags);
+	CHECK_VK_RESULT(wResult, "Command Buffer Reset");
 }

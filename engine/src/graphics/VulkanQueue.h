@@ -18,7 +18,7 @@ public:
 
 	uint32_t AcquireNextImage();
 
-	void SubmitAsync(VulkanCommandBuffer* iCmd);
+	void SubmitAsync(VulkanCommandBuffer* iCmd, VkFence iFence);
 	void SubmitSync(VulkanCommandBuffer* iCmd);
 
 	// A Semaphore representing the last command executed on GPU Before presenting

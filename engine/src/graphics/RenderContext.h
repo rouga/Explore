@@ -13,6 +13,9 @@
 #include "VulkanShader.h"
 #include "VulkanGraphicsPipeline.h"
 #include "VulkanGPUBuffer.h"
+#include "VulkanDescriptorPool.h"
+#include "VulkanDescriptorSet.h"
+#include "VulkanFence.h"
 
 class Window;
 
@@ -30,22 +33,26 @@ public:
 	std::unique_ptr<VulkanLogicalDevice> mLogicalDevice = nullptr;
 	std::unique_ptr<VulkanSwapchain> mSwapchain = nullptr;
 	std::unique_ptr<VulkanQueue> mQueue = nullptr;
+	std::unique_ptr<VulkanFence> mFence = nullptr;
 
 	VkCommandPool mCmdPool = VK_NULL_HANDLE;
 	std::vector<VulkanCommandBuffer> mCmds;
 	VulkanCommandBuffer mCopyCmd;
+
+	std::unique_ptr<VulkanDescriptorPool> mDescriptorPool;
+	std::vector<std::unique_ptr<VulkanDescriptorSet>> mDescriptorSets;
 
 	Window* mWindow = nullptr;
 
 	std::unique_ptr<VulkanShader> mVS = nullptr;
 	std::unique_ptr<VulkanShader> mFS = nullptr;
 	std::unique_ptr<VulkanGraphicsPipeline> mPipeline = nullptr;
-
 	std::unique_ptr<VulkanGPUBuffer> mStagingBuffer = nullptr;
 
 private:
+	void CreateDescriptorSets();
+	
 	void CreateCommandBuffers();
-	void RecordCommandBuffers();
 
 	void CreateStagingBuffer();
 };

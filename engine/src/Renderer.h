@@ -15,4 +15,5 @@ public:
 	void Render();
 
 	std::unique_ptr<RenderContext> mContext = nullptr;
+	Window* mWindow = nullptr;
 };
