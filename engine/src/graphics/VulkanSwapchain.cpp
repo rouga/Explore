@@ -11,6 +11,7 @@
 #include "VulkanInstance.h"
 #include "VulkanLogicalDevice.h"
 #include "VulkanPhysicalDevice.h"
+#include "VulkanCommandBuffer.h"
 #include "Utils.h"
 
 VulkanSwapchain::~VulkanSwapchain()
@@ -45,6 +46,70 @@ void VulkanSwapchain::Initialize(VkInstance iInstance, VulkanLogicalDevice* iLog
 
 	CreateSurface();
 	CreateSwapchain();
+}
+
+void VulkanSwapchain::TransitionImageToPresent(VulkanCommandBuffer* iCmd, uint32_t iImageIndex)
+{
+	VkImageSubresourceRange wSubresourceRange =
+	{
+		.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+		.baseMipLevel = 0,
+		.levelCount = 1,
+		.baseArrayLayer = 0,
+		.layerCount = 1
+	};
+
+	VkImageMemoryBarrier wToPresent =
+	{
+		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+		.pNext = nullptr,
+		.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+		.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+		.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.image = mImages[iImageIndex],
+		.subresourceRange = wSubresourceRange
+	};
+
+	vkCmdPipelineBarrier(iCmd->mCmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+		0,
+		0, nullptr,
+		0, nullptr,
+		1, &wToPresent);
+}
+
+void VulkanSwapchain::TransitionImageToDraw(VulkanCommandBuffer* iCmd, uint32_t iImageIndex)
+{
+	VkImageSubresourceRange wSubresourceRange =
+	{
+		.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+		.baseMipLevel = 0,
+		.levelCount = 1,
+		.baseArrayLayer = 0,
+		.layerCount = 1
+	};
+	
+	VkImageMemoryBarrier wPresentToClear =
+	{
+		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+		.pNext = nullptr,
+		.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+		.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+		.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+		.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.image = mImages[iImageIndex],
+		.subresourceRange = wSubresourceRange
+	};
+
+	vkCmdPipelineBarrier(iCmd->mCmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+		0,
+		0, nullptr,
+		0, nullptr,
+		1, &wPresentToClear);
 }
 
 void VulkanSwapchain::CreateSurface()

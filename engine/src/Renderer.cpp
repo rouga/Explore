@@ -36,15 +36,6 @@ void Renderer::Render(StaticMesh* iMesh)
 
 	VkClearColorValue wClearColor = { 1.f, 0.0f, 0.0f, 1.f };
 
-	VkImageSubresourceRange wSubresourceRange =
-	{
-		.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-		.baseMipLevel = 0,
-		.levelCount = 1,
-		.baseArrayLayer = 0,
-		.layerCount = 1
-	};
-
 	VkViewport wViewport =
 	{
 		.x = 0.0f,
@@ -67,34 +58,6 @@ void Renderer::Render(StaticMesh* iMesh)
 			.width = (uint32_t)mWindow->GetWidth(),
 			.height = (uint32_t)mWindow->GetHeight()
 		}
-	};
-
-	VkImageMemoryBarrier wPresentToClear =
-	{
-		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-		.pNext = nullptr,
-		.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-		.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-		.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-		.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-		.image = mContext->mSwapchain->mImages[wCurrentImageIndex],
-		.subresourceRange = wSubresourceRange
-	};
-
-	VkImageMemoryBarrier wToPresent =
-	{
-		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-		.pNext = nullptr,
-		.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-		.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-		.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-		.image = mContext->mSwapchain->mImages[wCurrentImageIndex],
-		.subresourceRange = wSubresourceRange
 	};
 
 	const VkRenderingAttachmentInfo wColorAttachmentInfo =
@@ -135,11 +98,7 @@ void Renderer::Render(StaticMesh* iMesh)
 	
 	wCmd->Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
-	vkCmdPipelineBarrier(wCmd->mCmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-		0,
-		0, nullptr,
-		0, nullptr,
-		1, &wPresentToClear);
+	mContext->mSwapchain->TransitionImageToDraw(wCmd, wCurrentImageIndex);
 
 	vkCmdBeginRendering(wCmd->mCmd, &render_info);
 
@@ -157,11 +116,7 @@ void Renderer::Render(StaticMesh* iMesh)
 
 	vkCmdEndRendering(wCmd->mCmd);
 
-	vkCmdPipelineBarrier(wCmd->mCmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-		0,
-		0, nullptr,
-		0, nullptr,
-		1, &wToPresent);
+	mContext->mSwapchain->TransitionImageToPresent(wCmd, wCurrentImageIndex);
 
 	wCmd->End();
 	

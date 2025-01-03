@@ -5,6 +5,7 @@
 
 class VulkanInstance;
 class VulkanLogicalDevice;
+class VulkanCommandBuffer;
 class Window;
 
 class VulkanSwapchain
@@ -14,6 +15,9 @@ public:
 	~VulkanSwapchain();
 	
 	void Initialize(VkInstance iInstance, VulkanLogicalDevice* iLogicalDevice, Window* iWindow, uint32_t iNumSwapchainImages);
+
+	void TransitionImageToPresent(VulkanCommandBuffer* iCmd, uint32_t iImageIndex);
+	void TransitionImageToDraw(VulkanCommandBuffer* iCmd, uint32_t iImageIndex);
 
 	uint32_t GetNumImages() const { return mNumSwapchainImages; }
 
