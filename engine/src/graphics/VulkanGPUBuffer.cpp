@@ -18,7 +18,7 @@ VulkanGPUBuffer::~VulkanGPUBuffer()
 {
 	if(mBuffer)
 	{
-		Destroy();
+		FreeGPU();
 	}
 }
 
@@ -87,7 +87,7 @@ void VulkanGPUBuffer::UnmapMemory()
 	vkUnmapMemory(mDevice, mMemory);
 }
 
-void VulkanGPUBuffer::Destroy()
+void VulkanGPUBuffer::FreeGPU()
 {
 	vkDestroyBuffer(mDevice, mBuffer, nullptr);
 	vkFreeMemory(mDevice, mMemory, nullptr);

@@ -31,7 +31,7 @@ public:
 
 	void Upload(VulkanCommandBuffer* iCmd , VulkanLogicalDevice* iDevice, VulkanGPUBuffer* iStagingBuffer);
 
-	void Destroy();
+	void FreeGPU();
 
 	void SetName(std::string iName) { mName = iName; }
 

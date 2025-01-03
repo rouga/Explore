@@ -5,7 +5,7 @@
 class VulkanFence 
 {
 public:
-	VulkanFence(VkDevice iDevice);
+	VulkanFence(VkDevice iDevice, VkFenceCreateFlags iFlags);
 	~VulkanFence();
 
 	void Reset();

@@ -13,6 +13,7 @@ public:
 	void Initialize(Window* iWindow);
 	void UploadMesh(StaticMesh* iMesh);
 	void Render(StaticMesh* iMesh);
+	void Flush();
 
 	std::unique_ptr<RenderContext> mContext = nullptr;
 	Window* mWindow = nullptr;

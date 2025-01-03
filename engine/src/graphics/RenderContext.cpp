@@ -13,7 +13,7 @@ RenderContext::RenderContext()
 	mDebugCallback = std::make_unique<VulkanDebugCallback>();
 #endif
 	mPhysicalDevice = std::make_unique<VulkanPhysicalDevice>();
-	mLogicalDevice = std::make_unique<VulkanLogicalDevice>();
+	mLogicalDevice = std::make_shared<VulkanLogicalDevice>();
 	mSwapchain = std::make_unique<VulkanSwapchain>();
 	mQueue = std::make_unique<VulkanQueue>();
 	mVS = std::make_unique<VulkanShader>();
@@ -40,7 +40,13 @@ void RenderContext::Initialize(Window* iWindow)
 	mLogicalDevice->Initialize(mPhysicalDevice.get());
 	mSwapchain->Initialize(mInstance->GetInstance(), mLogicalDevice.get(), iWindow, 2);
 	mQueue->Initialize(mLogicalDevice->mDevice, mSwapchain->mSwapchain, mLogicalDevice->mPhysicalDevice->GetQueueFamilyIndex(), 0);
-	mFence = std::make_unique<VulkanFence>(mLogicalDevice->mDevice);
+
+	mFences.resize(mSwapchain->GetNumImages());
+	for (uint32_t i = 0; i < mSwapchain->GetNumImages(); i++)
+	{
+		mFences[i] = std::make_unique<VulkanFence>(mLogicalDevice->mDevice, VK_FENCE_CREATE_SIGNALED_BIT);
+	}
+	
 	CreateDescriptorSets();
 	mVS->Initialize(mLogicalDevice->mDevice, "shaders/bin/basic.vert.spv");
 	mFS->Initialize(mLogicalDevice->mDevice, "shaders/bin/basic.frag.spv");

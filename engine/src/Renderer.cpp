@@ -129,7 +129,8 @@ void Renderer::Render(StaticMesh* iMesh)
 		.range = VK_WHOLE_SIZE
 	};
 
-	mContext->mFence->Reset();
+	mContext->mFences[wCurrentImageIndex]->Wait();
+	mContext->mFences[wCurrentImageIndex]->Reset();
 	wCmd->Reset(0);
 	
 	wCmd->Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
@@ -163,8 +164,12 @@ void Renderer::Render(StaticMesh* iMesh)
 		1, &wToPresent);
 
 	wCmd->End();
+	
+	mContext->mQueue->SubmitAsync(wCmd, mContext->mFences[wCurrentImageIndex]->mFence);
+	mContext->mQueue->Present(wCurrentImageIndex, wCmd->mCmdSubmitSemaphore->mSemaphore);
+}
 
-	mContext->mQueue->SubmitAsync(wCmd, mContext->mFence->mFence);
-	mContext->mQueue->Present(wCurrentImageIndex, mContext->mCmds[wCurrentImageIndex].mCmdSubmitSemaphore->mSemaphore);
-	mContext->mFence->Wait();
+void Renderer::Flush()
+{
+	mContext->mQueue->Flush();
 }

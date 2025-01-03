@@ -9,7 +9,7 @@ StaticMesh::StaticMesh()
 
 StaticMesh::~StaticMesh()
 {
-	Destroy();
+	FreeGPU();
 }
 
 void StaticMesh::Initialize(const std::vector<Vertex> iVertices)
@@ -30,10 +30,10 @@ void StaticMesh::Upload(VulkanCommandBuffer* iCmd , VulkanLogicalDevice* iDevice
 	mUploaded = true;
 }
 
-void StaticMesh::Destroy()
+void StaticMesh::FreeGPU()
 {
 	if (mVertexBuffer->mBuffer)
 	{
-		mVertexBuffer->Destroy();
+		mVertexBuffer->FreeGPU();
 	}
 }

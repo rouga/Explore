@@ -30,10 +30,10 @@ public:
 	std::unique_ptr<VulkanInstance> mInstance = nullptr;
 	std::unique_ptr<VulkanDebugCallback> mDebugCallback = nullptr;
 	std::unique_ptr<VulkanPhysicalDevice> mPhysicalDevice = nullptr;
-	std::unique_ptr<VulkanLogicalDevice> mLogicalDevice = nullptr;
+	std::shared_ptr<VulkanLogicalDevice> mLogicalDevice = nullptr;
 	std::unique_ptr<VulkanSwapchain> mSwapchain = nullptr;
 	std::unique_ptr<VulkanQueue> mQueue = nullptr;
-	std::unique_ptr<VulkanFence> mFence = nullptr;
+	std::vector<std::unique_ptr<VulkanFence>> mFences;
 
 	VkCommandPool mCmdPool = VK_NULL_HANDLE;
 	std::vector<VulkanCommandBuffer> mCmds;

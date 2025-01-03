@@ -15,7 +15,8 @@ Engine::Engine(Window* iWindow)
 
 Engine::~Engine()
 {
-	mMesh.Destroy();
+	mRenderer->Flush();
+	mMesh.FreeGPU();
 }
 
 void Engine::Initialize()

@@ -20,7 +20,7 @@ public:
 	void* MapMemory(VkDeviceSize iOffset, VkMemoryMapFlags iFlags);
 	void UnmapMemory();
 
-	void Destroy();
+	void FreeGPU();
 
 	VkDevice mDevice = VK_NULL_HANDLE;
 	VkBuffer mBuffer = VK_NULL_HANDLE;

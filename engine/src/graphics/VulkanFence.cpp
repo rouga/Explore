@@ -2,12 +2,12 @@
 
 #include "Utils.h"
 
-VulkanFence::VulkanFence(VkDevice iDevice)
+VulkanFence::VulkanFence(VkDevice iDevice, VkFenceCreateFlags iFlags)
 	:mDevice(iDevice)
 {
 	VkFenceCreateInfo wInfo{};
 	wInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	wInfo.flags = 0; // Can also use VK_FENCE_CREATE_SIGNALED_BIT for an initially signaled fence
+	wInfo.flags = iFlags;
 
 	VkResult wResult = vkCreateFence(mDevice, &wInfo, nullptr, &mFence);
 	CHECK_VK_RESULT(wResult, "Fence Creation");
