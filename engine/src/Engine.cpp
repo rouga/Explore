@@ -25,7 +25,7 @@ void Engine::Initialize()
 	std::vector<Vertex> wVertices =
 	{
 		Vertex({-1.f, -1.f, 0.f}, {0.f, 0.f}),
-		Vertex({1.f, -1.f, 0.f}, {0.f, 1.f}),
+		Vertex({0.f, -1.f, 0.f}, {0.f, 1.f}),
 		Vertex({0.f, 1.f, 0.f}, {1.f, 1.f})
 	};
 
@@ -38,5 +38,5 @@ void Engine::Initialize()
 void Engine::Run()
 {
 	glfwPollEvents();
-	mRenderer->Render();
+	mRenderer->Render(&mMesh);
 }

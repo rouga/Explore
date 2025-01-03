@@ -17,7 +17,9 @@ VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
 	vkDestroyPipeline(mDevice, mPipeline, nullptr);
 }
 
-void VulkanGraphicsPipeline::Initialize(VkDevice iDevice, Window* iWindow, VkFormat iColorFormat, VkShaderModule iVS, VkShaderModule iFS)
+void VulkanGraphicsPipeline::Initialize(VkDevice iDevice, Window* iWindow, VkFormat iColorFormat,
+	const std::vector<VkDescriptorSetLayout>& iDescriptorSetLayout,
+	const  VkShaderModule iVS, VkShaderModule iFS)
 {
 	mDevice = iDevice;
 
@@ -117,8 +119,8 @@ void VulkanGraphicsPipeline::Initialize(VkDevice iDevice, Window* iWindow, VkFor
 	VkPipelineLayoutCreateInfo wPipelineLayoutInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-		.setLayoutCount = 0,
-		.pSetLayouts = nullptr
+		.setLayoutCount = (uint32_t)iDescriptorSetLayout.size(),
+		.pSetLayouts = iDescriptorSetLayout.data()
 	};
 
 	VkResult wResult = vkCreatePipelineLayout(mDevice, &wPipelineLayoutInfo, nullptr, &mPipelineLayout);

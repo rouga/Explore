@@ -38,6 +38,7 @@ public:
 	bool IsUploaded() const {return mUploaded; }
 
 	std::string GetName() const { return mName; }
+	VulkanGPUBuffer* GetVertexBuffer() const { return mVertexBuffer.get(); }
 
 private:
 	std::string mName;

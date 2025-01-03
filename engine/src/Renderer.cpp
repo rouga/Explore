@@ -28,7 +28,7 @@ void Renderer::UploadMesh(StaticMesh* iMesh)
 	spdlog::info("Mesh {:s} uploaded", iMesh->GetName());
 }
 
-void Renderer::Render()
+void Renderer::Render(StaticMesh* iMesh)
 {
 	uint32_t wCurrentImageIndex = mContext->mQueue->AcquireNextImage();
 
@@ -122,6 +122,13 @@ void Renderer::Render()
 		.pColorAttachments = &wColorAttachmentInfo
 	};
 
+	VkDescriptorBufferInfo wBufferInfo =
+	{
+		.buffer = iMesh->GetVertexBuffer()->mBuffer,
+		.offset = 0,
+		.range = VK_WHOLE_SIZE
+	};
+
 	mContext->mFence->Reset();
 	wCmd->Reset(0);
 	
@@ -138,6 +145,12 @@ void Renderer::Render()
 	vkCmdBindPipeline(wCmd->mCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mContext->mPipeline->mPipeline);
 	vkCmdSetViewport(wCmd->mCmd, 0, 1, &wViewport);
 	vkCmdSetScissor(wCmd->mCmd, 0, 1, &wScissor);
+
+	mContext->mDescriptorSets[wCurrentImageIndex]->Update(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wBufferInfo);
+	VkDescriptorSet wDS = mContext->mDescriptorSets[wCurrentImageIndex]->GetHandle();
+	vkCmdBindDescriptorSets(wCmd->mCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mContext->mPipeline->mPipelineLayout,
+		0, 1, &wDS,
+		0, nullptr);
 
 	vkCmdDraw(wCmd->mCmd, 3, 1, 0, 0);
 

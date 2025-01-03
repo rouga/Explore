@@ -44,7 +44,8 @@ void RenderContext::Initialize(Window* iWindow)
 	CreateDescriptorSets();
 	mVS->Initialize(mLogicalDevice->mDevice, "shaders/bin/basic.vert.spv");
 	mFS->Initialize(mLogicalDevice->mDevice, "shaders/bin/basic.frag.spv");
-	mPipeline->Initialize(mLogicalDevice->mDevice, iWindow, mSwapchain->mColorFormat, mVS->mShader, mFS->mShader);
+	std::vector<VkDescriptorSetLayout> wDescriptorSetLayout{ mDescriptorSets[0]->GetLayout() };
+	mPipeline->Initialize(mLogicalDevice->mDevice, iWindow, mSwapchain->mColorFormat, wDescriptorSetLayout, mVS->mShader, mFS->mShader);
 	CreateCommandBuffers();
 	CreateStagingBuffer();
 	mQueue->Flush();
