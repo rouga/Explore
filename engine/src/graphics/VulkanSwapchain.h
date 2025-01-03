@@ -20,6 +20,7 @@ public:
 	void TransitionImageToDraw(VulkanCommandBuffer* iCmd, uint32_t iImageIndex);
 
 	uint32_t GetNumImages() const { return mNumSwapchainImages; }
+	const VkSurfaceCapabilitiesKHR& GetSurfaceCapabilites() const { return mSurfaceCapabilites; }
 
 	std::vector<VkImage> mImages;
 	std::vector<VkImageView> mImageViews;
@@ -36,6 +37,7 @@ private:
 
 	VkSurfaceKHR mSurface = VK_NULL_HANDLE;
 	VkInstance mInstance = VK_NULL_HANDLE;
+	VkSurfaceCapabilitiesKHR mSurfaceCapabilites{};
 
 	Window* mWindow = nullptr;
 	VulkanLogicalDevice* mLogicalDevice = nullptr;

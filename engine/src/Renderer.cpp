@@ -14,6 +14,7 @@ void Renderer::Initialize(Window* iWindow)
 {
 	mWindow = iWindow;
 	mContext->Initialize(iWindow);
+	mMainPass = std::make_unique<VulkanRenderPass>(mContext->mLogicalDevice->mDevice, mContext->mSwapchain->GetSurfaceCapabilites().currentExtent);
 }
 
 void Renderer::UploadMesh(StaticMesh* iMesh)
@@ -60,31 +61,6 @@ void Renderer::Render(StaticMesh* iMesh)
 		}
 	};
 
-	const VkRenderingAttachmentInfo wColorAttachmentInfo =
-	{
-		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-		.imageView = mContext->mSwapchain->mImageViews[wCurrentImageIndex],
-		.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
-		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-		.clearValue = wClearColor,
-	};
-
-	VkRect2D wRenderArea =
-	{
-		.offset = { 0, 0},
-		.extent = { (uint32_t)mWindow->GetWidth(), (uint32_t)mWindow->GetHeight() }
-	};
-
-	const VkRenderingInfo render_info
-	{
-		.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
-		.renderArea = wRenderArea,
-		.layerCount = 1,
-		.colorAttachmentCount = 1,
-		.pColorAttachments = &wColorAttachmentInfo
-	};
-
 	VkDescriptorBufferInfo wBufferInfo =
 	{
 		.buffer = iMesh->GetVertexBuffer()->mBuffer,
@@ -100,21 +76,25 @@ void Renderer::Render(StaticMesh* iMesh)
 
 	mContext->mSwapchain->TransitionImageToDraw(wCmd, wCurrentImageIndex);
 
-	vkCmdBeginRendering(wCmd->mCmd, &render_info);
+	std::vector<VkImageView> wBackbuffer{mContext->mSwapchain->mImageViews[wCurrentImageIndex]};
+
+	mMainPass->Begin(wCmd->mCmd, wBackbuffer, nullptr);
 
 	vkCmdBindPipeline(wCmd->mCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mContext->mPipeline->mPipeline);
 	vkCmdSetViewport(wCmd->mCmd, 0, 1, &wViewport);
 	vkCmdSetScissor(wCmd->mCmd, 0, 1, &wScissor);
 
 	mContext->mDescriptorSets[wCurrentImageIndex]->Update(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wBufferInfo);
+	
 	VkDescriptorSet wDS = mContext->mDescriptorSets[wCurrentImageIndex]->GetHandle();
+
 	vkCmdBindDescriptorSets(wCmd->mCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mContext->mPipeline->mPipelineLayout,
 		0, 1, &wDS,
 		0, nullptr);
 
 	vkCmdDraw(wCmd->mCmd, 3, 1, 0, 0);
 
-	vkCmdEndRendering(wCmd->mCmd);
+	mMainPass->End(wCmd->mCmd);
 
 	mContext->mSwapchain->TransitionImageToPresent(wCmd, wCurrentImageIndex);
 

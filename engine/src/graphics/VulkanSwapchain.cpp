@@ -125,8 +125,7 @@ void VulkanSwapchain::CreateSurface()
 
 void VulkanSwapchain::CreateSwapchain()
 {
-	VkSurfaceCapabilitiesKHR wSurfaceCapabilites;
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(mLogicalDevice->mPhysicalDevice->GetDevice(), mSurface, &wSurfaceCapabilites);
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(mLogicalDevice->mPhysicalDevice->GetDevice(), mSurface, &mSurfaceCapabilites);
 
 	uint32_t wQueueFamilyIndex = mLogicalDevice->mPhysicalDevice->GetQueueFamilyIndex();
 
@@ -139,13 +138,13 @@ void VulkanSwapchain::CreateSwapchain()
 		.minImageCount = mNumSwapchainImages,
 		.imageFormat = VK_FORMAT_B8G8R8A8_SRGB,
 		.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-		.imageExtent = wSurfaceCapabilites.currentExtent,
+		.imageExtent = mSurfaceCapabilites.currentExtent,
 		.imageArrayLayers = 1,
 		.imageUsage = (VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT),
 		.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		.queueFamilyIndexCount = 1,
 		.pQueueFamilyIndices = &wQueueFamilyIndex,
-		.preTransform = wSurfaceCapabilites.currentTransform,
+		.preTransform = mSurfaceCapabilites.currentTransform,
 		.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 		.presentMode = VK_PRESENT_MODE_FIFO_KHR,
 		.clipped = VK_TRUE

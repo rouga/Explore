@@ -13,6 +13,7 @@ public:
 	VkPhysicalDevice GetDevice() const { return mDevice; }
 	int							 GetQueueFamilyIndex() const { return mQueueFamilyIndex; }
 	const VkPhysicalDeviceMemoryProperties& GetMemProperties() const { return mMemProperties; }
+
 private:
 	void QueryDevice();
 	void QueryQueueFamily();

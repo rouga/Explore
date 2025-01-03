@@ -33,6 +33,8 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/graphics/VulkanShader.cpp
 						  src/graphics/VulkanGraphicsPipeline.h
 						  src/graphics/VulkanGraphicsPipeline.cpp
+						  src/graphics/VulkanRenderPass.h
+						  src/graphics/VulkanRenderPass.cpp
 						  src/graphics/VulkanGPUBuffer.h
 						  src/graphics/VulkanGPUBuffer.cpp
 						  src/graphics/VulkanDescriptorPool.h
