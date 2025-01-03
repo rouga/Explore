@@ -32,6 +32,7 @@ public:
 	void Upload(VulkanCommandBuffer* iCmd , VulkanLogicalDevice* iDevice, VulkanGPUBuffer* iStagingBuffer);
 
 	void FreeGPU();
+	void FreeCPU();
 
 	void SetName(std::string iName) { mName = iName; }
 
@@ -39,10 +40,12 @@ public:
 
 	std::string GetName() const { return mName; }
 	VulkanGPUBuffer* GetVertexBuffer() const { return mVertexBuffer.get(); }
+	uint32_t GetNumVertices() const { return mNumVertices; }
 
 private:
 	std::string mName;
 	std::vector<Vertex> mVertices;
+	uint32_t mNumVertices = 0;
 	std::unique_ptr<VulkanGPUBuffer> mVertexBuffer = nullptr;
 	bool mUploaded = false;
 };

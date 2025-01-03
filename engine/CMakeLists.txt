@@ -40,7 +40,11 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/graphics/VulkanDescriptorPool.h
 						  src/graphics/VulkanDescriptorPool.cpp
 						  src/graphics/VulkanDescriptorSet.h
-						  src/graphics/VulkanDescriptorSet.cpp)
+						  src/graphics/VulkanDescriptorSet.cpp
+						  src/graphics/DescriptorSetManager.h
+						  src/graphics/DescriptorSetManager.cpp
+						  src/graphics/PipelineLayoutManager.h
+						  src/graphics/PipelineLayoutManager.cpp)
 
 # Include Vulkan
 find_package(Vulkan REQUIRED)

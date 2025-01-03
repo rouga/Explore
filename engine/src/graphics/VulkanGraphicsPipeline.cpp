@@ -13,13 +13,10 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline()
 
 VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
 {
-	vkDestroyPipelineLayout(mDevice, mPipelineLayout, nullptr);
 	vkDestroyPipeline(mDevice, mPipeline, nullptr);
 }
 
-void VulkanGraphicsPipeline::Initialize(VkDevice iDevice, Window* iWindow, VkFormat iColorFormat,
-	const std::vector<VkDescriptorSetLayout>& iDescriptorSetLayout,
-	const  VkShaderModule iVS, VkShaderModule iFS)
+void VulkanGraphicsPipeline::Initialize(VkDevice iDevice, const PipelineInfo iPipelineInfo ,const VkShaderModule iVS, VkShaderModule iFS)
 {
 	mDevice = iDevice;
 
@@ -39,18 +36,34 @@ void VulkanGraphicsPipeline::Initialize(VkDevice iDevice, Window* iWindow, VkFor
 		}
 	};
 
-	VkPipelineVertexInputStateCreateInfo wVertexInputState =
+	VkGraphicsPipelineCreateInfo wCreateInfo =
 	{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+		.pNext = &iPipelineInfo.renderingInfo,
+		.stageCount = (uint32_t)_countof(wShaderStageCreateInfo),
+		.pStages = &wShaderStageCreateInfo[0],
+		.pVertexInputState = &iPipelineInfo.vertexInputInfo,
+		.pInputAssemblyState = &iPipelineInfo.inputAssemblyInfo,
+		.pViewportState = &iPipelineInfo.viewportInfo,
+		.pRasterizationState = &iPipelineInfo.rasterizationInfo,
+		.pMultisampleState = &iPipelineInfo.multisampleInfo,
+		.pColorBlendState = &iPipelineInfo.colorBlendInfo,
+		.pDynamicState = &iPipelineInfo.dynamicStateInfo,
+		.layout = iPipelineInfo.pipelineLayout,
+		.renderPass = nullptr,
+		.subpass = 0,
+		.basePipelineHandle = VK_NULL_HANDLE,
+		.basePipelineIndex = -1,
 	};
 
-	VkPipelineInputAssemblyStateCreateInfo wInputAssemblyState =
-	{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-		.primitiveRestartEnable = VK_FALSE
-	};
+	VkResult wResult = vkCreateGraphicsPipelines(mDevice, nullptr, 1, &wCreateInfo, nullptr, &mPipeline);
+	CHECK_VK_RESULT(wResult, "Graphics Pipeline Creation");
 
+	spdlog::info("Graphics Pipeline Created");
+}
+
+void VulkanGraphicsPipeline::Bind(VkCommandBuffer iCmd, Window* iWindow)
+{
 	VkViewport wViewport =
 	{
 		.x = 0.0f,
@@ -63,7 +76,7 @@ void VulkanGraphicsPipeline::Initialize(VkDevice iDevice, Window* iWindow, VkFor
 
 	VkRect2D wScissor =
 	{
-		.offset = 
+		.offset =
 		{
 			.x = 0,
 			.y = 0
@@ -75,98 +88,69 @@ void VulkanGraphicsPipeline::Initialize(VkDevice iDevice, Window* iWindow, VkFor
 		}
 	};
 
-	VkPipelineViewportStateCreateInfo wViewportState =
-	{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-		.viewportCount = 1,
-		.pViewports = &wViewport,
-		.scissorCount = 1,
-		.pScissors = &wScissor,
-	};
+	vkCmdBindPipeline(iCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipeline);
+	vkCmdSetViewport(iCmd, 0, 1, &wViewport);
+	vkCmdSetScissor(iCmd, 0, 1, &wScissor);
+}
 
-	VkPipelineRasterizationStateCreateInfo wRasterizationState =
-	{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-		.polygonMode = VK_POLYGON_MODE_FILL,
-		.cullMode = VK_CULL_MODE_NONE,
-		.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
-		.lineWidth = 1.0f
-	};
+void VulkanGraphicsPipeline::Bind(VkCommandBuffer iCmd)
+{
+	vkCmdBindPipeline(iCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipeline);
+}
 
-	VkPipelineMultisampleStateCreateInfo wMultisampleState =
-	{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
-		.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
-		.sampleShadingEnable = VK_FALSE,
-		.minSampleShading = 1.0f
-	};
+void VulkanGraphicsPipeline::DefaultPipelineConfigInfo(PipelineInfo& iPipelineInfo)
+{
+	iPipelineInfo.renderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+	iPipelineInfo.renderingInfo.pNext = nullptr;
+	iPipelineInfo.renderingInfo.colorAttachmentCount = 1;
 
-	VkPipelineColorBlendAttachmentState wColorBlendAttachment =
-	{
-		.blendEnable = VK_FALSE,
-		.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
-	};
+	iPipelineInfo.vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-	VkPipelineColorBlendStateCreateInfo wColorBlendState =
-	{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-		.logicOpEnable = VK_FALSE,
-		.logicOp = VK_LOGIC_OP_COPY,
-		.attachmentCount = 1,
-		.pAttachments = &wColorBlendAttachment
-	};
+	iPipelineInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	iPipelineInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	iPipelineInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
-	VkPipelineLayoutCreateInfo wPipelineLayoutInfo =
-	{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-		.setLayoutCount = (uint32_t)iDescriptorSetLayout.size(),
-		.pSetLayouts = iDescriptorSetLayout.data()
-	};
+	iPipelineInfo.viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	iPipelineInfo.viewportInfo.viewportCount = 1;
+	iPipelineInfo.viewportInfo.pViewports = nullptr;
+	iPipelineInfo.viewportInfo.scissorCount = 1;
+	iPipelineInfo.viewportInfo.pScissors = nullptr;
 
-	VkResult wResult = vkCreatePipelineLayout(mDevice, &wPipelineLayoutInfo, nullptr, &mPipelineLayout);
-	CHECK_VK_RESULT(wResult, "Graphics Pipeline Layout Creation");
+	iPipelineInfo.rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+	iPipelineInfo.rasterizationInfo.depthClampEnable = VK_FALSE;
+	iPipelineInfo.rasterizationInfo.rasterizerDiscardEnable = VK_FALSE;
+	iPipelineInfo.rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
+	iPipelineInfo.rasterizationInfo.lineWidth = 1.0f;
+	iPipelineInfo.rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+	iPipelineInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	iPipelineInfo.rasterizationInfo.depthBiasEnable = VK_FALSE;
 
-	VkPipelineRenderingCreateInfo wPipelineRenderingInfo =
-	{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
-		.pNext = nullptr,
-		.colorAttachmentCount = 1,
-		.pColorAttachmentFormats = &iColorFormat
-	};
+	iPipelineInfo.multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+	iPipelineInfo.multisampleInfo.sampleShadingEnable = VK_FALSE;
+	iPipelineInfo.multisampleInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
-	VkDynamicState wDynamicStates[2] = { VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_VIEWPORT };
+	iPipelineInfo.colorBlendAttachment.blendEnable = VK_FALSE;
+	iPipelineInfo.colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT |
+		VK_COLOR_COMPONENT_G_BIT |
+		VK_COLOR_COMPONENT_B_BIT |
+		VK_COLOR_COMPONENT_A_BIT;
 
-	VkPipelineDynamicStateCreateInfo wDynamicState =
-	{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-		.dynamicStateCount = 2,
-		.pDynamicStates = &wDynamicStates[0]
-	};
+	iPipelineInfo.colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+	iPipelineInfo.colorBlendInfo.logicOpEnable = VK_FALSE;
+	iPipelineInfo.colorBlendInfo.attachmentCount = 1;
+	iPipelineInfo.colorBlendInfo.pAttachments = &iPipelineInfo.colorBlendAttachment;
 
-	VkGraphicsPipelineCreateInfo wCreateInfo =
-	{
-		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-		.pNext = &wPipelineRenderingInfo,
-		.stageCount = (uint32_t)_countof(wShaderStageCreateInfo),
-		.pStages = &wShaderStageCreateInfo[0],
-		.pVertexInputState = &wVertexInputState,
-		.pInputAssemblyState = &wInputAssemblyState,
-		.pViewportState = &wViewportState,
-		.pRasterizationState = &wRasterizationState,
-		.pMultisampleState = &wMultisampleState,
-		.pColorBlendState = &wColorBlendState,
-		.pDynamicState = &wDynamicState,
-		.layout = mPipelineLayout,
-		.renderPass = nullptr,
-		.subpass = 0,
-		.basePipelineHandle = VK_NULL_HANDLE,
-		.basePipelineIndex = -1,
-	};
+	iPipelineInfo.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+	iPipelineInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
+	iPipelineInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
+	iPipelineInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+	iPipelineInfo.depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
+	iPipelineInfo.depthStencilInfo.stencilTestEnable = VK_FALSE;
 
-	wResult = vkCreateGraphicsPipelines(mDevice, nullptr, 1, &wCreateInfo, nullptr, &mPipeline);
-	CHECK_VK_RESULT(wResult, "Graphics Pipeline Creation");
-
-	spdlog::info("Graphics Pipeline Created");
+	iPipelineInfo.dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+	iPipelineInfo.dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	iPipelineInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(iPipelineInfo.dynamicStates.size());
+	iPipelineInfo.dynamicStateInfo.pDynamicStates = iPipelineInfo.dynamicStates.data();
 }
 
 

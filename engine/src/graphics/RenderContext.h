@@ -39,19 +39,11 @@ public:
 	std::vector<VulkanCommandBuffer> mCmds;
 	VulkanCommandBuffer mCopyCmd;
 
-	std::unique_ptr<VulkanDescriptorPool> mDescriptorPool;
-	std::vector<std::unique_ptr<VulkanDescriptorSet>> mDescriptorSets;
-
 	Window* mWindow = nullptr;
 
-	std::unique_ptr<VulkanShader> mVS = nullptr;
-	std::unique_ptr<VulkanShader> mFS = nullptr;
-	std::unique_ptr<VulkanGraphicsPipeline> mPipeline = nullptr;
 	std::unique_ptr<VulkanGPUBuffer> mStagingBuffer = nullptr;
 
 private:
-	void CreateDescriptorSets();
-	
 	void CreateCommandBuffers();
 
 	void CreateStagingBuffer();

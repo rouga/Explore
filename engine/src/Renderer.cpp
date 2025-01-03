@@ -15,6 +15,17 @@ void Renderer::Initialize(Window* iWindow)
 	mWindow = iWindow;
 	mContext->Initialize(iWindow);
 	mMainPass = std::make_unique<VulkanRenderPass>(mContext->mLogicalDevice->mDevice, mContext->mSwapchain->GetSurfaceCapabilites().currentExtent);
+
+	// Initialize Descriptor Sets Manager
+	mDescriptorSetManager = std::make_unique<DescriptorSetManager>(mContext->mLogicalDevice->mDevice, mContext->mSwapchain->GetNumImages());
+	CreateDescriptorSetLayouts();
+
+	// Initialize Pipeline Layout Manager
+	mPipelineLayoutManager = std::make_unique<PipelineLayoutManager>(mContext->mLogicalDevice->mDevice);
+	CreatePipelineLayouts();
+
+	CreateShaders();
+	CreatePipelines();
 }
 
 void Renderer::UploadMesh(StaticMesh* iMesh)
@@ -35,32 +46,6 @@ void Renderer::Render(StaticMesh* iMesh)
 
 	VulkanCommandBuffer* wCmd = &mContext->mCmds[wCurrentImageIndex];
 
-	VkClearColorValue wClearColor = { 1.f, 0.0f, 0.0f, 1.f };
-
-	VkViewport wViewport =
-	{
-		.x = 0.0f,
-		.y = 0.0f,
-		.width = (float)mWindow->GetWidth(),
-		.height = (float)mWindow->GetHeight(),
-		.minDepth = 0.0f,
-		.maxDepth = 1.0f
-	};
-
-	VkRect2D wScissor =
-	{
-		.offset =
-		{
-			.x = 0,
-			.y = 0
-		},
-		.extent =
-		{
-			.width = (uint32_t)mWindow->GetWidth(),
-			.height = (uint32_t)mWindow->GetHeight()
-		}
-	};
-
 	VkDescriptorBufferInfo wBufferInfo =
 	{
 		.buffer = iMesh->GetVertexBuffer()->mBuffer,
@@ -69,6 +54,7 @@ void Renderer::Render(StaticMesh* iMesh)
 	};
 
 	mContext->mFences[wCurrentImageIndex]->Wait();
+	mDescriptorSetManager->ResetPool(wCurrentImageIndex);
 	mContext->mFences[wCurrentImageIndex]->Reset();
 	wCmd->Reset(0);
 	
@@ -80,19 +66,18 @@ void Renderer::Render(StaticMesh* iMesh)
 
 	mMainPass->Begin(wCmd->mCmd, wBackbuffer, nullptr);
 
-	vkCmdBindPipeline(wCmd->mCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mContext->mPipeline->mPipeline);
-	vkCmdSetViewport(wCmd->mCmd, 0, 1, &wViewport);
-	vkCmdSetScissor(wCmd->mCmd, 0, 1, &wScissor);
+	mPipeline->Bind(wCmd->mCmd, mWindow);
 
-	mContext->mDescriptorSets[wCurrentImageIndex]->Update(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wBufferInfo);
+	VulkanDescriptorSet wDS = mDescriptorSetManager->AllocateDescriptorSet("main", wCurrentImageIndex);
+	wDS.Update(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wBufferInfo);
 	
-	VkDescriptorSet wDS = mContext->mDescriptorSets[wCurrentImageIndex]->GetHandle();
+	VkDescriptorSet wDSHandle = wDS.GetHandle();
 
-	vkCmdBindDescriptorSets(wCmd->mCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mContext->mPipeline->mPipelineLayout,
-		0, 1, &wDS,
+	vkCmdBindDescriptorSets(wCmd->mCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipelineLayoutManager->GetLayout("main"),
+		0, 1, &wDSHandle,
 		0, nullptr);
 
-	vkCmdDraw(wCmd->mCmd, 3, 1, 0, 0);
+	vkCmdDraw(wCmd->mCmd, iMesh->GetNumVertices(), 1, 0, 0);
 
 	mMainPass->End(wCmd->mCmd);
 
@@ -107,4 +92,45 @@ void Renderer::Render(StaticMesh* iMesh)
 void Renderer::Flush()
 {
 	mContext->mQueue->Flush();
+}
+
+void Renderer::CreateDescriptorSetLayouts()
+{
+	std::vector<DescriptorSetManager::Binding> wBinding =
+	{
+		{0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE}
+	};
+
+	mDescriptorSetManager->CreateLayout(wBinding, "main");
+}
+
+void Renderer::CreatePipelineLayouts()
+{
+	std::vector<VkDescriptorSetLayout> wDSLayouts = { mDescriptorSetManager->GetLayout("main") };
+	std::vector<VkPushConstantRange> wPCRanges;
+	mPipelineLayoutManager->CreateLayout(wDSLayouts, wPCRanges, "main");
+}
+
+void Renderer::CreateShaders()
+{
+	mVS = std::make_unique<VulkanShader>();
+	mFS = std::make_unique<VulkanShader>();
+
+	mVS->Initialize(mContext->mLogicalDevice->mDevice, "shaders/bin/basic.vert.spv");
+	mFS->Initialize(mContext->mLogicalDevice->mDevice, "shaders/bin/basic.frag.spv");
+}
+
+void Renderer::CreatePipelines()
+{
+	VulkanGraphicsPipeline::PipelineInfo wPipeline{};
+	VulkanGraphicsPipeline::DefaultPipelineConfigInfo(wPipeline);
+
+	wPipeline.pipelineLayout = mPipelineLayoutManager->GetLayout("main");
+
+	wPipeline.renderingInfo.pColorAttachmentFormats = &mContext->mSwapchain->mColorFormat;
+	wPipeline.renderingInfo.depthAttachmentFormat = VK_FORMAT_UNDEFINED;
+	wPipeline.renderingInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
+
+	mPipeline = std::make_unique<VulkanGraphicsPipeline>();
+	mPipeline->Initialize(mContext->mLogicalDevice->mDevice, wPipeline, mVS->mShader, mFS->mShader);
 }

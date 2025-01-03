@@ -16,9 +16,6 @@ RenderContext::RenderContext()
 	mLogicalDevice = std::make_shared<VulkanLogicalDevice>();
 	mSwapchain = std::make_unique<VulkanSwapchain>();
 	mQueue = std::make_unique<VulkanQueue>();
-	mVS = std::make_unique<VulkanShader>();
-	mFS = std::make_unique<VulkanShader>();
-	mPipeline = std::make_unique<VulkanGraphicsPipeline>();
 	mStagingBuffer = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 }
 
@@ -46,32 +43,10 @@ void RenderContext::Initialize(Window* iWindow)
 	{
 		mFences[i] = std::make_unique<VulkanFence>(mLogicalDevice->mDevice, VK_FENCE_CREATE_SIGNALED_BIT);
 	}
-	
-	CreateDescriptorSets();
-	mVS->Initialize(mLogicalDevice->mDevice, "shaders/bin/basic.vert.spv");
-	mFS->Initialize(mLogicalDevice->mDevice, "shaders/bin/basic.frag.spv");
-	std::vector<VkDescriptorSetLayout> wDescriptorSetLayout{ mDescriptorSets[0]->GetLayout() };
-	mPipeline->Initialize(mLogicalDevice->mDevice, iWindow, mSwapchain->mColorFormat, wDescriptorSetLayout, mVS->mShader, mFS->mShader);
+
 	CreateCommandBuffers();
 	CreateStagingBuffer();
 	mQueue->Flush();
-}
-
-void RenderContext::CreateDescriptorSets()
-{
-	mDescriptorPool = std::make_unique<VulkanDescriptorPool>(mLogicalDevice->mDevice, mSwapchain->GetNumImages());
-	mDescriptorSets.resize(mSwapchain->GetNumImages());
-
-	std::vector<VulkanDescriptorSet::Binding> wBinding =
-	{
-		{0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE}
-	};
-
-	for(uint32_t i = 0; i < mSwapchain->GetNumImages(); i++)
-	{
-		mDescriptorSets[i] = std::make_unique<VulkanDescriptorSet>(mLogicalDevice->mDevice, wBinding);
-		mDescriptorSets[i]->Allocate(mDescriptorPool->getHandle());
-	}
 }
 
 void RenderContext::CreateCommandBuffers()

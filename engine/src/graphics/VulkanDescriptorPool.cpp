@@ -15,10 +15,15 @@ VulkanDescriptorPool::VulkanDescriptorPool(VkDevice iDevice, uint32_t iMaxSets, 
 
 VulkanDescriptorPool::~VulkanDescriptorPool()
 {
-	if (mPool != VK_NULL_HANDLE) 
+	if (mPools != VK_NULL_HANDLE) 
 	{
-		vkDestroyDescriptorPool(mDevice, mPool, nullptr);
+		vkDestroyDescriptorPool(mDevice, mPools, nullptr);
 	}
+}
+
+void VulkanDescriptorPool::Reset()
+{
+	vkResetDescriptorPool(mDevice, mPools, 0);
 }
 
 void VulkanDescriptorPool::CreatePool(const PoolSizes& iPoolSizes, uint32_t iMaxSets)
@@ -53,7 +58,7 @@ void VulkanDescriptorPool::CreatePool(const PoolSizes& iPoolSizes, uint32_t iMax
 	wPoolInfo.maxSets = iMaxSets;
 	wPoolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
-	VkResult wResult = vkCreateDescriptorPool(mDevice, &wPoolInfo, nullptr, &mPool);
+	VkResult wResult = vkCreateDescriptorPool(mDevice, &wPoolInfo, nullptr, &mPools);
 	CHECK_VK_RESULT(wResult, "Descriptor Pool Creation");
 
 	spdlog::info("Descriptor Pool Created");

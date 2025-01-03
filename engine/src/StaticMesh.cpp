@@ -15,6 +15,7 @@ StaticMesh::~StaticMesh()
 void StaticMesh::Initialize(const std::vector<Vertex> iVertices)
 {
 	mVertices = iVertices;
+	mNumVertices = mVertices.size();
 }
 
 void StaticMesh::Upload(VulkanCommandBuffer* iCmd , VulkanLogicalDevice* iDevice, VulkanGPUBuffer* iStagingBuffer)
@@ -25,8 +26,6 @@ void StaticMesh::Upload(VulkanCommandBuffer* iCmd , VulkanLogicalDevice* iDevice
 	mVertexBuffer->Initialize(iDevice, mVertices.size() * sizeof(Vertex));
 	mVertexBuffer->Upload(iCmd, iStagingBuffer, mVertices.size() * sizeof(Vertex), 0, 0);
 
-	mVertices.clear();
-
 	mUploaded = true;
 }
 
@@ -36,4 +35,9 @@ void StaticMesh::FreeGPU()
 	{
 		mVertexBuffer->FreeGPU();
 	}
+}
+
+void StaticMesh::FreeCPU()
+{
+	mVertices.clear();
 }

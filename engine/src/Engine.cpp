@@ -26,7 +26,7 @@ void Engine::Initialize()
 	std::vector<Vertex> wVertices =
 	{
 		Vertex({-1.f, -1.f, 0.f}, {0.f, 0.f}),
-		Vertex({0.f, -1.f, 0.f}, {0.f, 1.f}),
+		Vertex({1.f, 0.f, 0.f}, {0.f, 1.f}),
 		Vertex({0.f, 1.f, 0.f}, {1.f, 1.f})
 	};
 
@@ -34,6 +34,7 @@ void Engine::Initialize()
 	mMesh.Initialize(wVertices);
 
 	mRenderer->UploadMesh(&mMesh);
+	mMesh.FreeCPU();
 }
 
 void Engine::Run()
