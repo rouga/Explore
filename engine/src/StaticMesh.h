@@ -27,7 +27,7 @@ public:
 	~StaticMesh();
 
 	// Populate mesh CPU side
-	void Initialize(const std::vector<Vertex> iVertices);
+	void Initialize(const std::vector<Vertex> iVertices, const std::vector<uint32_t> iIndices);
 
 	void Upload(VulkanCommandBuffer* iCmd , VulkanLogicalDevice* iDevice, VulkanGPUBuffer* iStagingBuffer);
 
@@ -40,12 +40,15 @@ public:
 
 	std::string GetName() const { return mName; }
 	VulkanGPUBuffer* GetVertexBuffer() const { return mVertexBuffer.get(); }
-	uint32_t GetNumVertices() const { return mNumVertices; }
+	VulkanGPUBuffer* GeIndexBuffer() const { return mIndexBuffer.get(); }
+	uint32_t GetIndexCount() const { return mIndexCount; }
 
 private:
 	std::string mName;
 	std::vector<Vertex> mVertices;
-	uint32_t mNumVertices = 0;
+	std::vector<uint32_t> mIndices;
+	uint32_t mIndexCount = 0;
 	std::unique_ptr<VulkanGPUBuffer> mVertexBuffer = nullptr;
+	std::unique_ptr<VulkanGPUBuffer> mIndexBuffer = nullptr;
 	bool mUploaded = false;
 };

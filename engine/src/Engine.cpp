@@ -36,8 +36,13 @@ void Engine::Initialize()
 		Vertex({0.f, 1.f, 0.f}, {1.f, 1.f})
 	};
 
+	std::vector<uint32_t> wIndices =
+	{
+		0,1,2
+	};
+
 	mMesh.SetName("Triangle");
-	mMesh.Initialize(wVertices);
+	mMesh.Initialize(wVertices, wIndices);
 
 	mRenderer->UploadMesh(&mMesh);
 	mMesh.FreeCPU();

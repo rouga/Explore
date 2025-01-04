@@ -72,6 +72,12 @@ void Renderer::Render(OrbitCamera* iCamera ,StaticMesh* iMesh)
 		.offset = 0,
 		.range = VK_WHOLE_SIZE
 	};
+	VkDescriptorBufferInfo wIndexBufferInfo =
+	{
+		.buffer = iMesh->GeIndexBuffer()->mBuffer,
+		.offset = 0,
+		.range = VK_WHOLE_SIZE
+	};
 
 	VkDescriptorBufferInfo wFrameUBInfo =
 	{
@@ -95,7 +101,8 @@ void Renderer::Render(OrbitCamera* iCamera ,StaticMesh* iMesh)
 
 	VulkanDescriptorSet wDS = mDescriptorSetManager->AllocateDescriptorSet("ObjectDS", wCurrentImageIndex);
 	wDS.Update(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wVertexBufferInfo);
-	
+	wDS.Update(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wIndexBufferInfo);
+
 	VkDescriptorSet wDSHandle = wDS.GetHandle();
 	VkDescriptorSet wFrameUBDSHandle = wFrameUBDS.GetHandle();
 
@@ -105,7 +112,7 @@ void Renderer::Render(OrbitCamera* iCamera ,StaticMesh* iMesh)
 		0, _countof(wDSList), wDSList,
 		0, nullptr);
 
-	vkCmdDraw(wCmd->mCmd, iMesh->GetNumVertices(), 1, 0, 0);
+	vkCmdDraw(wCmd->mCmd, iMesh->GetIndexCount(), 1, 0, 0);
 
 	mMainPass->End(wCmd->mCmd);
 
@@ -131,7 +138,8 @@ void Renderer::CreateDescriptorSetLayouts()
 
 	std::vector<DescriptorSetManager::Binding> wBinding =
 	{
-		{0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE}
+		{0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE},
+		{1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE},
 	};
 
 	mDescriptorSetManager->CreateLayout(wFrameUBBinding, "FrameUB");
