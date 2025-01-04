@@ -5,7 +5,11 @@
 #include <vulkan/vulkan.h>
 #include <glfw/glfw3.h>
 
+#define FMT_UNICODE 0
+#include <spdlog/spdlog.h>
+
 #include "Window.h"
+#include "Input.h"
 
 Engine::Engine(Window* iWindow)
 	:mWindow(iWindow)
@@ -22,6 +26,7 @@ Engine::~Engine()
 void Engine::Initialize()
 {
 	mRenderer->Initialize(mWindow);
+	Input::Get().Initialize(mWindow->GetGLFWWindow());
 
 	std::vector<Vertex> wVertices =
 	{
@@ -39,6 +44,11 @@ void Engine::Initialize()
 
 void Engine::Run()
 {
+	Input::Get().Setup();
 	glfwPollEvents();
+	if(Input::Get().IsKeyDown(GLFW_KEY_R))
+	{
+		spdlog::info("R Key Pressed.");
+	}
 	mRenderer->Render(&mMesh);
 }

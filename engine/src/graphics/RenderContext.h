@@ -45,6 +45,5 @@ public:
 
 private:
 	void CreateCommandBuffers();
-
 	void CreateStagingBuffer();
 };

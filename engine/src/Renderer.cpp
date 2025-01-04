@@ -35,7 +35,7 @@ void Renderer::UploadMesh(StaticMesh* iMesh)
 	mContext->mCopyCmd.End();
 
 	mContext->mQueue->SubmitSync(&mContext->mCopyCmd);
-	mContext->mQueue->Flush();
+	Flush();
 
 	spdlog::info("Mesh {:s} uploaded", iMesh->GetName());
 }
@@ -45,6 +45,10 @@ void Renderer::Render(StaticMesh* iMesh)
 	uint32_t wCurrentImageIndex = mContext->mQueue->AcquireNextImage();
 
 	VulkanCommandBuffer* wCmd = &mContext->mCmds[wCurrentImageIndex];
+	mContext->mFences[wCurrentImageIndex]->Wait();
+	mDescriptorSetManager->ResetPool(wCurrentImageIndex);
+	mContext->mFences[wCurrentImageIndex]->Reset();
+	wCmd->Reset(0);
 
 	VkDescriptorBufferInfo wBufferInfo =
 	{
@@ -53,10 +57,6 @@ void Renderer::Render(StaticMesh* iMesh)
 		.range = VK_WHOLE_SIZE
 	};
 
-	mContext->mFences[wCurrentImageIndex]->Wait();
-	mDescriptorSetManager->ResetPool(wCurrentImageIndex);
-	mContext->mFences[wCurrentImageIndex]->Reset();
-	wCmd->Reset(0);
 	
 	wCmd->Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
