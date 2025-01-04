@@ -4,6 +4,7 @@
 #include "Renderer.h"
 
 #include "StaticMesh.h"
+#include "Camera.h"
 
 class Window;
 
@@ -19,6 +20,8 @@ public:
 private:
 	StaticMesh mMesh;
 	Window* mWindow = nullptr;
+
 	std::unique_ptr<Renderer> mRenderer = nullptr;
+	std::unique_ptr<OrbitCamera> mOrbitCamera = nullptr;
 
 };

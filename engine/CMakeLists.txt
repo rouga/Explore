@@ -9,6 +9,8 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/StaticMesh.h
 						  src/Input.cpp
 						  src/Input.h
+						  src/Camera.cpp
+						  src/Camera.h
 						  src/graphics/VulkanInstance.cpp
 						  src/graphics/VulkanInstance.h
 						  src/graphics/RenderContext.cpp

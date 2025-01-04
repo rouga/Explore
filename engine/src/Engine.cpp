@@ -15,6 +15,7 @@ Engine::Engine(Window* iWindow)
 	:mWindow(iWindow)
 {
 	mRenderer = std::make_unique<Renderer>();
+	mOrbitCamera = std::make_unique<OrbitCamera>(mWindow);
 }
 
 Engine::~Engine()
@@ -46,9 +47,6 @@ void Engine::Run()
 {
 	Input::Get().Setup();
 	glfwPollEvents();
-	if(Input::Get().IsKeyDown(GLFW_KEY_R))
-	{
-		spdlog::info("R Key Pressed.");
-	}
-	mRenderer->Render(&mMesh);
+	mOrbitCamera->Update();
+	mRenderer->Render(mOrbitCamera.get(), &mMesh);
 }

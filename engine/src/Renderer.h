@@ -1,23 +1,33 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include "graphics/RenderContext.h"
 #include "graphics/VulkanRenderPass.h"
 #include "graphics/DescriptorSetManager.h"
 #include "graphics/PipelineLayoutManager.h"
 #include "graphics/VulkanShader.h"
 #include "graphics/VulkanGraphicsPipeline.h"
+#include "graphics/VulkanGPUBuffer.h"
 
 class Window;
 class StaticMesh;
+class OrbitCamera;
 
 class Renderer
 {
 public:
+	struct FrameUB
+	{
+		glm::mat4 ViewMatrix = glm::mat4();
+		glm::mat4 ProjectionMatrix = glm::mat4();
+	};
+
 	Renderer();
 
 	void Initialize(Window* iWindow);
 	void UploadMesh(StaticMesh* iMesh);
-	void Render(StaticMesh* iMesh);
+	void Render(OrbitCamera* iCamera,StaticMesh* iMesh);
 	void Flush();
 
 	std::unique_ptr<RenderContext> mContext = nullptr;
@@ -29,6 +39,7 @@ public:
 	std::unique_ptr<VulkanGraphicsPipeline> mPipeline = nullptr;
 
 	Window* mWindow = nullptr;
+	std::unique_ptr<VulkanGPUBuffer> mFrameUB = nullptr;
 
 private:
 	void CreateDescriptorSetLayouts();
