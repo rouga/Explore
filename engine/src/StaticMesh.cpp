@@ -1,6 +1,7 @@
 #include "StaticMesh.h"
 
 #include "graphics/VulkanCommandBuffer.h"
+#include "graphics/RenderContext.h"
 
 StaticMesh::StaticMesh()
 {
@@ -20,21 +21,21 @@ void StaticMesh::Initialize(const std::vector<Vertex> iVertices, const std::vect
 	mIndexCount = mIndices.size();
 }
 
-void StaticMesh::Upload(VulkanCommandBuffer* iCmd , VulkanLogicalDevice* iDevice, VulkanGPUBuffer* iStagingBuffer)
+void StaticMesh::Upload(VulkanCommandBuffer* iCmd, RenderContext* iRenderContext)
 {
 	uint32_t wVerticesSize = mVertices.size() * sizeof(Vertex);
 	uint32_t wIndicesSize = mIndices.size() * sizeof(uint32_t);
 	
-	void* wMappedMem = iStagingBuffer->MapMemory(0,0);
+	void* wMappedMem = iRenderContext->mStagingBuffer->MapMemory(0,0);
 	memcpy(wMappedMem, mVertices.data(), wVerticesSize);
 	memcpy((char*)wMappedMem + wVerticesSize, mIndices.data(), wIndicesSize);
-	iStagingBuffer->UnmapMemory();
+	iRenderContext->mStagingBuffer->UnmapMemory();
 	
-	mVertexBuffer->Initialize(iDevice, wVerticesSize);
-	mIndexBuffer->Initialize(iDevice, wIndicesSize);
+	mVertexBuffer->Initialize(iRenderContext->mLogicalDevice.get(), wVerticesSize, iRenderContext->mDeviceMemPool.get());
+	mIndexBuffer->Initialize(iRenderContext->mLogicalDevice.get(), wIndicesSize, iRenderContext->mDeviceMemPool.get());
 
-	mVertexBuffer->Upload(iCmd, iStagingBuffer, wVerticesSize, 0, 0);
-	mIndexBuffer->Upload(iCmd, iStagingBuffer, wIndicesSize, wVerticesSize, 0);
+	mVertexBuffer->Upload(iCmd, iRenderContext->mStagingBuffer.get(), wVerticesSize, 0, 0);
+	mIndexBuffer->Upload(iCmd, iRenderContext->mStagingBuffer.get(), wIndicesSize, wVerticesSize, 0);
 
 	mUploaded = true;
 }

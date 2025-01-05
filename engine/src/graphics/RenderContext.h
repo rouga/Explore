@@ -11,11 +11,9 @@
 #include "VulkanCommandBuffer.h"
 #include "VulkanQueue.h"
 #include "VulkanShader.h"
-#include "VulkanGraphicsPipeline.h"
 #include "VulkanGPUBuffer.h"
-#include "VulkanDescriptorPool.h"
-#include "VulkanDescriptorSet.h"
 #include "VulkanFence.h"
+#include "VulkanMemoryPool.h"
 
 class Window;
 
@@ -41,6 +39,8 @@ public:
 
 	Window* mWindow = nullptr;
 
+	std::unique_ptr<VulkanMemoryPool> mHostCoherentMemPool = nullptr;
+	std::unique_ptr<VulkanMemoryPool> mDeviceMemPool = nullptr;
 	std::unique_ptr<VulkanGPUBuffer> mStagingBuffer = nullptr;
 
 private:

@@ -1,5 +1,8 @@
 #include "Utils.h"
 
+#define FMT_UNICODE 0
+#include <spdlog/spdlog.h>
+
 VkImageView CreateImageView(VkDevice iDevice, VkImage iImage, VkFormat iFormat, VkImageAspectFlags iAspect, VkImageViewType iViewType, uint32_t iLayerCount, uint32_t iMipCount)
 {
 	VkImageViewCreateInfo wImageViewCreateInfo =
@@ -66,4 +69,21 @@ const char* GetDebugTypeStr(VkDebugUtilsMessageTypeFlagsEXT iType)
 	default:
 		throw std::exception("Invalid Type Code : %d\n", iType);
 	}
+}
+
+uint32_t FindMemoryType(VkPhysicalDevice iPhysicalDevice, VkMemoryPropertyFlags iMemProps)
+{
+	VkPhysicalDeviceMemoryProperties wMemProperties;
+	vkGetPhysicalDeviceMemoryProperties(iPhysicalDevice, &wMemProperties);
+
+	for (uint32_t i = 0; i < wMemProperties.memoryTypeCount; i++)
+	{
+		if ((wMemProperties.memoryTypes[i].propertyFlags & iMemProps) == iMemProps)
+		{
+			return i;
+		}
+	}
+
+	spdlog::error("Cannot Find Memory Type");
+	exit(EXIT_FAILURE);
 }

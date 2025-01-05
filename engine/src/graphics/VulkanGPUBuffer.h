@@ -2,6 +2,8 @@
 
 #include <vulkan/vulkan.h>
 
+#include "VulkanMemoryPool.h"
+
 class VulkanLogicalDevice;
 class VulkanCommandBuffer;
 
@@ -11,7 +13,7 @@ public:
 	VulkanGPUBuffer(VkBufferUsageFlags iUsageFlags, VkMemoryPropertyFlags iMemPropertiesFlags);
 	~VulkanGPUBuffer();
 
-	void Initialize(VulkanLogicalDevice* iDevice, VkDeviceSize iSize);
+	void Initialize(VulkanLogicalDevice* iDevice, VkDeviceSize iSize, VulkanMemoryPool* iMemPool);
 
 	// Upload to GPU Local Memory
 	void Upload(VulkanCommandBuffer* iCmd, VulkanGPUBuffer* iStagingBuffer, VkDeviceSize iSize, VkDeviceSize iSrcOffset, VkDeviceSize iDstOffset);
@@ -24,12 +26,8 @@ public:
 
 	VkDevice mDevice = VK_NULL_HANDLE;
 	VkBuffer mBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory mMemory = VK_NULL_HANDLE;
-	VkDeviceSize mAllocationSize = 0;
-
-	VkMemoryPropertyFlags mMemProperties = 0;
+	VulkanMemoryPool* mMemPool = nullptr;
+	VulkanMemoryPool::MemoryBlock mMemBlock;
+	VkMemoryPropertyFlags mMemProperties;
 	VkBufferUsageFlags mUsageFlags = 0;
-
-private:
-	uint32_t GetMemoryTypeIndex(VulkanLogicalDevice* iDeivce, uint32_t iMemTypeBitmask, VkMemoryPropertyFlags iMemPropertiesFlags);
 };

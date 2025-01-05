@@ -16,7 +16,6 @@ RenderContext::RenderContext()
 	mLogicalDevice = std::make_shared<VulkanLogicalDevice>();
 	mSwapchain = std::make_unique<VulkanSwapchain>();
 	mQueue = std::make_unique<VulkanQueue>();
-	mStagingBuffer = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 }
 
 RenderContext::~RenderContext()
@@ -37,6 +36,14 @@ void RenderContext::Initialize(Window* iWindow)
 	mLogicalDevice->Initialize(mPhysicalDevice.get());
 	mSwapchain->Initialize(mInstance->GetInstance(), mLogicalDevice.get(), iWindow, 2);
 	mQueue->Initialize(mLogicalDevice->mDevice, mSwapchain->mSwapchain, mLogicalDevice->mPhysicalDevice->GetQueueFamilyIndex(), 0);
+	
+	mHostCoherentMemPool = std::make_unique<VulkanMemoryPool>(mLogicalDevice->mDevice, mPhysicalDevice->GetDevice(),
+																												16 * 1024 * 1024, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+	mDeviceMemPool = std::make_unique<VulkanMemoryPool>(mLogicalDevice->mDevice, mPhysicalDevice->GetDevice(),
+																											 64 * 1024 * 1024, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+	mStagingBuffer = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 	mFences.resize(mSwapchain->GetNumImages());
 	for (uint32_t i = 0; i < mSwapchain->GetNumImages(); i++)
@@ -78,5 +85,5 @@ void RenderContext::CreateCommandBuffers()
 
 void RenderContext::CreateStagingBuffer()
 {
-	mStagingBuffer->Initialize(mLogicalDevice.get(), 1024*1024*4);
+	mStagingBuffer->Initialize(mLogicalDevice.get(), 1024*1024*4, mHostCoherentMemPool.get());
 }

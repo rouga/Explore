@@ -16,3 +16,5 @@ VkImageView CreateImageView(VkDevice iDevice, VkImage iImage, VkFormat iFormat, 
 	VkImageViewType iViewType, uint32_t iLayerCount, uint32_t iMipCount);
 const char* GetDebugSeverityStr(VkDebugUtilsMessageSeverityFlagBitsEXT iSeverity);
 const char* GetDebugTypeStr(VkDebugUtilsMessageTypeFlagsEXT iType);
+
+uint32_t FindMemoryType(VkPhysicalDevice iPhysicalDevice, VkMemoryPropertyFlags iMemProps);

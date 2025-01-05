@@ -22,8 +22,9 @@ VulkanGPUBuffer::~VulkanGPUBuffer()
 	}
 }
 
-void VulkanGPUBuffer::Initialize(VulkanLogicalDevice* iDevice, VkDeviceSize iSize)
+void VulkanGPUBuffer::Initialize(VulkanLogicalDevice* iDevice, VkDeviceSize iSize, VulkanMemoryPool* iMemPool)
 {
+	mMemPool = iMemPool;
 	mDevice = iDevice->mDevice;
 
 	VkBufferCreateInfo wCreateInfo =
@@ -41,22 +42,10 @@ void VulkanGPUBuffer::Initialize(VulkanLogicalDevice* iDevice, VkDeviceSize iSiz
 	VkMemoryRequirements wMemRequirements = {};
 	vkGetBufferMemoryRequirements(mDevice, mBuffer, &wMemRequirements);
 
-	mAllocationSize = wMemRequirements.size;
-
-	uint32_t wMemTypeIndex = GetMemoryTypeIndex(iDevice, wMemRequirements.memoryTypeBits, mMemProperties);
-
-	VkMemoryAllocateInfo wMemInfo =
-	{
-		.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-		.allocationSize = mAllocationSize,
-		.memoryTypeIndex = wMemTypeIndex
-	};
-
-	wResult = vkAllocateMemory(mDevice, &wMemInfo, nullptr, &mMemory);
-	CHECK_VK_RESULT(wResult, "Memory Allocation");
+	mMemBlock = iMemPool->Allocate(iSize, wMemRequirements.alignment);
 
 	// Bind Buffer to Memory
-	wResult = vkBindBufferMemory(mDevice, mBuffer, mMemory, 0);
+	wResult = vkBindBufferMemory(mDevice, mBuffer, mMemBlock.memory, mMemBlock.offset);
 	CHECK_VK_RESULT(wResult, "Buffer Memory Bind");
 
 }
@@ -77,41 +66,19 @@ void* VulkanGPUBuffer::MapMemory(VkDeviceSize iOffset, VkMemoryMapFlags iFlags)
 {
 		assert((mMemProperties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
     void* wMappedMem = nullptr;
-		VkResult wResult = vkMapMemory(mDevice, mMemory, iOffset, mAllocationSize, iFlags, &wMappedMem);
+		VkResult wResult = vkMapMemory(mDevice, mMemBlock.memory, mMemBlock.offset, mMemBlock.size, iFlags, &wMappedMem);
 		CHECK_VK_RESULT(wResult, "Memory mapping");
 		return wMappedMem;
 }
 
 void VulkanGPUBuffer::UnmapMemory()
 {
-	vkUnmapMemory(mDevice, mMemory);
+	vkUnmapMemory(mDevice, mMemBlock.memory);
 }
 
 void VulkanGPUBuffer::FreeGPU()
 {
 	vkDestroyBuffer(mDevice, mBuffer, nullptr);
-	vkFreeMemory(mDevice, mMemory, nullptr);
 	mBuffer = VK_NULL_HANDLE;
-	mMemory = VK_NULL_HANDLE;
-}
-
-uint32_t VulkanGPUBuffer::GetMemoryTypeIndex(VulkanLogicalDevice* iDevice, uint32_t iMemTypeBitmask, VkMemoryPropertyFlags iMemPropertiesFlags)
-{
-	const VkPhysicalDeviceMemoryProperties& wPhysicalDeviceMemProperties = iDevice->mPhysicalDevice->GetMemProperties();
-
-	for(uint32_t i = 0; i < wPhysicalDeviceMemProperties.memoryTypeCount; i++)
-	{
-		const VkMemoryType& wMemType = wPhysicalDeviceMemProperties.memoryTypes[i];
-		uint32_t wCurrBitmask = (1 << i);
-		bool wIsCurrMemTypeSupported = (iMemTypeBitmask & wCurrBitmask);
-		bool wHasRequiredMemProps = ((wMemType.propertyFlags & iMemPropertiesFlags) == iMemPropertiesFlags);
-
-		if(wIsCurrMemTypeSupported && wHasRequiredMemProps)
-		{
-			return i;
-		}
-	}
-
-	spdlog::error("Cannot Find Memory Type");
-	exit(EXIT_FAILURE);
+	mMemPool->Free(mMemBlock);
 }

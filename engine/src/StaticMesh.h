@@ -8,6 +8,7 @@
 #include "graphics/VulkanGPUBuffer.h"
 
 class VulkanCommandBuffer;
+class RenderContext;
 
 struct Vertex
 {
@@ -29,7 +30,7 @@ public:
 	// Populate mesh CPU side
 	void Initialize(const std::vector<Vertex> iVertices, const std::vector<uint32_t> iIndices);
 
-	void Upload(VulkanCommandBuffer* iCmd , VulkanLogicalDevice* iDevice, VulkanGPUBuffer* iStagingBuffer);
+	void Upload(VulkanCommandBuffer* iCmd , RenderContext* iRenderContext);
 
 	void FreeGPU();
 	void FreeCPU();

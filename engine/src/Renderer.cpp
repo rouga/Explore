@@ -31,13 +31,13 @@ void Renderer::Initialize(Window* iWindow)
 
 	mFrameUB = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-	mFrameUB->Initialize(mContext->mLogicalDevice.get(), sizeof(FrameUB));
+	mFrameUB->Initialize(mContext->mLogicalDevice.get(), sizeof(FrameUB), mContext->mHostCoherentMemPool.get());
 }
 
 void Renderer::UploadMesh(StaticMesh* iMesh)
 {
 	mContext->mCopyCmd.Begin(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
-	iMesh->Upload(&mContext->mCopyCmd, mContext->mLogicalDevice.get(), mContext->mStagingBuffer.get());
+	iMesh->Upload(&mContext->mCopyCmd, mContext.get());
 	mContext->mCopyCmd.End();
 
 	mContext->mQueue->SubmitSync(&mContext->mCopyCmd);
