@@ -5,8 +5,8 @@
 
 StaticMesh::StaticMesh()
 {
-	mVertexBuffer = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	mIndexBuffer = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	mVertexBuffer = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, 0);
+	mIndexBuffer = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, 0);
 }
 
 StaticMesh::~StaticMesh()
@@ -31,8 +31,8 @@ void StaticMesh::Upload(VulkanCommandBuffer* iCmd, RenderContext* iRenderContext
 	memcpy((char*)wMappedMem + wVerticesSize, mIndices.data(), wIndicesSize);
 	iRenderContext->mStagingBuffer->UnmapMemory();
 	
-	mVertexBuffer->Initialize(iRenderContext->mLogicalDevice.get(), wVerticesSize, iRenderContext->mDeviceMemPool.get());
-	mIndexBuffer->Initialize(iRenderContext->mLogicalDevice.get(), wIndicesSize, iRenderContext->mDeviceMemPool.get());
+	mVertexBuffer->Initialize(iRenderContext->mLogicalDevice.get(), wVerticesSize, iRenderContext->mAllocator);
+	mIndexBuffer->Initialize(iRenderContext->mLogicalDevice.get(), wIndicesSize, iRenderContext->mAllocator);
 
 	mVertexBuffer->Upload(iCmd, iRenderContext->mStagingBuffer.get(), wVerticesSize, 0, 0);
 	mIndexBuffer->Upload(iCmd, iRenderContext->mStagingBuffer.get(), wIndicesSize, wVerticesSize, 0);

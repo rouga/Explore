@@ -1,5 +1,8 @@
 #include "RenderContext.h"
 
+#define VMA_IMPLEMENTATION
+#include "vma/vk_mem_alloc.h"
+
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
 
@@ -22,6 +25,8 @@ RenderContext::~RenderContext()
 {
 	mQueue->Flush();
 	vkDestroyCommandPool(mLogicalDevice->mDevice, mCmdPool, nullptr);
+	mStagingBuffer->FreeGPU();
+	vmaDestroyAllocator(mAllocator);
 }
 
 void RenderContext::Initialize(Window* iWindow)
@@ -34,16 +39,13 @@ void RenderContext::Initialize(Window* iWindow)
 #endif
 	mPhysicalDevice->Initialize(mInstance->GetInstance());
 	mLogicalDevice->Initialize(mPhysicalDevice.get());
+
+	CreateAllocator();
+
 	mSwapchain->Initialize(mInstance->GetInstance(), mLogicalDevice.get(), iWindow, 2);
 	mQueue->Initialize(mLogicalDevice->mDevice, mSwapchain->mSwapchain, mLogicalDevice->mPhysicalDevice->GetQueueFamilyIndex(), 0);
-	
-	mHostCoherentMemPool = std::make_unique<VulkanMemoryPool>(mLogicalDevice->mDevice, mPhysicalDevice->GetDevice(),
-																												16 * 1024 * 1024, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-	mDeviceMemPool = std::make_unique<VulkanMemoryPool>(mLogicalDevice->mDevice, mPhysicalDevice->GetDevice(),
-																											 64 * 1024 * 1024, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-	mStagingBuffer = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	mStagingBuffer = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 
 	mFences.resize(mSwapchain->GetNumImages());
 	for (uint32_t i = 0; i < mSwapchain->GetNumImages(); i++)
@@ -54,6 +56,21 @@ void RenderContext::Initialize(Window* iWindow)
 	CreateCommandBuffers();
 	CreateStagingBuffer();
 	mQueue->Flush();
+}
+
+void RenderContext::CreateAllocator()
+{
+	// initialize the memory allocator
+	VmaAllocatorCreateInfo wAllocatorInfo = {};
+	wAllocatorInfo.physicalDevice = mPhysicalDevice->GetDevice();
+	wAllocatorInfo.device = mLogicalDevice->mDevice;
+	wAllocatorInfo.instance = mInstance->GetInstance();
+	wAllocatorInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+	VkResult wResult = vmaCreateAllocator(&wAllocatorInfo, &mAllocator);
+
+	CHECK_VK_RESULT(wResult, "Allocator Creation");
+
+	spdlog::info("VMA Allocator Created");
 }
 
 void RenderContext::CreateCommandBuffers()
@@ -85,5 +102,5 @@ void RenderContext::CreateCommandBuffers()
 
 void RenderContext::CreateStagingBuffer()
 {
-	mStagingBuffer->Initialize(mLogicalDevice.get(), 1024*1024*4, mHostCoherentMemPool.get());
+	mStagingBuffer->Initialize(mLogicalDevice.get(), 1024*1024*4, mAllocator);
 }

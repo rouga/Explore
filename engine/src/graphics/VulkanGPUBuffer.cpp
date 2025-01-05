@@ -8,9 +8,9 @@
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
 
-VulkanGPUBuffer::VulkanGPUBuffer(VkBufferUsageFlags iUsageFlags, VkMemoryPropertyFlags iMemPropertiesFlags)
+VulkanGPUBuffer::VulkanGPUBuffer(VkBufferUsageFlags iUsageFlags, VmaAllocationCreateFlags iAllocationFlags)
 	:mUsageFlags(iUsageFlags),
-	mMemProperties(iMemPropertiesFlags)
+	mAllocationFlags(iAllocationFlags)
 {
 }
 
@@ -22,9 +22,9 @@ VulkanGPUBuffer::~VulkanGPUBuffer()
 	}
 }
 
-void VulkanGPUBuffer::Initialize(VulkanLogicalDevice* iDevice, VkDeviceSize iSize, VulkanMemoryPool* iMemPool)
+void VulkanGPUBuffer::Initialize(VulkanLogicalDevice* iDevice, VkDeviceSize iSize, VmaAllocator iAllocator)
 {
-	mMemPool = iMemPool;
+	mAllocator = iAllocator;
 	mDevice = iDevice->mDevice;
 
 	VkBufferCreateInfo wCreateInfo =
@@ -35,24 +35,17 @@ void VulkanGPUBuffer::Initialize(VulkanLogicalDevice* iDevice, VkDeviceSize iSiz
 		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
 	};
 
-	VkResult wResult = vkCreateBuffer(mDevice, &wCreateInfo, nullptr, &mBuffer);
-	CHECK_VK_RESULT(wResult, "Buffer creation");
+	VmaAllocationCreateInfo wVmaAllocInfo = {};
+	wVmaAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+	wVmaAllocInfo.flags = mAllocationFlags;
 
-	// Create Memory for the buffer (TODO : Create one memory pool)
-	VkMemoryRequirements wMemRequirements = {};
-	vkGetBufferMemoryRequirements(mDevice, mBuffer, &wMemRequirements);
+	VkResult wResult = vmaCreateBuffer(mAllocator, &wCreateInfo, &wVmaAllocInfo, &mBuffer, &mAllocation, &mAllocationInfo);
 
-	mMemBlock = iMemPool->Allocate(iSize, wMemRequirements.alignment);
-
-	// Bind Buffer to Memory
-	wResult = vkBindBufferMemory(mDevice, mBuffer, mMemBlock.memory, mMemBlock.offset);
-	CHECK_VK_RESULT(wResult, "Buffer Memory Bind");
-
+	CHECK_VK_RESULT(wResult, "Buffer Creation");
 }
 
 void VulkanGPUBuffer::Upload(VulkanCommandBuffer* iCmd, VulkanGPUBuffer* iStagingBuffer, VkDeviceSize iSize, VkDeviceSize iSrcOffset, VkDeviceSize iDstOffset)
 {
-	assert((mMemProperties & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) == VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 	VkBufferCopy wCopy = 
 	{
 		.srcOffset = iSrcOffset,
@@ -64,21 +57,27 @@ void VulkanGPUBuffer::Upload(VulkanCommandBuffer* iCmd, VulkanGPUBuffer* iStagin
 
 void* VulkanGPUBuffer::MapMemory(VkDeviceSize iOffset, VkMemoryMapFlags iFlags)
 {
-		assert((mMemProperties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-    void* wMappedMem = nullptr;
-		VkResult wResult = vkMapMemory(mDevice, mMemBlock.memory, mMemBlock.offset, mMemBlock.size, iFlags, &wMappedMem);
-		CHECK_VK_RESULT(wResult, "Memory mapping");
-		return wMappedMem;
+	VmaAllocationCreateFlags wSequentialWriteCheck = mAllocationFlags | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+	VmaAllocationCreateFlags wRandomAccessCheck = mAllocationFlags | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+
+	assert(wSequentialWriteCheck == VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+				 || wRandomAccessCheck == VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT);
+
+  void* wMappedMem = nullptr;
+	VkResult wResult = vmaMapMemory(mAllocator, mAllocation, &wMappedMem);
+	CHECK_VK_RESULT(wResult, "Memory mapping");
+
+	return wMappedMem;
 }
 
 void VulkanGPUBuffer::UnmapMemory()
 {
-	vkUnmapMemory(mDevice, mMemBlock.memory);
+	vmaUnmapMemory(mAllocator, mAllocation);
 }
 
 void VulkanGPUBuffer::FreeGPU()
 {
-	vkDestroyBuffer(mDevice, mBuffer, nullptr);
+	vmaDestroyBuffer(mAllocator, mBuffer, mAllocation);
 	mBuffer = VK_NULL_HANDLE;
-	mMemPool->Free(mMemBlock);
+	spdlog::info("Buffer destroyed with size : {:d}", mAllocationInfo.size);
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
+#include "vma/vk_mem_alloc.h"
 
 #include "VulkanMemoryPool.h"
 
@@ -10,10 +11,10 @@ class VulkanCommandBuffer;
 class VulkanGPUBuffer
 {
 public:
-	VulkanGPUBuffer(VkBufferUsageFlags iUsageFlags, VkMemoryPropertyFlags iMemPropertiesFlags);
+	VulkanGPUBuffer(VkBufferUsageFlags iUsageFlags, VmaAllocationCreateFlags iAllocationFlags);
 	~VulkanGPUBuffer();
 
-	void Initialize(VulkanLogicalDevice* iDevice, VkDeviceSize iSize, VulkanMemoryPool* iMemPool);
+	void Initialize(VulkanLogicalDevice* iDevice, VkDeviceSize iSize, VmaAllocator iAllocator);
 
 	// Upload to GPU Local Memory
 	void Upload(VulkanCommandBuffer* iCmd, VulkanGPUBuffer* iStagingBuffer, VkDeviceSize iSize, VkDeviceSize iSrcOffset, VkDeviceSize iDstOffset);
@@ -26,8 +27,9 @@ public:
 
 	VkDevice mDevice = VK_NULL_HANDLE;
 	VkBuffer mBuffer = VK_NULL_HANDLE;
-	VulkanMemoryPool* mMemPool = nullptr;
-	VulkanMemoryPool::MemoryBlock mMemBlock;
-	VkMemoryPropertyFlags mMemProperties;
+	VmaAllocation mAllocation;
+	VmaAllocationInfo mAllocationInfo;
+	VmaAllocator mAllocator;
+	VmaAllocationCreateFlags mAllocationFlags;
 	VkBufferUsageFlags mUsageFlags = 0;
 };

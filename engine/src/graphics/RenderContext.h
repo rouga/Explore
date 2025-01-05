@@ -14,6 +14,7 @@
 #include "VulkanGPUBuffer.h"
 #include "VulkanFence.h"
 #include "VulkanMemoryPool.h"
+#include "vma/vk_mem_alloc.h"
 
 class Window;
 
@@ -29,6 +30,7 @@ public:
 	std::unique_ptr<VulkanDebugCallback> mDebugCallback = nullptr;
 	std::unique_ptr<VulkanPhysicalDevice> mPhysicalDevice = nullptr;
 	std::shared_ptr<VulkanLogicalDevice> mLogicalDevice = nullptr;
+	VmaAllocator mAllocator = VK_NULL_HANDLE;
 	std::unique_ptr<VulkanSwapchain> mSwapchain = nullptr;
 	std::unique_ptr<VulkanQueue> mQueue = nullptr;
 	std::vector<std::unique_ptr<VulkanFence>> mFences;
@@ -39,11 +41,10 @@ public:
 
 	Window* mWindow = nullptr;
 
-	std::unique_ptr<VulkanMemoryPool> mHostCoherentMemPool = nullptr;
-	std::unique_ptr<VulkanMemoryPool> mDeviceMemPool = nullptr;
 	std::unique_ptr<VulkanGPUBuffer> mStagingBuffer = nullptr;
 
 private:
+	void CreateAllocator();
 	void CreateCommandBuffers();
 	void CreateStagingBuffer();
 };

@@ -40,11 +40,19 @@ void VulkanLogicalDevice::Initialize(VulkanPhysicalDevice* iPhysicalDevice)
 		VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME
 	};
 
-	auto Core_1_3 = VkPhysicalDeviceVulkan13Features{
-		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
-		.pNext = nullptr,
-		.dynamicRendering = VK_TRUE
+	auto Core_1_2 = VkPhysicalDeviceVulkan12Features
+	{
+	.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
+	.pNext = nullptr,
+	.bufferDeviceAddress = VK_TRUE,
 	};
+
+	auto Core_1_3 = VkPhysicalDeviceVulkan13Features
+	{
+		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+		.pNext = &Core_1_2,
+		.dynamicRendering = VK_TRUE
+	};	
 
 	VkDeviceCreateInfo wCreateInfo = 
 	{
