@@ -55,7 +55,7 @@ void VulkanQueue::SubmitAsync(VulkanCommandBuffer* iCmd, VkFence iFence)
 	CHECK_VK_RESULT(wResult, "Command Queue Submit");
 }
 
-void VulkanQueue::SubmitSync(VulkanCommandBuffer* iCmd)
+void VulkanQueue::SubmitSync(VulkanCommandBuffer* iCmd, VkFence iFence)
 {
 	VkSubmitInfo wSubmitInfo =
 	{
@@ -70,7 +70,7 @@ void VulkanQueue::SubmitSync(VulkanCommandBuffer* iCmd)
 		.pSignalSemaphores = VK_NULL_HANDLE
 	};
 
-	VkResult wResult = vkQueueSubmit(mQueue, 1, &wSubmitInfo, nullptr);
+	VkResult wResult = vkQueueSubmit(mQueue, 1, &wSubmitInfo, iFence);
 	CHECK_VK_RESULT(wResult, "Command Queue Submit");
 }
 

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vulkan/vulkan.h>
+#include "vma/vk_mem_alloc.h"
 
 #include "VulkanInstance.h"
 #include "VulkanDebugCallback.h"
@@ -14,7 +15,8 @@
 #include "VulkanGPUBuffer.h"
 #include "VulkanFence.h"
 #include "VulkanMemoryPool.h"
-#include "vma/vk_mem_alloc.h"
+#include "VulkanImage.h"
+
 
 class Window;
 
@@ -32,8 +34,10 @@ public:
 	std::shared_ptr<VulkanLogicalDevice> mLogicalDevice = nullptr;
 	VmaAllocator mAllocator = VK_NULL_HANDLE;
 	std::unique_ptr<VulkanSwapchain> mSwapchain = nullptr;
+	std::unique_ptr<VulkanImage> mDepthBuffer = nullptr;
 	std::unique_ptr<VulkanQueue> mQueue = nullptr;
-	std::vector<std::unique_ptr<VulkanFence>> mFences;
+	std::vector<std::unique_ptr<VulkanFence>> mCompleteFences;
+	std::unique_ptr<VulkanFence> mCopyFence = nullptr;
 
 	VkCommandPool mCmdPool = VK_NULL_HANDLE;
 	std::vector<VulkanCommandBuffer> mCmds;
@@ -45,6 +49,8 @@ public:
 
 private:
 	void CreateAllocator();
+	void CreateDepthBuffer();
 	void CreateCommandBuffers();
 	void CreateStagingBuffer();
+	void TransitionDepthBuffer();
 };

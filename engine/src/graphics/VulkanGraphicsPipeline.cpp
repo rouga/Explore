@@ -47,6 +47,7 @@ void VulkanGraphicsPipeline::Initialize(VkDevice iDevice, const PipelineInfo iPi
 		.pViewportState = &iPipelineInfo.viewportInfo,
 		.pRasterizationState = &iPipelineInfo.rasterizationInfo,
 		.pMultisampleState = &iPipelineInfo.multisampleInfo,
+		.pDepthStencilState = &iPipelineInfo.depthStencilInfo,
 		.pColorBlendState = &iPipelineInfo.colorBlendInfo,
 		.pDynamicState = &iPipelineInfo.dynamicStateInfo,
 		.layout = iPipelineInfo.pipelineLayout,

@@ -1,11 +1,14 @@
 #include "Renderer.h"
 
+#include <vma/vk_mem_alloc.h>
+
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
 
 #include "StaticMesh.h"
 #include "Window.h"
 #include "Camera.h"
+#include "Engine.h"
 
 Renderer::Renderer()
 {
@@ -35,30 +38,33 @@ void Renderer::Initialize(Window* iWindow)
 
 void Renderer::UploadMesh(StaticMesh* iMesh)
 {
-	mContext->mCopyCmd.Begin(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
-	iMesh->Upload(&mContext->mCopyCmd, mContext.get());
-	mContext->mCopyCmd.End();
+	VulkanCommandBuffer* iCopyCmd = &mContext->mCopyCmd;
+	iCopyCmd->Reset(0);
+	iCopyCmd->Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+	iMesh->Upload(iCopyCmd, mContext.get());
+	iCopyCmd->End();
 
-	mContext->mQueue->SubmitSync(&mContext->mCopyCmd);
-	Flush();
+	mContext->mQueue->SubmitSync(iCopyCmd, mContext->mCopyFence->mFence);
+	mContext->mCopyFence->Wait();
+	mContext->mCopyFence->Reset();
 
 	spdlog::info("Mesh {:s} uploaded", iMesh->GetName());
 }
 
-void Renderer::Render(OrbitCamera* iCamera ,StaticMesh* iMesh)
+void Renderer::Render()
 {
 	uint32_t wCurrentImageIndex = mContext->mQueue->AcquireNextImage();
 
 	VulkanCommandBuffer* wCmd = &mContext->mCmds[wCurrentImageIndex];
-	mContext->mFences[wCurrentImageIndex]->Wait();
+	mContext->mCompleteFences[wCurrentImageIndex]->Wait();
 	mDescriptorSetManager->ResetPool(wCurrentImageIndex);
-	mContext->mFences[wCurrentImageIndex]->Reset();
+	mContext->mCompleteFences[wCurrentImageIndex]->Reset();
 	wCmd->Reset(0);
 
 	FrameUB wFrameUB =
 	{
-		.ViewMatrix = iCamera->getViewMatrix(),
-		.ProjectionMatrix = iCamera->GetProjectionMatrix(),
+		.ViewMatrix = Engine::Get().GetCamera()->getViewMatrix(),
+		.ProjectionMatrix = Engine::Get().GetCamera()->GetProjectionMatrix(),
 	};
 
 	void* wMappedMem = mFrameUB->MapMemory(0, 0);
@@ -67,13 +73,13 @@ void Renderer::Render(OrbitCamera* iCamera ,StaticMesh* iMesh)
 
 	VkDescriptorBufferInfo wVertexBufferInfo =
 	{
-		.buffer = iMesh->GetVertexBuffer()->mBuffer,
+		.buffer = Engine::Get().GetMesh()->GetVertexBuffer()->mBuffer,
 		.offset = 0,
 		.range = VK_WHOLE_SIZE
 	};
 	VkDescriptorBufferInfo wIndexBufferInfo =
 	{
-		.buffer = iMesh->GeIndexBuffer()->mBuffer,
+		.buffer = Engine::Get().GetMesh()->GeIndexBuffer()->mBuffer,
 		.offset = 0,
 		.range = VK_WHOLE_SIZE
 	};
@@ -94,7 +100,7 @@ void Renderer::Render(OrbitCamera* iCamera ,StaticMesh* iMesh)
 
 	std::vector<VkImageView> wBackbuffer{mContext->mSwapchain->mImageViews[wCurrentImageIndex]};
 
-	mMainPass->Begin(wCmd->mCmd, wBackbuffer, nullptr);
+	mMainPass->Begin(wCmd->mCmd, wBackbuffer, mContext->mDepthBuffer->mImageView);
 
 	mPipeline->Bind(wCmd->mCmd, mWindow);
 
@@ -111,7 +117,7 @@ void Renderer::Render(OrbitCamera* iCamera ,StaticMesh* iMesh)
 		0, _countof(wDSList), wDSList,
 		0, nullptr);
 
-	vkCmdDraw(wCmd->mCmd, iMesh->GetIndexCount(), 1, 0, 0);
+	vkCmdDraw(wCmd->mCmd, Engine::Get().GetMesh()->GetIndexCount(), 1, 0, 0);
 
 	mMainPass->End(wCmd->mCmd);
 
@@ -119,7 +125,7 @@ void Renderer::Render(OrbitCamera* iCamera ,StaticMesh* iMesh)
 
 	wCmd->End();
 	
-	mContext->mQueue->SubmitAsync(wCmd, mContext->mFences[wCurrentImageIndex]->mFence);
+	mContext->mQueue->SubmitAsync(wCmd, mContext->mCompleteFences[wCurrentImageIndex]->mFence);
 	mContext->mQueue->Present(wCurrentImageIndex, wCmd->mCmdSubmitSemaphore->mSemaphore);
 }
 
@@ -169,8 +175,8 @@ void Renderer::CreatePipelines()
 	wPipeline.pipelineLayout = mPipelineLayoutManager->GetLayout("main");
 
 	wPipeline.renderingInfo.pColorAttachmentFormats = &mContext->mSwapchain->mColorFormat;
-	wPipeline.renderingInfo.depthAttachmentFormat = VK_FORMAT_UNDEFINED;
-	wPipeline.renderingInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
+	wPipeline.renderingInfo.depthAttachmentFormat = mContext->mDepthBuffer->GetFormat();
+	wPipeline.renderingInfo.stencilAttachmentFormat = mContext->mDepthBuffer->GetFormat();
 
 	mPipeline = std::make_unique<VulkanGraphicsPipeline>();
 	mPipeline->Initialize(mContext->mLogicalDevice->mDevice, wPipeline, mVS->mShader, mFS->mShader);

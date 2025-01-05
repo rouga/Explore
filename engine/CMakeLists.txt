@@ -50,7 +50,9 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/graphics/DescriptorSetManager.h
 						  src/graphics/DescriptorSetManager.cpp
 						  src/graphics/PipelineLayoutManager.h
-						  src/graphics/PipelineLayoutManager.cpp)
+						  src/graphics/PipelineLayoutManager.cpp
+						  src/graphics/VulkanImage.h
+						  src/graphics/VulkanImage.cpp)
 
 # Include Vulkan
 find_package(Vulkan REQUIRED)

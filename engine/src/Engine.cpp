@@ -11,21 +11,19 @@
 #include "Window.h"
 #include "Input.h"
 
-Engine::Engine(Window* iWindow)
-	:mWindow(iWindow)
+
+Engine& Engine::Get()
 {
+	static Engine sInstance;
+	return sInstance;
+}
+
+void Engine::Initialize(Window* iWindow)
+{
+	mWindow = iWindow;
 	mRenderer = std::make_unique<Renderer>();
 	mOrbitCamera = std::make_unique<OrbitCamera>(mWindow);
-}
 
-Engine::~Engine()
-{
-	mRenderer->Flush();
-	mMesh.FreeGPU();
-}
-
-void Engine::Initialize()
-{
 	mRenderer->Initialize(mWindow);
 	Input::Get().Initialize(mWindow->GetGLFWWindow());
 
@@ -33,12 +31,16 @@ void Engine::Initialize()
 	{
 		Vertex({-1.f, -1.f, 0.f}, {0.f, 0.f}),
 		Vertex({1.f, 0.f, 0.f}, {0.f, 1.f}),
-		Vertex({0.f, 1.f, 0.f}, {1.f, 1.f})
+		Vertex({0.f, 1.f, 0.f}, {1.f, 1.f}),
+		Vertex({-1.f, -1.f, 2.f}, {0.f, 0.f}),
+		Vertex({1.f, 0.f, 2.f}, {0.f, 1.f}),
+		Vertex({0.f, 1.f, 2.f}, {1.f, 1.f})
 	};
 
 	std::vector<uint32_t> wIndices =
 	{
-		0,1,2
+		0,1,2,
+		3,4,5
 	};
 
 	mMesh.SetName("Triangle");
@@ -48,10 +50,16 @@ void Engine::Initialize()
 	mMesh.FreeCPU();
 }
 
+void Engine::Shutdown()
+{
+	mRenderer->Flush();
+	mMesh.FreeGPU();
+}
+
 void Engine::Run()
 {
 	Input::Get().Setup();
 	glfwPollEvents();
 	mOrbitCamera->Update();
-	mRenderer->Render(mOrbitCamera.get(), &mMesh);
+	mRenderer->Render();
 }

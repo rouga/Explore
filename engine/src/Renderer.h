@@ -27,7 +27,7 @@ public:
 
 	void Initialize(Window* iWindow);
 	void UploadMesh(StaticMesh* iMesh);
-	void Render(OrbitCamera* iCamera,StaticMesh* iMesh);
+	void Render();
 	void Flush();
 
 	std::unique_ptr<RenderContext> mContext = nullptr;

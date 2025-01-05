@@ -9,12 +9,11 @@ int main()
 {
 		spdlog::info("Launching Editor...");
 		Window wWnd;
-		Engine wEngine{&wWnd};
 
     try 
 		{
 			wWnd.Initialize(1920, 1080, "Editor");
-			wEngine.Initialize();
+			Engine::Get().Initialize(&wWnd);
     } 
 		catch (const std::exception& e) 
 		{
@@ -24,10 +23,11 @@ int main()
 
 		while (!wWnd.ShouldClose())
 		{
-			wEngine.Run();
+			Engine::Get().Run();
 		}
 
 		spdlog::info("Closing Editor.");
+		Engine::Get().Shutdown();
 
     return EXIT_SUCCESS;
 }
