@@ -22,11 +22,9 @@ void Renderer::Initialize(Window* iWindow)
 	mMainPass = std::make_unique<VulkanRenderPass>(mContext->mLogicalDevice->mDevice, mContext->mSwapchain->GetSurfaceCapabilites().currentExtent);
 
 	// Initialize Descriptor Sets Manager
-	mDescriptorSetManager = std::make_unique<DescriptorSetManager>(mContext->mLogicalDevice->mDevice, mContext->mSwapchain->GetNumImages());
 	CreateDescriptorSetLayouts();
 
 	// Initialize Pipeline Layout Manager
-	mPipelineLayoutManager = std::make_unique<PipelineLayoutManager>(mContext->mLogicalDevice->mDevice);
 	CreatePipelineLayouts();
 
 	CreateShaders();
@@ -57,7 +55,7 @@ void Renderer::Render()
 
 	VulkanCommandBuffer* wCmd = &mContext->mCmds[wCurrentImageIndex];
 	mContext->mCompleteFences[wCurrentImageIndex]->Wait();
-	mDescriptorSetManager->ResetPool(wCurrentImageIndex);
+	mContext->mDescriptorSetManager->ResetPool(wCurrentImageIndex);
 	mContext->mCompleteFences[wCurrentImageIndex]->Reset();
 	wCmd->Reset(0);
 
@@ -91,7 +89,7 @@ void Renderer::Render()
 		.range = VK_WHOLE_SIZE
 	};
 	
-	VulkanDescriptorSet wFrameUBDS = mDescriptorSetManager->AllocateDescriptorSet("FrameUB", wCurrentImageIndex);
+	VulkanDescriptorSet wFrameUBDS = mContext->mDescriptorSetManager->AllocateDescriptorSet("FrameUB", wCurrentImageIndex);
 	wFrameUBDS.Update(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &wFrameUBInfo);
 
 	wCmd->Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
@@ -104,7 +102,7 @@ void Renderer::Render()
 
 	mPipeline->Bind(wCmd->mCmd, mWindow);
 
-	VulkanDescriptorSet wDS = mDescriptorSetManager->AllocateDescriptorSet("ObjectDS", wCurrentImageIndex);
+	VulkanDescriptorSet wDS = mContext->mDescriptorSetManager->AllocateDescriptorSet("ObjectDS", wCurrentImageIndex);
 	wDS.Update(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wVertexBufferInfo);
 	wDS.Update(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wIndexBufferInfo);
 
@@ -113,7 +111,7 @@ void Renderer::Render()
 
 	VkDescriptorSet wDSList[] = { wFrameUBDSHandle,wDSHandle};
 
-	vkCmdBindDescriptorSets(wCmd->mCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipelineLayoutManager->GetLayout("main"),
+	vkCmdBindDescriptorSets(wCmd->mCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mContext->mPipelineLayoutManager->GetLayout("main"),
 		0, _countof(wDSList), wDSList,
 		0, nullptr);
 
@@ -147,15 +145,15 @@ void Renderer::CreateDescriptorSetLayouts()
 		{1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE},
 	};
 
-	mDescriptorSetManager->CreateLayout(wFrameUBBinding, "FrameUB");
-	mDescriptorSetManager->CreateLayout(wBinding, "ObjectDS");
+	mContext->mDescriptorSetManager->CreateLayout(wFrameUBBinding, "FrameUB");
+	mContext->mDescriptorSetManager->CreateLayout(wBinding, "ObjectDS");
 }
 
 void Renderer::CreatePipelineLayouts()
 {
-	std::vector<VkDescriptorSetLayout> wDSLayouts = { mDescriptorSetManager->GetLayout("FrameUB"), mDescriptorSetManager->GetLayout("ObjectDS") };
+	std::vector<VkDescriptorSetLayout> wDSLayouts = { mContext->mDescriptorSetManager->GetLayout("FrameUB"), mContext->mDescriptorSetManager->GetLayout("ObjectDS") };
 	std::vector<VkPushConstantRange> wPCRanges;
-	mPipelineLayoutManager->CreateLayout(wDSLayouts, wPCRanges, "main");
+	mContext->mPipelineLayoutManager->CreateLayout(wDSLayouts, wPCRanges, "main");
 }
 
 void Renderer::CreateShaders()
@@ -172,7 +170,7 @@ void Renderer::CreatePipelines()
 	VulkanGraphicsPipeline::PipelineInfo wPipeline{};
 	VulkanGraphicsPipeline::DefaultPipelineConfigInfo(wPipeline);
 
-	wPipeline.pipelineLayout = mPipelineLayoutManager->GetLayout("main");
+	wPipeline.pipelineLayout = mContext->mPipelineLayoutManager->GetLayout("main");
 
 	wPipeline.renderingInfo.pColorAttachmentFormats = &mContext->mSwapchain->mColorFormat;
 	wPipeline.renderingInfo.depthAttachmentFormat = mContext->mDepthBuffer->GetFormat();

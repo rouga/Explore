@@ -49,6 +49,9 @@ void RenderContext::Initialize(Window* iWindow)
 
 	mStagingBuffer = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 
+	mDescriptorSetManager = std::make_unique<DescriptorSetManager>(mLogicalDevice->mDevice, mSwapchain->GetNumImages());
+	mPipelineLayoutManager = std::make_unique<PipelineLayoutManager>(mLogicalDevice->mDevice);
+
 	mCompleteFences.resize(mSwapchain->GetNumImages());
 	for (uint32_t i = 0; i < mSwapchain->GetNumImages(); i++)
 	{

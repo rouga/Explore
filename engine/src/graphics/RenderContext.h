@@ -14,9 +14,9 @@
 #include "VulkanShader.h"
 #include "VulkanGPUBuffer.h"
 #include "VulkanFence.h"
-#include "VulkanMemoryPool.h"
+#include "graphics/DescriptorSetManager.h"
+#include "graphics/PipelineLayoutManager.h"
 #include "VulkanImage.h"
-
 
 class Window;
 
@@ -36,6 +36,8 @@ public:
 	std::unique_ptr<VulkanSwapchain> mSwapchain = nullptr;
 	std::unique_ptr<VulkanImage> mDepthBuffer = nullptr;
 	std::unique_ptr<VulkanQueue> mQueue = nullptr;
+	std::unique_ptr<DescriptorSetManager> mDescriptorSetManager = nullptr;
+	std::unique_ptr<PipelineLayoutManager> mPipelineLayoutManager = nullptr;
 	std::vector<std::unique_ptr<VulkanFence>> mCompleteFences;
 	std::unique_ptr<VulkanFence> mCopyFence = nullptr;
 
