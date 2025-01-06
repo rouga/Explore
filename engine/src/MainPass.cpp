@@ -2,6 +2,7 @@
 
 #include "graphics/RenderContext.h"
 #include "Engine.h"
+#include "Window.h"
 
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
@@ -13,7 +14,7 @@ MainPass::MainPass(RenderContext* iContext)
 
 void MainPass::Setup(VkCommandBuffer iCmd)
 {
-	mRenderPass = std::make_unique<VulkanRenderPass>(mContext->mLogicalDevice->mDevice, mContext->mSwapchain->GetSurfaceCapabilites().currentExtent);
+	mRenderPass = std::make_unique<VulkanRenderPass>(mContext->mLogicalDevice->mDevice);
 
 	// Setup Descriptor set layouts
 	std::vector<DescriptorSetManager::Binding> wBinding =
@@ -56,7 +57,8 @@ void MainPass::Begin(VkCommandBuffer iCmd)
 	uint32_t wCurrentImageIndex = mContext->mQueue->GetCurrentImageIndex();
 	std::vector<VkImageView> wBackbuffer{ mContext->mSwapchain->mImageViews[wCurrentImageIndex] };
 
-	mRenderPass->Begin(iCmd, wBackbuffer, mContext->mDepthBuffer->mImageView);
+	mRenderPass->Begin(iCmd, wBackbuffer, mContext->mDepthBuffer->mImageView, 
+		VkExtent2D{(uint32_t)Engine::Get().GetWindow()->GetWidth(), (uint32_t)Engine::Get().GetWindow()->GetHeight()});
 
 	mPipeline->Bind(iCmd, mContext->mWindow);
 }

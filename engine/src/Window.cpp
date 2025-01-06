@@ -6,6 +6,8 @@
 #include <iostream>
 #include <exception>
 
+#include "Engine.h"
+
 void KeyCallback(GLFWwindow* iWindow, int iKey, int iScancode, int iAction, int iMode)
 {
 	if(iKey == GLFW_KEY_ESCAPE && iAction == GLFW_PRESS)
@@ -14,7 +16,13 @@ void KeyCallback(GLFWwindow* iWindow, int iKey, int iScancode, int iAction, int 
 	}
 }
 
-Window::Window()
+void WindowResizeCallback(GLFWwindow* iWindow, int iWidth, int iHeight) {
+	auto wEngine = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(iWindow));
+	wEngine->OnResize(iWidth, iHeight);
+}
+
+Window::Window(Engine* iEngine)
+	:mEngine(iEngine)
 {
 }
 
@@ -39,7 +47,7 @@ void Window::Initialize(int iWidth, int iHeight, std::string iTitle)
 	}
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
 	mWindow = glfwCreateWindow(iWidth, iHeight, iTitle.c_str(), nullptr, nullptr);
 
@@ -51,9 +59,16 @@ void Window::Initialize(int iWidth, int iHeight, std::string iTitle)
 	}
 
 	glfwSetKeyCallback(mWindow, KeyCallback);
+	glfwSetWindowUserPointer(mWindow, mEngine);
+	glfwSetFramebufferSizeCallback(mWindow, WindowResizeCallback);
 }
 
 bool Window::ShouldClose() const
 {
 	return glfwWindowShouldClose(mWindow);
+}
+
+bool Window::IsMinimized() const
+{
+	return glfwGetWindowAttrib(mWindow, GLFW_ICONIFIED);
 }

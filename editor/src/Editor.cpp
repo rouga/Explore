@@ -8,7 +8,7 @@
 int main() 
 {
 		spdlog::info("Launching Editor...");
-		Window wWnd;
+		Window wWnd(&Engine::Get());
 
     try 
 		{

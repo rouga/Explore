@@ -28,6 +28,7 @@ public:
 	void UploadMesh(StaticMesh* iMesh);
 	void Render();
 	void Flush();
+	void Resize(int iWidth, int iHeight);
 
 	std::unique_ptr<RenderContext> mContext = nullptr;
 	std::unique_ptr<MainPass> mMainPass = nullptr;

@@ -20,9 +20,11 @@ public:
 	void Initialize(Window* iWindow);
 	void Shutdown();
 	void Run();
+	void OnResize(int iWidth, int iHeight);
 
 	StaticMesh* GetMesh() { return &mMesh; }
 	OrbitCamera* GetCamera() {return mOrbitCamera.get(); }
+	Window* GetWindow() { return mWindow; }
 
 private:
 	// Private constructor for Singleton

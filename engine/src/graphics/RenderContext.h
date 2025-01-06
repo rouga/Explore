@@ -28,6 +28,8 @@ public:
 
 	void Initialize(Window* iWindow);
 
+	void Resize(int iWidth, int iHeight);
+
 	std::unique_ptr<VulkanInstance> mInstance = nullptr;
 	std::unique_ptr<VulkanDebugCallback> mDebugCallback = nullptr;
 	std::unique_ptr<VulkanPhysicalDevice> mPhysicalDevice = nullptr;

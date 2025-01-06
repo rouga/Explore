@@ -60,6 +60,20 @@ void Engine::Run()
 {
 	Input::Get().Setup();
 	glfwPollEvents();
+	if(mWindow->IsMinimized())
+	{
+		return;
+	}
 	mOrbitCamera->Update();
 	mRenderer->Render();
+}
+
+void Engine::OnResize(int iWidth, int iHeight)
+{
+	if(iWidth != 0 && iHeight != 0)
+	{
+		mWindow->SetWidth(iWidth);
+		mWindow->SetHeight(iHeight);
+		mRenderer->Resize(iWidth, iHeight);
+	}
 }

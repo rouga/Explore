@@ -16,6 +16,8 @@ public:
 	
 	void Initialize(VkInstance iInstance, VulkanLogicalDevice* iLogicalDevice, Window* iWindow, uint32_t iNumSwapchainImages);
 
+	void Resize(VkExtent2D iNewSize);
+
 	void TransitionImageToPresent(VulkanCommandBuffer* iCmd, uint32_t iImageIndex);
 	void TransitionImageToDraw(VulkanCommandBuffer* iCmd, uint32_t iImageIndex);
 
@@ -32,6 +34,7 @@ public:
 private:
 	void CreateSurface();
 	void CreateSwapchain();
+	void DestroySwapchain();
 
 	uint32_t mNumSwapchainImages = 0;
 

@@ -4,6 +4,7 @@
 #include <spdlog/spdlog.h>
 
 #include "VulkanCommandBuffer.h"
+#include "VulkanSwapchain.h"
 #include "Utils.h"
 
 VulkanQueue::VulkanQueue()
@@ -14,7 +15,7 @@ VulkanQueue::~VulkanQueue()
 {
 }
 
-void VulkanQueue::Initialize(VkDevice iDevice, VkSwapchainKHR iSwapchain, uint32_t iQueueFamily, uint32_t iQueueIndex)
+void VulkanQueue::Initialize(VkDevice iDevice, VulkanSwapchain* iSwapchain, uint32_t iQueueFamily, uint32_t iQueueIndex)
 {
 	mDevice = iDevice;
 	mSwapchain = iSwapchain;
@@ -27,7 +28,7 @@ void VulkanQueue::Initialize(VkDevice iDevice, VkSwapchainKHR iSwapchain, uint32
 
 uint32_t VulkanQueue::AcquireNextImage()
 {
-	VkResult wResult = vkAcquireNextImageKHR(mDevice, mSwapchain, UINT64_MAX, mPresentSemaphore->mSemaphore, nullptr, &mCurrentImageIndex);
+	VkResult wResult = vkAcquireNextImageKHR(mDevice, mSwapchain->mSwapchain, UINT64_MAX, mPresentSemaphore->mSemaphore, nullptr, &mCurrentImageIndex);
 	CHECK_VK_RESULT(wResult, "Acquire Next Image");
 
 	return mCurrentImageIndex;
@@ -82,7 +83,7 @@ void VulkanQueue::Present(uint32_t iImageIndex, VkSemaphore iSemaphore)
 		.waitSemaphoreCount = 1,
 		.pWaitSemaphores = &iSemaphore,
 		.swapchainCount = 1,
-		.pSwapchains = &mSwapchain,
+		.pSwapchains = &mSwapchain->mSwapchain,
 		.pImageIndices = &iImageIndex
 	};
 

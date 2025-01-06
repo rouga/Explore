@@ -106,3 +106,9 @@ void Renderer::Flush()
 {
 	mContext->mQueue->Flush();
 }
+
+void Renderer::Resize(int iWidth, int iHeight)
+{
+	Flush();
+	mContext->Resize(iWidth, iHeight);
+}

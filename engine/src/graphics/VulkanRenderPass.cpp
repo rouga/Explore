@@ -3,12 +3,11 @@
 #include "Window.h"
 
 
-VulkanRenderPass::VulkanRenderPass(VkDevice iDevice, VkExtent2D iScreenExtent)
-	:mDevice(iDevice),
-	mScreenExtent(iScreenExtent)
+VulkanRenderPass::VulkanRenderPass(VkDevice iDevice)
+	:mDevice(iDevice)
 {}
 
-void VulkanRenderPass::Begin(VkCommandBuffer iCmd, std::vector<VkImageView> iColorImages, VkImageView iDepthImageView) const
+void VulkanRenderPass::Begin(VkCommandBuffer iCmd, std::vector<VkImageView> iColorImages, VkImageView iDepthImageView, VkExtent2D iExtent) const
 {
 	std::vector<VkRenderingAttachmentInfo> wColorAttachments(iColorImages.size());
 
@@ -45,7 +44,7 @@ void VulkanRenderPass::Begin(VkCommandBuffer iCmd, std::vector<VkImageView> iCol
 			.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
 			.pNext = nullptr,
 			.flags = 0,
-			.renderArea = { {0, 0}, mScreenExtent },
+			.renderArea = { {0, 0}, iExtent },
 			.layerCount = 1,
 			.colorAttachmentCount = (uint32_t)wColorAttachments.size(),
 			.pColorAttachments = wColorAttachments.data(),

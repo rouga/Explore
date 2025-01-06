@@ -45,7 +45,7 @@ void RenderContext::Initialize(Window* iWindow)
 
 	mSwapchain->Initialize(mInstance->GetInstance(), mLogicalDevice.get(), iWindow, 2);
 	CreateDepthBuffer();
-	mQueue->Initialize(mLogicalDevice->mDevice, mSwapchain->mSwapchain, mLogicalDevice->mPhysicalDevice->GetQueueFamilyIndex(), 0);
+	mQueue->Initialize(mLogicalDevice->mDevice, mSwapchain.get(), mLogicalDevice->mPhysicalDevice->GetQueueFamilyIndex(), 0);
 
 	mStagingBuffer = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 
@@ -64,6 +64,12 @@ void RenderContext::Initialize(Window* iWindow)
 	CreateStagingBuffer();
 	TransitionDepthBuffer();
 	mQueue->Flush();
+}
+
+void RenderContext::Resize(int iWidth, int iHeight)
+{
+	mDepthBuffer->Resize(VkExtent3D{(uint32_t)iWidth, (uint32_t)iHeight, 1});
+	mSwapchain->Resize(VkExtent2D{ (uint32_t)iWidth, (uint32_t)iHeight });
 }
 
 void RenderContext::CreateAllocator()

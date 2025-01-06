@@ -7,6 +7,7 @@
 
 class VulkanCommandBuffer;
 class VulkanSemaphore;
+class VulkanSwapchain;
 
 class VulkanQueue
 {
@@ -14,7 +15,7 @@ public:
 	VulkanQueue();
 	~VulkanQueue();
 
-	void Initialize(VkDevice iDevice, VkSwapchainKHR iSwapchain, uint32_t iQueueFamily, uint32_t iQueueIndex);
+	void Initialize(VkDevice iDevice, VulkanSwapchain* iSwapchain, uint32_t iQueueFamily, uint32_t iQueueIndex);
 
 	uint32_t AcquireNextImage();
 
@@ -30,7 +31,7 @@ public:
 
 	VkQueue mQueue = VK_NULL_HANDLE;
 	VkDevice mDevice = VK_NULL_HANDLE;
-	VkSwapchainKHR mSwapchain = VK_NULL_HANDLE;
+	VulkanSwapchain* mSwapchain = nullptr;
 
 	std::unique_ptr<VulkanSemaphore> mPresentSemaphore = nullptr;
 

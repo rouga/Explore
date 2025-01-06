@@ -10,12 +10,11 @@ class Window;
 class VulkanRenderPass
 {
 public:
-	VulkanRenderPass(VkDevice iDevice, VkExtent2D iScreenExtent);
+	VulkanRenderPass(VkDevice iDevice);
 
-	void Begin(VkCommandBuffer iCmd, std::vector<VkImageView> iColorImages, VkImageView iDepthImageView) const;
+	void Begin(VkCommandBuffer iCmd, std::vector<VkImageView> iColorImages, VkImageView iDepthImageView, VkExtent2D iExtent) const;
 	void End(VkCommandBuffer iCmd) const;
 
 private:
 	VkDevice mDevice = VK_NULL_HANDLE;
-	VkExtent2D mScreenExtent{0, 0};
 };

@@ -16,13 +16,7 @@
 
 VulkanSwapchain::~VulkanSwapchain()
 {
-	for (size_t i = 0; i < mNumSwapchainImages; i++)
-	{
-		vkDestroyImageView(mLogicalDevice->mDevice, mImageViews[i], nullptr);
-	}
-
-	vkDestroySwapchainKHR(mLogicalDevice->mDevice, mSwapchain, nullptr);
-	spdlog::info("Swapchain Destroyed.");
+	DestroySwapchain();
 
 	PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR = VK_NULL_HANDLE;
 	vkDestroySurfaceKHR = (PFN_vkDestroySurfaceKHR)vkGetInstanceProcAddr(mInstance, "vkDestroySurfaceKHR");
@@ -45,6 +39,12 @@ void VulkanSwapchain::Initialize(VkInstance iInstance, VulkanLogicalDevice* iLog
 	mNumSwapchainImages = iNumSwapchainImages;
 
 	CreateSurface();
+	CreateSwapchain();
+}
+
+void VulkanSwapchain::Resize(VkExtent2D iNewSize)
+{
+	DestroySwapchain();
 	CreateSwapchain();
 }
 
@@ -166,4 +166,15 @@ void VulkanSwapchain::CreateSwapchain()
 	}
 
 	spdlog::info("Swapchain created with {:d} images", mNumSwapchainImages);
+}
+
+void VulkanSwapchain::DestroySwapchain()
+{
+	for (size_t i = 0; i < mNumSwapchainImages; i++)
+	{
+		vkDestroyImageView(mLogicalDevice->mDevice, mImageViews[i], nullptr);
+	}
+
+	vkDestroySwapchainKHR(mLogicalDevice->mDevice, mSwapchain, nullptr);
+	spdlog::info("Swapchain Destroyed.");
 }
