@@ -41,8 +41,6 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/graphics/VulkanRenderPass.cpp
 						  src/graphics/VulkanGPUBuffer.h
 						  src/graphics/VulkanGPUBuffer.cpp
-						  src/graphics/VulkanMemoryPool.h
-						  src/graphics/VulkanMemoryPool.cpp
 						  src/graphics/VulkanDescriptorPool.h
 						  src/graphics/VulkanDescriptorPool.cpp
 						  src/graphics/VulkanDescriptorSet.h
@@ -52,7 +50,11 @@ add_library(Engine STATIC src/Engine.cpp
 						  src/graphics/PipelineLayoutManager.h
 						  src/graphics/PipelineLayoutManager.cpp
 						  src/graphics/VulkanImage.h
-						  src/graphics/VulkanImage.cpp)
+						  src/graphics/VulkanImage.cpp
+						  src/RenderPass.h
+						  src/RenderPass.cpp
+						  src/MainPass.h
+						  src/MainPass.cpp)
 
 # Include Vulkan
 find_package(Vulkan REQUIRED)

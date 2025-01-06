@@ -7,6 +7,7 @@
 #include "graphics/VulkanShader.h"
 #include "graphics/VulkanGraphicsPipeline.h"
 #include "graphics/VulkanGPUBuffer.h"
+#include "MainPass.h"
 
 class Window;
 class StaticMesh;
@@ -29,17 +30,8 @@ public:
 	void Flush();
 
 	std::unique_ptr<RenderContext> mContext = nullptr;
-	std::unique_ptr<VulkanRenderPass> mMainPass = nullptr;
-	std::unique_ptr<VulkanShader> mVS = nullptr;
-	std::unique_ptr<VulkanShader> mFS = nullptr;
-	std::unique_ptr<VulkanGraphicsPipeline> mPipeline = nullptr;
+	std::unique_ptr<MainPass> mMainPass = nullptr;
 
 	Window* mWindow = nullptr;
 	std::unique_ptr<VulkanGPUBuffer> mFrameUB = nullptr;
-
-private:
-	void CreateDescriptorSetLayouts();
-	void CreatePipelineLayouts();
-	void CreateShaders();
-	void CreatePipelines();
 };

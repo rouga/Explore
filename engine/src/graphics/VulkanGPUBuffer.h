@@ -3,8 +3,6 @@
 #include <vulkan/vulkan.h>
 #include "vma/vk_mem_alloc.h"
 
-#include "VulkanMemoryPool.h"
-
 class VulkanLogicalDevice;
 class VulkanCommandBuffer;
 

@@ -27,11 +27,10 @@ void VulkanQueue::Initialize(VkDevice iDevice, VkSwapchainKHR iSwapchain, uint32
 
 uint32_t VulkanQueue::AcquireNextImage()
 {
-	uint32_t wImageIndex = 0;
-	VkResult wResult = vkAcquireNextImageKHR(mDevice, mSwapchain, UINT64_MAX, mPresentSemaphore->mSemaphore, nullptr, &wImageIndex);
+	VkResult wResult = vkAcquireNextImageKHR(mDevice, mSwapchain, UINT64_MAX, mPresentSemaphore->mSemaphore, nullptr, &mCurrentImageIndex);
 	CHECK_VK_RESULT(wResult, "Acquire Next Image");
 
-	return wImageIndex;
+	return mCurrentImageIndex;
 }
 
 void VulkanQueue::SubmitAsync(VulkanCommandBuffer* iCmd, VkFence iFence)

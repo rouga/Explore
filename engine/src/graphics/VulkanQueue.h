@@ -24,6 +24,8 @@ public:
 	// A Semaphore representing the last command executed on GPU Before presenting
 	void Present(uint32_t iImageIndex, VkSemaphore iSemaphore);
 
+	uint32_t GetCurrentImageIndex() const { return mCurrentImageIndex; }
+
 	void Flush();
 
 	VkQueue mQueue = VK_NULL_HANDLE;
@@ -31,4 +33,7 @@ public:
 	VkSwapchainKHR mSwapchain = VK_NULL_HANDLE;
 
 	std::unique_ptr<VulkanSemaphore> mPresentSemaphore = nullptr;
+
+private:
+	uint32_t mCurrentImageIndex = 0;
 };
