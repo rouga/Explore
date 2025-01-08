@@ -15,4 +15,9 @@ add_custom_command(TARGET Editor POST_BUILD
                            ${CMAKE_SOURCE_DIR}/shaders 
 					        $<TARGET_FILE_DIR:Editor>/shaders)
 
+add_custom_command(TARGET Editor POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory
+                           ${CMAKE_SOURCE_DIR}/resources 
+					        $<TARGET_FILE_DIR:Editor>/resources)
+
 set_property(TARGET Editor  PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})

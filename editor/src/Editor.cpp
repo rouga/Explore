@@ -1,6 +1,6 @@
 #include <iostream>
-#include "Engine.h"
-#include "Window.h"
+#include "Core/Engine.h"
+#include "Core/Window.h"
 
 #define FMT_UNICODE 0
 #include "spdlog/spdlog.h"

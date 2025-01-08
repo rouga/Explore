@@ -6,7 +6,7 @@
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
 
-#include "Window.h"
+#include "Core/Window.h"
 #include "Utils.h"
 
 RenderContext::RenderContext()
@@ -131,7 +131,7 @@ void RenderContext::CreateCommandBuffers()
 
 void RenderContext::CreateStagingBuffer()
 {
-	mStagingBuffer->Initialize(mLogicalDevice.get(), 128 * 1024 * 1024, mAllocator);
+	mStagingBuffer->Initialize(mLogicalDevice.get(), 64 * 1024 * 1024, mAllocator);
 }
 
 void RenderContext::TransitionDepthBuffer()
@@ -144,6 +144,5 @@ void RenderContext::TransitionDepthBuffer()
 	mQueue->SubmitSync(&mCopyCmd, mCopyFence->mFence);
 	mCopyFence->Wait();
 	mCopyFence->Reset();
-	
 
 }

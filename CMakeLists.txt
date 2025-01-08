@@ -27,9 +27,17 @@ endForeach()
 
 add_custom_target(shaders ALL DEPENDS ${SPV_SHADERS})
 
+# Add subdirectories
+add_subdirectory(extern/assimp-5.4.3)
+# set variables that are needed for assimp
+set(ZLIB_LIBRARIES zlibstatic)
+set(ENABLE_BOOST_WORKAROUND ON)
+set(BUILD_STATIC_LIB ON)
+set(BUILD_ASSIMP_TOOLS  ON)
+set(ASSIMP_BUILD_STATIC_LIB ON)
+
 add_subdirectory(extern/glfw)
 
-# Add subdirectories
 add_subdirectory(engine)
 add_subdirectory(editor)
 

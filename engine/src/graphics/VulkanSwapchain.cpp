@@ -6,7 +6,7 @@
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
 
-#include "Window.h"
+#include "Core/Window.h"
 
 #include "VulkanInstance.h"
 #include "VulkanLogicalDevice.h"

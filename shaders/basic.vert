@@ -1,9 +1,8 @@
 #version 460
 
-struct VertexData
+struct PositionData
 {
 	float x, y ,z;
-	float u, v;
 };
 
 layout (binding=0) readonly uniform FrameUB
@@ -14,7 +13,7 @@ layout (binding=0) readonly uniform FrameUB
 
 layout (set=1,binding=0) readonly buffer Vertices 
 { 
-	VertexData data[]; 
+	PositionData data[]; 
 } in_Vertices;
 
 layout (set=1,binding=1) readonly buffer Indices 
@@ -24,7 +23,7 @@ layout (set=1,binding=1) readonly buffer Indices
 
 void main() 
 {
-	uint index = in_Indices.data[gl_VertexIndex];
-	VertexData vertex = in_Vertices.data[index];
+	uint index = in_Indices.data[gl_VertexIndex];	
+	PositionData vertex = in_Vertices.data[index];
     gl_Position = in_FrameUB.ProjectionMatrix * in_FrameUB.ViewMatrix  * vec4(vertex.x, vertex.y, vertex.z, 1.0) ;
 }

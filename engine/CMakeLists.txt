@@ -1,60 +1,62 @@
 # Declare the library
-add_library(Engine STATIC src/Engine.cpp
-						  src/Engine.h
-						  src/Window.cpp
-						  src/Window.h
-						  src/Renderer.cpp
-						  src/Renderer.h
-						  src/StaticMesh.cpp
-						  src/StaticMesh.h
-						  src/Input.cpp
-						  src/Input.h
-						  src/Camera.cpp
-						  src/Camera.h
-						  src/graphics/VulkanInstance.cpp
-						  src/graphics/VulkanInstance.h
-						  src/graphics/RenderContext.cpp
-						  src/graphics/RenderContext.h
-						  src/graphics/Utils.h 
-						  src/graphics/Utils.cpp
-						  src/graphics/VulkanDebugCallback.h 
-						  src/graphics/VulkanDebugCallback.cpp
-						  src/graphics/VulkanSwapchain.h 
-						  src/graphics/VulkanSwapchain.cpp
-						  src/graphics/VulkanPhysicalDevice.h 
-						  src/graphics/VulkanPhysicalDevice.cpp
-						  src/graphics/VulkanLogicalDevice.h
-						  src/graphics/VulkanLogicalDevice.cpp
-						  src/graphics/VulkanSemaphore.h
-						  src/graphics/VulkanSemaphore.cpp
-						  src/graphics/VulkanFence.h
-						  src/graphics/VulkanFence.cpp
-						  src/graphics/VulkanCommandBuffer.h
-						  src/graphics/VulkanCommandBuffer.cpp
-						  src/graphics/VulkanQueue.h
-						  src/graphics/VulkanQueue.cpp
-						  src/graphics/VulkanShader.h
-						  src/graphics/VulkanShader.cpp
-						  src/graphics/VulkanGraphicsPipeline.h
-						  src/graphics/VulkanGraphicsPipeline.cpp
-						  src/graphics/VulkanRenderPass.h
-						  src/graphics/VulkanRenderPass.cpp
-						  src/graphics/VulkanGPUBuffer.h
-						  src/graphics/VulkanGPUBuffer.cpp
-						  src/graphics/VulkanDescriptorPool.h
-						  src/graphics/VulkanDescriptorPool.cpp
-						  src/graphics/VulkanDescriptorSet.h
-						  src/graphics/VulkanDescriptorSet.cpp
-						  src/graphics/DescriptorSetManager.h
-						  src/graphics/DescriptorSetManager.cpp
-						  src/graphics/PipelineLayoutManager.h
-						  src/graphics/PipelineLayoutManager.cpp
-						  src/graphics/VulkanImage.h
-						  src/graphics/VulkanImage.cpp
-						  src/RenderPass.h
-						  src/RenderPass.cpp
-						  src/MainPass.h
-						  src/MainPass.cpp)
+add_library(Engine STATIC src/Core/Engine.cpp
+						  src/Core/Engine.h
+						  src/Core/Window.cpp
+						  src/Core/Window.h
+						  src/Core/Input.cpp
+						  src/Core/Input.h
+						  src/Renderer/Renderer.cpp
+						  src/Renderer/Renderer.h
+						  src/Renderer/RenderPass.h
+						  src/Renderer/RenderPass.cpp
+						  src/Renderer/MainPass.h
+						  src/Renderer/MainPass.cpp
+						  src/Scene/StaticMesh.cpp
+						  src/Scene/StaticMesh.h
+						  src/Scene/Camera.cpp
+						  src/Scene/Camera.h
+						  src/Scene/Model.cpp
+						  src/Scene/Model.h
+						  src/Graphics/VulkanInstance.cpp
+						  src/Graphics/VulkanInstance.h
+						  src/Graphics/RenderContext.cpp
+						  src/Graphics/RenderContext.h
+						  src/Graphics/Utils.h 
+						  src/Graphics/Utils.cpp
+						  src/Graphics/VulkanDebugCallback.h 
+						  src/Graphics/VulkanDebugCallback.cpp
+						  src/Graphics/VulkanSwapchain.h 
+						  src/Graphics/VulkanSwapchain.cpp
+						  src/Graphics/VulkanPhysicalDevice.h 
+						  src/Graphics/VulkanPhysicalDevice.cpp
+						  src/Graphics/VulkanLogicalDevice.h
+						  src/Graphics/VulkanLogicalDevice.cpp
+						  src/Graphics/VulkanSemaphore.h
+						  src/Graphics/VulkanSemaphore.cpp
+						  src/Graphics/VulkanFence.h
+						  src/Graphics/VulkanFence.cpp
+						  src/Graphics/VulkanCommandBuffer.h
+						  src/Graphics/VulkanCommandBuffer.cpp
+						  src/Graphics/VulkanQueue.h
+						  src/Graphics/VulkanQueue.cpp
+						  src/Graphics/VulkanShader.h
+						  src/Graphics/VulkanShader.cpp
+						  src/Graphics/VulkanGraphicsPipeline.h
+						  src/Graphics/VulkanGraphicsPipeline.cpp
+						  src/Graphics/VulkanRenderPass.h
+						  src/Graphics/VulkanRenderPass.cpp
+						  src/Graphics/VulkanGPUBuffer.h
+						  src/Graphics/VulkanGPUBuffer.cpp
+						  src/Graphics/VulkanDescriptorPool.h
+						  src/Graphics/VulkanDescriptorPool.cpp
+						  src/Graphics/VulkanDescriptorSet.h
+						  src/Graphics/VulkanDescriptorSet.cpp
+						  src/Graphics/DescriptorSetManager.h
+						  src/Graphics/DescriptorSetManager.cpp
+						  src/Graphics/PipelineLayoutManager.h
+						  src/Graphics/PipelineLayoutManager.cpp
+						  src/Graphics/VulkanImage.h
+						  src/Graphics/VulkanImage.cpp)
 
 # Include Vulkan
 find_package(Vulkan REQUIRED)
@@ -62,7 +64,8 @@ find_package(Vulkan REQUIRED)
 # Include directories for this library
 target_include_directories(Engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 										 ${Vulkan_INCLUDE_DIRS}
-										 ${CMAKE_SOURCE_DIR}/extern)
+										 ${CMAKE_SOURCE_DIR}/extern
+										 ${CMAKE_SOURCE_DIR}/extern/assimp-5.4.3/include)
 
 # Link Vulkan to the engine
-target_link_libraries(Engine PUBLIC Vulkan::Vulkan glfw)
+target_link_libraries(Engine PRIVATE Vulkan::Vulkan glfw assimp)

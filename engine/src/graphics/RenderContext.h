@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <vulkan/vulkan.h>
-#include "vma/vk_mem_alloc.h"
+#include <vma/vk_mem_alloc.h>
 
 #include "VulkanInstance.h"
 #include "VulkanDebugCallback.h"
@@ -14,8 +14,8 @@
 #include "VulkanShader.h"
 #include "VulkanGPUBuffer.h"
 #include "VulkanFence.h"
-#include "graphics/DescriptorSetManager.h"
-#include "graphics/PipelineLayoutManager.h"
+#include "DescriptorSetManager.h"
+#include "PipelineLayoutManager.h"
 #include "VulkanImage.h"
 
 class Window;
