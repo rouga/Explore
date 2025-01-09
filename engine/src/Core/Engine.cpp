@@ -27,9 +27,11 @@ void Engine::Initialize(Window* iWindow)
 	mRenderer->Initialize(mWindow);
 	Input::Get().Initialize(mWindow->GetGLFWWindow());
 
-	mModel = std::make_unique<Model>("resources/teapot.obj");
+	mModel = std::make_unique<Model>("resources/cottage.obj");
 	mRenderer->UploadModel(mModel.get());
 	mModel->FreeCPU();
+	mModel->GetTransform()->SetScale(glm::vec3{0.5, 0.5, 0.5});
+	mModel->GetTransform()->SetRotation(glm::vec3{1.0, 0.0, 0.0}, 180);
 }
 
 void Engine::Shutdown()

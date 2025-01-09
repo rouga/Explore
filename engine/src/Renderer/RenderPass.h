@@ -7,6 +7,7 @@
 #include "Graphics/VulkanGraphicsPipeline.h"
 
 class RenderContext;
+struct FrameResources;
 
 class RenderPass
 {
@@ -15,7 +16,7 @@ public:
 
 	virtual void Setup(VkCommandBuffer iCmd) = 0;
 	virtual void Begin(VkCommandBuffer iCmd) = 0;
-	virtual void Draw(VkCommandBuffer iCmd) = 0;
+	virtual void Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources) = 0;
 	virtual void End(VkCommandBuffer iCmd) = 0;
 
 protected:

@@ -9,7 +9,7 @@
 
 StaticMesh::StaticMesh()
 {
-
+	mTranformation = std::make_shared<Transformation>();
 }
 
 StaticMesh::~StaticMesh()

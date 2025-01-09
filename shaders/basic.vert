@@ -21,9 +21,14 @@ layout (set=1,binding=1) readonly buffer Indices
 	uint data[]; 
 } in_Indices;
 
+layout (set=1, binding=2) readonly uniform ObjectUB
+{
+	mat4 ModelMatrix;
+} in_ObjectUB;
+
 void main() 
 {
 	uint index = in_Indices.data[gl_VertexIndex];	
 	PositionData vertex = in_Vertices.data[index];
-    gl_Position = in_FrameUB.ProjectionMatrix * in_FrameUB.ViewMatrix  * vec4(vertex.x, vertex.y, vertex.z, 1.0) ;
+    gl_Position = in_FrameUB.ProjectionMatrix * in_FrameUB.ViewMatrix  * in_ObjectUB.ModelMatrix * vec4(vertex.x, vertex.y, vertex.z, 1.0) ;
 }

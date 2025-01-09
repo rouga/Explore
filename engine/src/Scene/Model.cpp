@@ -4,7 +4,9 @@
 #include <spdlog/spdlog.h>
 
 Model::Model(const std::string & iPath)
-{
+{	
+	mTranformation = std::make_shared<Transformation>();
+	mTranformation->SetParent(nullptr);
 	LoadModel(iPath);
 }
 
@@ -37,10 +39,10 @@ void Model::LoadModel(const std::string& iPath)
 	}
 
 	mDirectory = iPath.substr(0, iPath.find_last_of('/'));
-	ProcessNode(wScene->mRootNode, wScene);
+	ProcessNode(wScene->mRootNode, wScene, mTranformation);
 }
 
-void Model::ProcessNode(aiNode* iNode, const aiScene* iScene)
+void Model::ProcessNode(aiNode* iNode, const aiScene* iScene, std::shared_ptr<Transformation> iTransformation)
 {
 	mMeshes.reserve(iScene->mNumMeshes);
 	for (unsigned int i = 0; i < iNode->mNumMeshes; i++)
@@ -48,12 +50,13 @@ void Model::ProcessNode(aiNode* iNode, const aiScene* iScene)
 		aiMesh* wMesh = iScene->mMeshes[iNode->mMeshes[i]];
 		mMeshes.push_back(std::make_unique<StaticMesh>());
 		ProcessMesh(wMesh, iScene, mMeshes.back().get());
-		
+		mMeshes.back().get()->GetTransform()->SetParent(iTransformation);
 	}
 
 	for (unsigned int i = 0; i < iNode->mNumChildren; i++) 
 	{
-		ProcessNode(iNode->mChildren[i], iScene);
+		// TO FIX: Currently a hack is implemented for the transform, the last mesh added controls the transform of all children
+		ProcessNode(iNode->mChildren[i], iScene, iNode == iScene->mRootNode ? mTranformation : mMeshes.back().get()->GetTransform());
 	}
 }
 

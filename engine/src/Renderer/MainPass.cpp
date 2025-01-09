@@ -3,6 +3,7 @@
 #include "Graphics/RenderContext.h"
 #include "Core/Engine.h"
 #include "Core/Window.h"
+#include "Renderer.h"
 
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
@@ -21,6 +22,7 @@ void MainPass::Setup(VkCommandBuffer iCmd)
 	{
 		{0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE},
 		{1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE},
+		{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE}
 	};
 
 	mContext->mDescriptorSetManager->CreateLayout(wBinding, "ObjectDS");
@@ -59,42 +61,72 @@ void MainPass::Begin(VkCommandBuffer iCmd)
 
 	mRenderPass->Begin(iCmd, wBackbuffer, mContext->mDepthBuffer->mImageView, 
 		VkExtent2D{(uint32_t)Engine::Get().GetWindow()->GetWidth(), (uint32_t)Engine::Get().GetWindow()->GetHeight()});
-
-	mPipeline->Bind(iCmd, mContext->mWindow);
 }
 
-void MainPass::Draw(VkCommandBuffer iCmd)
+void MainPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 {
 	uint32_t wCurrentImageIndex = mContext->mQueue->GetCurrentImageIndex();
 
-	for (uint32_t i = 0; i < Engine::Get().GetModel()->GetNumMeshes(); i++)
+	// Bind Global Frame Uniform Buffer
+	mPipeline->Bind(iCmd, mContext->mWindow);
+
+	VkDescriptorBufferInfo wFrameUBInfo =
 	{
+		.buffer = iFrameResources->mFrameUniformBuffer->mBuffer,
+		.offset = 0,
+		.range = VK_WHOLE_SIZE
+	};
+
+	VulkanDescriptorSet wFrameUBDS = mContext->mDescriptorSetManager->AllocateDescriptorSet("FrameUB", wCurrentImageIndex);
+	wFrameUBDS.Update(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &wFrameUBInfo);
+	VkDescriptorSet wFrameUBDSHandle = wFrameUBDS.GetHandle();
+	VkDescriptorSet wFrameDSList[] = { wFrameUBDSHandle };
+
+	vkCmdBindDescriptorSets(iCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mContext->mPipelineLayoutManager->GetLayout("main"),
+		0, _countof(wFrameDSList), wFrameDSList,
+		0, nullptr);
+
+	Model* wModel = Engine::Get().GetModel();
+
+	// Draw Meshes
+	for (uint32_t i = 0; i < wModel->GetNumMeshes(); i++)
+	{
+		StaticMesh* wMesh = wModel->GetMesh(i);
 		VkDescriptorBufferInfo wVertexBufferInfo =
 		{
-			.buffer = Engine::Get().GetModel()->GetMesh(i)->GetVertexBuffer()->mBuffer,
+			.buffer = wMesh->GetVertexBuffer()->mBuffer,
 			.offset = 0,
 			.range = VK_WHOLE_SIZE
 		};
+
 		VkDescriptorBufferInfo wIndexBufferInfo =
 		{
-			.buffer = Engine::Get().GetModel()->GetMesh(i)->GeIndexBuffer()->mBuffer,
+			.buffer = wMesh->GeIndexBuffer()->mBuffer,
 			.offset = 0,
 			.range = VK_WHOLE_SIZE
+		};
+
+		VkDescriptorBufferInfo wObjectUBInfo =
+		{
+			.buffer = iFrameResources->mObjectsUniformBuffer->mBuffer,
+			.offset = wModel->GetUniformBufferOffset() +  wMesh->GetUniformBufferOffset() + sizeof(ObjectUB) * wCurrentImageIndex,
+			.range = sizeof(ObjectUB)
 		};
 
 		VulkanDescriptorSet wDS = mContext->mDescriptorSetManager->AllocateDescriptorSet("ObjectDS", wCurrentImageIndex);
 		wDS.Update(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wVertexBufferInfo);
 		wDS.Update(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wIndexBufferInfo);
+		wDS.Update(2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &wObjectUBInfo);
 
 		VkDescriptorSet wDSHandle = wDS.GetHandle();
 
-		VkDescriptorSet wDSList[] = { wDSHandle };
+		VkDescriptorSet wObjectDSList[] = { wDSHandle };
 
 		vkCmdBindDescriptorSets(iCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mContext->mPipelineLayoutManager->GetLayout("main"),
-			1, _countof(wDSList), wDSList,
+			1, _countof(wObjectDSList), wObjectDSList,
 			0, nullptr);
 
-		vkCmdDraw(iCmd, Engine::Get().GetModel()->GetMesh(i)->GetIndexCount(), 1, 0, 0);
+		vkCmdDraw(iCmd, wModel->GetMesh(i)->GetIndexCount(), 1, 0, 0);
 	}
 }
 

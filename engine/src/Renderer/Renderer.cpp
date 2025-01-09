@@ -1,6 +1,7 @@
 #include "Renderer.h"
 
 #include <vma/vk_mem_alloc.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
@@ -24,6 +25,9 @@ void Renderer::Initialize(Window* iWindow)
 
 	mFrameUB = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 	mFrameUB->Initialize(mContext->mLogicalDevice.get(), sizeof(FrameUB), mContext->mAllocator);
+
+	mObjectsUB = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+	mObjectsUB->Initialize(mContext->mLogicalDevice.get(), sizeof(ObjectUB) * mMaxNumberMeshes * mContext->mSwapchain->GetNumImages(), mContext->mAllocator);
 
 	std::vector<DescriptorSetManager::Binding> wFrameUBBinding =
 	{
@@ -73,29 +77,21 @@ void Renderer::Render()
 	memcpy(wMappedMem, &wFrameUB, sizeof(FrameUB));
 	mFrameUB->UnmapMemory();
 
-	VkDescriptorBufferInfo wFrameUBInfo =
+	FillUniformBuffer();
+
+	FrameResources wFrameResources =
 	{
-		.buffer = mFrameUB->mBuffer,
-		.offset = 0,
-		.range = VK_WHOLE_SIZE
+		.FrameUB = wFrameUB,
+		.mFrameUniformBuffer = mFrameUB.get(),
+		.mObjectsUniformBuffer = mObjectsUB.get()
 	};
-	
-	VulkanDescriptorSet wFrameUBDS = mContext->mDescriptorSetManager->AllocateDescriptorSet("FrameUB", wCurrentImageIndex);
-	wFrameUBDS.Update(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &wFrameUBInfo);
-	VkDescriptorSet wFrameUBDSHandle = wFrameUBDS.GetHandle();
-	VkDescriptorSet wDSList[] = { wFrameUBDSHandle };
 
 	wCmd->Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
 	mContext->mSwapchain->TransitionImageToDraw(wCmd, wCurrentImageIndex);
 
 	mMainPass->Begin(wCmd->mCmd);
-
-	vkCmdBindDescriptorSets(wCmd->mCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mContext->mPipelineLayoutManager->GetLayout("main"),
-		0, _countof(wDSList), wDSList,
-		0, nullptr);
-
-	mMainPass->Draw(wCmd->mCmd);
+	mMainPass->Draw(wCmd->mCmd, &wFrameResources);
 	mMainPass->End(wCmd->mCmd);
 
 	mContext->mSwapchain->TransitionImageToPresent(wCmd, wCurrentImageIndex);
@@ -115,4 +111,27 @@ void Renderer::Resize(int iWidth, int iHeight)
 {
 	Flush();
 	mContext->Resize(iWidth, iHeight);
+}
+
+void Renderer::FillUniformBuffer()
+{
+	uint32_t wCurrentImageIndex = mContext->mQueue->GetCurrentImageIndex();
+
+	Model* wModel = Engine::Get().GetModel();
+	wModel->SetUniformBufferOffset(0);
+
+	uint32_t wCurrentOffset = 0;
+	uint32_t wUniformSize = sizeof(ObjectUB);
+	uint32_t wUniformStride = sizeof(ObjectUB) * mContext->mSwapchain->GetNumImages();
+	void* wMappedMem = mObjectsUB->MapMemory(0, 0);
+
+	for (uint32_t i = 0; i < wModel->GetNumMeshes(); i++)
+	{
+		const glm::f32* wMatrix = glm::value_ptr(wModel->GetMesh(i)->GetTransform()->GetMatrix());
+		memcpy((char*)wMappedMem + wCurrentOffset + wCurrentImageIndex * wUniformSize, wMatrix, sizeof(ObjectUB));
+		wModel->GetMesh(i)->SetUniformBufferOffset(wModel->GetUniformBufferOffset() + wCurrentOffset);
+		wCurrentOffset += wUniformStride;
+	}
+
+	mObjectsUB->UnmapMemory();
 }

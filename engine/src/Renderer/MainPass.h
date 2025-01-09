@@ -3,6 +3,8 @@
 #include "RenderPass.h"
 #include "graphics/VulkanShader.h"
 
+class VulkanGPUBuffer;
+
 class MainPass : public RenderPass
 {
 public:
@@ -10,7 +12,7 @@ public:
 
 	virtual void Setup(VkCommandBuffer iCmd) override;
 	virtual void Begin(VkCommandBuffer iCmd) override;
-	virtual void Draw(VkCommandBuffer iCmd) override;
+	virtual void Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources) override;
 	virtual void End(VkCommandBuffer iCmd) override;
 
 	std::unique_ptr<VulkanShader> mVS = nullptr;

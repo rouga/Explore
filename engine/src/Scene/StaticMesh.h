@@ -6,6 +6,7 @@
 #include <string>
 
 #include "Graphics/VulkanGPUBuffer.h"
+#include "Transformation.h"
 
 class VulkanCommandBuffer;
 class RenderContext;
@@ -32,6 +33,8 @@ public:
 	void FreeGPU();
 	void FreeCPU();
 
+	std::shared_ptr<Transformation> GetTransform() { return mTranformation; }
+
 	bool isUploaded() const {return mUploaded; }
 	bool isAttributeEnabled(MeshAttributes iAttribute) const { return mAttributeMask & iAttribute; }
 
@@ -41,6 +44,9 @@ public:
 	VulkanGPUBuffer* GetNormalBuffer() const { return mNormalBuffer.get(); }
 	VulkanGPUBuffer* GetUVBuffer() const { return mUVBuffer.get(); }
 	uint32_t GetIndexCount() const { return mIndexCount; }
+
+	void SetUniformBufferOffset(uint32_t iOffset) { mUniformBufferOffset = iOffset; }
+	uint32_t GetUniformBufferOffset() const { return mUniformBufferOffset; }
 
 private:
 	std::string mName;
@@ -59,5 +65,9 @@ private:
 	std::unique_ptr<VulkanGPUBuffer> mNormalBuffer = nullptr;
 	std::unique_ptr<VulkanGPUBuffer> mUVBuffer = nullptr;
 
+	uint32_t mUniformBufferOffset = 0;
+
 	bool mUploaded = false;
+
+	std::shared_ptr<Transformation> mTranformation;
 };
