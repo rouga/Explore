@@ -18,7 +18,8 @@ public:
 		VkDescriptorType type;
 		uint32_t count;
 		VkShaderStageFlags stageFlags;
-		VkSampler sampler; // Optional, for sampled images
+		VkSampler sampler = VK_NULL_HANDLE; // Optional, for sampled images
+		bool partiallyBound = false;
 	};
 
 	DescriptorSetManager(VkDevice iDevice, uint32_t iNumImagesSwapchain);

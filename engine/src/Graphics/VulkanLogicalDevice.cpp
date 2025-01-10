@@ -44,6 +44,7 @@ void VulkanLogicalDevice::Initialize(VulkanPhysicalDevice* iPhysicalDevice)
 	{
 	.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
 	.pNext = nullptr,
+	.descriptorBindingPartiallyBound = VK_TRUE,
 	.bufferDeviceAddress = VK_TRUE,
 	};
 
@@ -51,8 +52,8 @@ void VulkanLogicalDevice::Initialize(VulkanPhysicalDevice* iPhysicalDevice)
 	{
 		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
 		.pNext = &Core_1_2,
-		.dynamicRendering = VK_TRUE
-	};	
+		.dynamicRendering = VK_TRUE,
+	};
 
 	VkDeviceCreateInfo wCreateInfo = 
 	{

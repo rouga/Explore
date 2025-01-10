@@ -27,6 +27,7 @@ DescriptorSetManager::~DescriptorSetManager()
 void DescriptorSetManager::CreateLayout(const std::vector<Binding>& iBindings, const std::string& iName)
 {
 	std::vector<VkDescriptorSetLayoutBinding> wLayoutBindings;
+	std::vector<VkDescriptorBindingFlags> wPartiallyBindingFlags;
 
 	for (const auto& wBinding : iBindings)
 	{
@@ -42,11 +43,22 @@ void DescriptorSetManager::CreateLayout(const std::vector<Binding>& iBindings, c
 		};
 
 		wLayoutBindings.push_back(wLayoutBinding);
+		wPartiallyBindingFlags.push_back(wBinding.partiallyBound ? VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT : 0);
 	}
+
+
+	VkDescriptorSetLayoutBindingFlagsCreateInfo wBindingFlags =
+	{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
+		.bindingCount = (uint32_t)wLayoutBindings.size(),
+		.pBindingFlags = wPartiallyBindingFlags.data(),
+	};
 
 	VkDescriptorSetLayoutCreateInfo wLayoutInfo = 
 	{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.pNext = &wBindingFlags,
+		.flags = 0,
 		.bindingCount = static_cast<uint32_t>(wLayoutBindings.size()),
 		.pBindings = wLayoutBindings.data(),
 	};
