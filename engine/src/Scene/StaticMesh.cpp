@@ -3,8 +3,6 @@
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
 
-
-#include "Graphics/VulkanCommandBuffer.h"
 #include "Graphics/RenderContext.h"
 
 StaticMesh::StaticMesh()
@@ -94,7 +92,7 @@ void StaticMesh::UploadGeometry(VulkanCommandBuffer* iCmd, RenderContext* iRende
 
 	if (isAttributeEnabled(MeshAttributes::UV))
 	{
-		mNormalBuffer->Upload(iCmd, iRenderContext->mStagingBuffer.get(), wUVsSize, wLastOffset, 0);
+		mUVBuffer->Upload(iCmd, iRenderContext->mStagingBuffer.get(), wUVsSize, wLastOffset, 0);
 		wLastOffset += wUVsSize;
 	}
 

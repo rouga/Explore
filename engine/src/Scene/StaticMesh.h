@@ -9,6 +9,7 @@
 #include "Transformation.h"
 
 class VulkanCommandBuffer;
+class VulkanImage;
 class RenderContext;
 
 class StaticMesh
@@ -45,6 +46,9 @@ public:
 	VulkanGPUBuffer* GetUVBuffer() const { return mUVBuffer.get(); }
 	uint32_t GetIndexCount() const { return mIndexCount; }
 
+	VulkanImage* GetAlbedoTexture() const { return mAlbedoTexture.get(); }
+	void SetAlbedoTexture(std::shared_ptr<VulkanImage> iAlbedo) { mAlbedoTexture = iAlbedo; }
+
 	void SetUniformBufferOffset(uint32_t iOffset) { mUniformBufferOffset = iOffset; }
 	uint32_t GetUniformBufferOffset() const { return mUniformBufferOffset; }
 
@@ -64,6 +68,7 @@ private:
 	std::unique_ptr<VulkanGPUBuffer> mIndexBuffer = nullptr;
 	std::unique_ptr<VulkanGPUBuffer> mNormalBuffer = nullptr;
 	std::unique_ptr<VulkanGPUBuffer> mUVBuffer = nullptr;
+	std::shared_ptr<VulkanImage> mAlbedoTexture = nullptr;
 
 	uint32_t mUniformBufferOffset = 0;
 

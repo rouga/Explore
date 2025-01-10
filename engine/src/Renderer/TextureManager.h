@@ -8,13 +8,26 @@
 class TextureManager
 {
 public:
-	TextureManager(RenderContext* iContext);
+	// Get the singleton instance
+	static TextureManager& Get();
 
-	std::shared_ptr<VulkanImage> LoadTexture(std::string iPath);
+	TextureManager(const TextureManager&) = delete;
+	TextureManager& operator=(const TextureManager&) = delete;
+
+	void Initialize(RenderContext* iContext);
+	void Shutdown();
+
+	std::shared_ptr<VulkanImage> AddTexture(std::string iPath);
+
+	void LoadPending();
 	
-private:
-	std::shared_ptr<VulkanImage> CreateTexture(std::string iPath);
-	std::unordered_map<std::string, std::weak_ptr<VulkanImage>> mTextureCache; // Map for loaded textures
+	std::shared_ptr<VulkanImage> sGridTexture;
 
+private:
+	TextureManager() = default;;
+	void CreateTexture(std::string iPath, VulkanImage* iTexture);
+	
+	std::unordered_map<std::string, std::weak_ptr<VulkanImage>> mTextureCache; // Map for loaded textures
+	std::vector<std::string> mTexturePending; // Map for loaded textures
 	RenderContext* mContext = nullptr;
 };

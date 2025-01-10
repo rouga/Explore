@@ -6,6 +6,8 @@
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
 
+#include "TextureManager.h"
+
 #include "Scene/StaticMesh.h"
 #include "Scene/Camera.h"
 #include "Scene/Model.h"
@@ -18,6 +20,11 @@ Renderer::Renderer()
 	mContext = std::make_unique<RenderContext>();
 }
 
+Renderer::~Renderer()
+{
+	TextureManager::Get().Shutdown();
+}
+
 void Renderer::Initialize(Window* iWindow)
 {
 	mWindow = iWindow;
@@ -28,6 +35,8 @@ void Renderer::Initialize(Window* iWindow)
 
 	mObjectsUB = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 	mObjectsUB->Initialize(mContext->mLogicalDevice.get(), sizeof(ObjectUB) * mMaxNumberMeshes * mContext->mSwapchain->GetNumImages(), mContext->mAllocator);
+
+	TextureManager::Get().Initialize(mContext.get());
 
 	std::vector<DescriptorSetManager::Binding> wFrameUBBinding =
 	{
@@ -150,8 +159,13 @@ void Renderer::FillUniformBuffer()
 
 	for (uint32_t i = 0; i < wModel->GetNumMeshes(); i++)
 	{
-		const glm::f32* wMatrix = glm::value_ptr(wModel->GetMesh(i)->GetTransform()->GetMatrix());
-		memcpy((char*)wMappedMem + wCurrentOffset + wCurrentImageIndex * wUniformSize, wMatrix, sizeof(ObjectUB));
+		ObjectUB wObjectUB =
+		{
+			.ModelMatrix = wModel->GetMesh(i)->GetTransform()->GetMatrix(),
+			.HasUV = wModel->GetMesh(i)->isAttributeEnabled(StaticMesh::MeshAttributes::UV),
+		};
+		
+		memcpy((char*)wMappedMem + wCurrentOffset + wCurrentImageIndex * wUniformSize, &wObjectUB, sizeof(ObjectUB));
 		wModel->GetMesh(i)->SetUniformBufferOffset(wModel->GetUniformBufferOffset() + wCurrentOffset);
 		wCurrentOffset += wUniformStride;
 	}

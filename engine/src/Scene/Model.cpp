@@ -3,6 +3,8 @@
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
 
+#include "Renderer/TextureManager.h"
+
 Model::Model(const std::string & iPath)
 {	
 	mTranformation = std::make_shared<Transformation>();
@@ -105,4 +107,6 @@ void Model::ProcessMesh(aiMesh* iAiMesh, const aiScene* iScene, StaticMesh* iSta
 		}
 		iStaticMesh->LoadUVs(wUVs);
 	}
+
+	iStaticMesh->SetAlbedoTexture(TextureManager::Get().sGridTexture);
 }

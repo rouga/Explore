@@ -8,21 +8,32 @@
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
 
+#include "Graphics/Utils.h"
+
 MainPass::MainPass(RenderContext* iContext)
 	:RenderPass(iContext)
 {
 }
 
+MainPass::~MainPass()
+{
+	vkDestroySampler(mContext->mLogicalDevice->mDevice, mSampler, nullptr);
+}
+
 void MainPass::Setup(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 {
+	CreateTextureSampler(mContext->mLogicalDevice->mDevice, mContext->mPhysicalDevice->GetDevice());
+
 	mRenderPass = std::make_unique<VulkanRenderPass>(mContext->mLogicalDevice->mDevice);
 
 	// Setup Descriptor set layouts
 	std::vector<DescriptorSetManager::Binding> wBinding =
 	{
-		{0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE},
-		{1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE},
-		{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE}
+		{0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT},
+		{1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT},
+		{2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE, true},
+		{3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT},
+		{4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, mSampler}
 	};
 
 	mContext->mDescriptorSetManager->CreateLayout(wBinding, "ObjectDS");
@@ -113,10 +124,31 @@ void MainPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 			.range = sizeof(ObjectUB)
 		};
 
+		VkDescriptorImageInfo wImageInfo =
+		{
+			.sampler = mSampler,
+			.imageView = wMesh->GetAlbedoTexture()->mImageView,
+			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+		};
+
 		VulkanDescriptorSet wDS = mContext->mDescriptorSetManager->AllocateDescriptorSet("ObjectDS", wCurrentImageIndex);
 		wDS.Update(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wVertexBufferInfo);
 		wDS.Update(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wIndexBufferInfo);
-		wDS.Update(2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &wObjectUBInfo);
+
+		if(wMesh->isAttributeEnabled(StaticMesh::MeshAttributes::UV))
+		{
+			VkDescriptorBufferInfo wUVInfo =
+			{
+				.buffer = wMesh->GetUVBuffer()->mBuffer,
+				.offset = 0,
+				.range = VK_WHOLE_SIZE
+			};
+
+			wDS.Update(2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wUVInfo);
+		}
+
+		wDS.Update(3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &wObjectUBInfo);
+		wDS.Update(4, &wImageInfo);
 
 		VkDescriptorSet wDSHandle = wDS.GetHandle();
 
@@ -133,4 +165,45 @@ void MainPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 void MainPass::End(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 {
 	mRenderPass->End(iCmd);
+}
+
+void MainPass::CreateTextureSampler(VkDevice iDevice, VkPhysicalDevice iPhysicalDevice)
+{
+	VkSamplerCreateInfo wSamplerInfo{};
+	wSamplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	wSamplerInfo.magFilter = VK_FILTER_LINEAR;
+	wSamplerInfo.minFilter = VK_FILTER_LINEAR;
+	wSamplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	wSamplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	wSamplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+	// Query device properties for anisotropy limits
+	VkPhysicalDeviceProperties properties{};
+	vkGetPhysicalDeviceProperties(iPhysicalDevice, &properties);
+
+	VkPhysicalDeviceFeatures deviceFeatures;
+	vkGetPhysicalDeviceFeatures(iPhysicalDevice, &deviceFeatures);
+
+	//if (!deviceFeatures.samplerAnisotropy)
+	//{
+		wSamplerInfo.anisotropyEnable = VK_FALSE;
+		wSamplerInfo.maxAnisotropy = 1.0f;
+	//}
+	//else
+	//{
+	//	wSamplerInfo.anisotropyEnable = VK_TRUE;
+	//	wSamplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+	//}
+
+	wSamplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+	wSamplerInfo.unnormalizedCoordinates = VK_FALSE;
+	wSamplerInfo.compareEnable = VK_FALSE;
+	wSamplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+	wSamplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	wSamplerInfo.mipLodBias = 0.0f;
+	wSamplerInfo.minLod = 0.0f;
+	wSamplerInfo.maxLod = 1.0f;
+
+	VkResult wResult = vkCreateSampler(iDevice, &wSamplerInfo, nullptr, &mSampler);
+	CHECK_VK_RESULT(wResult, "Sampler Creation");
 }

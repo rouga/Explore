@@ -2,7 +2,24 @@
 
 layout(location = 0) out vec4 out_Color;
 
+layout(location = 0) in vec2 in_UVs;
+
+layout (set=1, binding=3) readonly uniform ObjectUB
+{
+	mat4 ModelMatrix;
+	int HasUV;
+} in_ObjectUB;
+
+layout (set=1, binding=4) uniform sampler2D AlbedoTex;
+
 void main()
 {
-	out_Color = vec4(0.0, 0.4, 1.0, 1.0);
+	if(in_ObjectUB.HasUV != 0)
+	{
+		out_Color = texture(AlbedoTex, in_UVs);
+	}
+	else
+	{
+		out_Color = vec4(1.0, 0.0, 0.0, 1.0);
+	}
 }

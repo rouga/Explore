@@ -20,9 +20,10 @@ struct FrameUB
 	glm::mat4 ProjectionMatrix = glm::mat4();
 };
 
-struct ObjectUB
+struct alignas(64) ObjectUB
 {
 	glm::mat4 ModelMatrix = glm::mat4();
+	int HasUV = false;
 };
 
 struct FrameResources
@@ -37,6 +38,7 @@ class Renderer
 {
 public:
 	Renderer();
+	~Renderer();
 
 	void Initialize(Window* iWindow);
 	void UploadGeometry(Model* iModel);

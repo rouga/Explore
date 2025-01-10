@@ -9,6 +9,7 @@ class MainPass : public RenderPass
 {
 public:
 	MainPass(RenderContext* iContext);
+	~MainPass();
 
 	virtual void Setup(VkCommandBuffer iCmd, FrameResources* iFrameResources) override;
 	virtual void Begin(VkCommandBuffer iCmd, FrameResources* iFrameResources) override;
@@ -17,4 +18,8 @@ public:
 
 	std::unique_ptr<VulkanShader> mVS = nullptr;
 	std::unique_ptr<VulkanShader> mFS = nullptr;
+
+private:
+	void CreateTextureSampler(VkDevice iDevice, VkPhysicalDevice iPhysicalDevice);
+	VkSampler mSampler;
 };
