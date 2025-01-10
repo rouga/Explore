@@ -28,7 +28,7 @@ void Engine::Initialize(Window* iWindow)
 	Input::Get().Initialize(mWindow->GetGLFWWindow());
 
 	mModel = std::make_unique<Model>("resources/cottage.obj");
-	mRenderer->UploadModel(mModel.get());
+	mRenderer->UploadGeometry(mModel.get());
 	mModel->FreeCPU();
 	mModel->GetTransform()->SetScale(glm::vec3{0.5, 0.5, 0.5});
 	mModel->GetTransform()->SetRotation(glm::vec3{1.0, 0.0, 0.0}, 180);

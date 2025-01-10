@@ -39,7 +39,7 @@ public:
 	Renderer();
 
 	void Initialize(Window* iWindow);
-	void UploadModel(Model* iModel);
+	void UploadGeometry(Model* iModel);
 	void Render();
 	void Flush();
 	void Resize(int iWidth, int iHeight);

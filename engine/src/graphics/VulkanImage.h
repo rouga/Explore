@@ -5,6 +5,9 @@
 #include <stdexcept>
 #include <iostream>
 
+class VulkanCommandBuffer;
+class VulkanGPUBuffer;
+
 class VulkanImage
 {
 public:
@@ -26,11 +29,15 @@ public:
 
 	void Transition(VkCommandBuffer iCmd, VkImageLayout iOldLayout, VkImageLayout iNewLayout);
 
+	void UploadData(VulkanCommandBuffer* iCmd, VulkanGPUBuffer* iStagingBuffer, VkDeviceSize iSize, VkDeviceSize iStagingBufferOffset, VkExtent3D iDstExtent);
+
 	void Resize(VkExtent3D iExtent);
 
 	void FreeGPU();
 
 	const VkFormat& GetFormat() const { return mImageConfig.format; }
+
+	const VkExtent3D& GetExtent() const { return mExtent; }
 
 	VkImage mImage = VK_NULL_HANDLE;
 	VkImageView mImageView = VK_NULL_HANDLE;
@@ -40,6 +47,7 @@ private:
 
 	void CreateImageView(VkFormat iFormat, VkImageAspectFlags iAspectFlags);
 
+	VkExtent3D mExtent{0,0,0};
 	VkDevice mDevice = VK_NULL_HANDLE;
 	VmaAllocator mAllocator = VK_NULL_HANDLE;
 	VmaAllocation mAllocation = VK_NULL_HANDLE;

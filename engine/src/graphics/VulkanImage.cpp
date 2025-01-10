@@ -3,6 +3,9 @@
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
 
+#include "VulkanGPUBuffer.h"
+#include "VulkanCommandBuffer.h"
+
 #include "Utils.h"
 
 VulkanImage::VulkanImage(VkDevice iDevice, VmaAllocator iAllocator)
@@ -18,8 +21,9 @@ VulkanImage::~VulkanImage()
 
 void VulkanImage::Initialize(VkExtent3D iExtent, const ImageConfig& iConfigInfo)
 {
+	mExtent = iExtent;
 	mImageConfig = iConfigInfo;
-	CreateImage(iExtent, mImageConfig.format, mImageConfig.usage, mImageConfig.tiling);
+	CreateImage(mExtent, mImageConfig.format, mImageConfig.usage, mImageConfig.tiling);
 	CreateImageView(mImageConfig.format, mImageConfig.aspectFlags);
 }
 
@@ -98,6 +102,22 @@ void VulkanImage::Transition(VkCommandBuffer iCmd, VkImageLayout iOldLayout, VkI
 		0, nullptr,             // No buffer memory barriers
 		1, &wBarrier             // One image memory barrier
 	);
+}
+
+void VulkanImage::UploadData(VulkanCommandBuffer* iCmd, VulkanGPUBuffer* iStagingBuffer, VkDeviceSize iSize, VkDeviceSize iStagingBufferOffset, VkExtent3D iDstExtent)
+{
+	VkBufferImageCopy wRegion{};
+	wRegion.bufferOffset = iStagingBufferOffset;
+	wRegion.bufferRowLength = 0;
+	wRegion.bufferImageHeight = 0; 
+	wRegion.imageSubresource.aspectMask = mImageConfig.aspectFlags;
+	wRegion.imageSubresource.mipLevel = 0;
+	wRegion.imageSubresource.baseArrayLayer = 0;
+	wRegion.imageSubresource.layerCount = 1;
+	wRegion.imageOffset = { 0, 0, 0 };
+	wRegion.imageExtent = iDstExtent;
+
+	vkCmdCopyBufferToImage(iCmd->mCmd, iStagingBuffer->mBuffer, mImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &wRegion);
 }
 
 void VulkanImage::Resize(VkExtent3D iExtent)

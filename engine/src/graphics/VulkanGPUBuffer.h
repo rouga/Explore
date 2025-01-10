@@ -14,7 +14,7 @@ public:
 
 	void Initialize(VulkanLogicalDevice* iDevice, VkDeviceSize iSize, VmaAllocator iAllocator);
 
-	// Upload to GPU Local Memory
+	// UploadGeometry to GPU Local Memory
 	void Upload(VulkanCommandBuffer* iCmd, VulkanGPUBuffer* iStagingBuffer, VkDeviceSize iSize, VkDeviceSize iSrcOffset, VkDeviceSize iDstOffset);
 
 	// Map memory to host (proper flags must be set)

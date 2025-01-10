@@ -28,7 +28,7 @@ public:
 	void LoadNormals(const std::vector<glm::vec3>& iNormals);
 	void LoadUVs(const std::vector<glm::vec2>& iUVs);
 
-	void Upload(VulkanCommandBuffer* iCmd , RenderContext* iRenderContext);
+	void UploadGeometry(VulkanCommandBuffer* iCmd , RenderContext* iRenderContext);
 
 	void FreeGPU();
 	void FreeCPU();

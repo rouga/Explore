@@ -5,6 +5,8 @@
 
 #include "VulkanCommandBuffer.h"
 #include "VulkanSwapchain.h"
+#include "VulkanFence.h"
+
 #include "Utils.h"
 
 VulkanQueue::VulkanQueue()
@@ -55,7 +57,7 @@ void VulkanQueue::SubmitAsync(VulkanCommandBuffer* iCmd, VkFence iFence)
 	CHECK_VK_RESULT(wResult, "Command Queue Submit");
 }
 
-void VulkanQueue::SubmitSync(VulkanCommandBuffer* iCmd, VkFence iFence)
+void VulkanQueue::SubmitSync(VulkanCommandBuffer* iCmd, VulkanFence* iFence)
 {
 	VkSubmitInfo wSubmitInfo =
 	{
@@ -70,7 +72,10 @@ void VulkanQueue::SubmitSync(VulkanCommandBuffer* iCmd, VkFence iFence)
 		.pSignalSemaphores = VK_NULL_HANDLE
 	};
 
-	VkResult wResult = vkQueueSubmit(mQueue, 1, &wSubmitInfo, iFence);
+	VkResult wResult = vkQueueSubmit(mQueue, 1, &wSubmitInfo, iFence->mFence);
+
+	iFence->Wait();
+	iFence->Reset();
 	CHECK_VK_RESULT(wResult, "Command Queue Submit");
 }
 

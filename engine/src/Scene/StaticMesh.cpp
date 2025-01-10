@@ -48,7 +48,7 @@ void StaticMesh::LoadUVs(const std::vector<glm::vec2>& iUVs)
 	}
 }
 
-void StaticMesh::Upload(VulkanCommandBuffer* iCmd, RenderContext* iRenderContext)
+void StaticMesh::UploadGeometry(VulkanCommandBuffer* iCmd, RenderContext* iRenderContext)
 {
 	uint32_t wVerticesSize = mPositions.size() * sizeof(glm::vec3);
 	uint32_t wIndicesSize = mIndices.size() * sizeof(uint32_t);

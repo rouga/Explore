@@ -187,8 +187,5 @@ void RenderContext::TransitionDepthBuffer()
 	mDepthBuffer->Transition(mCopyCmd.mCmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 	mCopyCmd.End();
 
-	mQueue->SubmitSync(&mCopyCmd, mCopyFence->mFence);
-	mCopyFence->Wait();
-	mCopyFence->Reset();
-
+	mQueue->SubmitSync(&mCopyCmd, mCopyFence.get());
 }

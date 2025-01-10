@@ -11,6 +11,8 @@ add_library(Engine STATIC src/Core/Engine.cpp
 						  src/Renderer/RenderPass.cpp
 						  src/Renderer/MainPass.h
 						  src/Renderer/MainPass.cpp
+						  src/Renderer/TextureManager.h
+						  src/Renderer/TextureManager.cpp
 						  src/Scene/StaticMesh.cpp
 						  src/Scene/StaticMesh.h
 						  src/Scene/Camera.cpp

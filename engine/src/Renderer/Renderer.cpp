@@ -57,21 +57,19 @@ void Renderer::Initialize(Window* iWindow)
 	mMainPass->Setup(nullptr, &wFrameResources);
 }
 
-void Renderer::UploadModel(Model* iModel)
+void Renderer::UploadGeometry(Model* iModel)
 {
 	VulkanCommandBuffer* iCopyCmd = &mContext->mCopyCmd;
 	iCopyCmd->Reset(0);
 	iCopyCmd->Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 	for(uint32_t i = 0; i < iModel->GetNumMeshes(); i++)
 	{
-		iModel->GetMesh(i)->Upload(iCopyCmd, mContext.get());
+		iModel->GetMesh(i)->UploadGeometry(iCopyCmd, mContext.get());
 	}
 	
 	iCopyCmd->End();
 
-	mContext->mQueue->SubmitSync(iCopyCmd, mContext->mCopyFence->mFence);
-	mContext->mCopyFence->Wait();
-	mContext->mCopyFence->Reset();
+	mContext->mQueue->SubmitSync(iCopyCmd, mContext->mCopyFence.get());
 }
 
 void Renderer::Render()

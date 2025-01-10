@@ -8,6 +8,7 @@
 class VulkanCommandBuffer;
 class VulkanSemaphore;
 class VulkanSwapchain;
+class VulkanFence;
 
 class VulkanQueue
 {
@@ -20,7 +21,7 @@ public:
 	uint32_t AcquireNextImage();
 
 	void SubmitAsync(VulkanCommandBuffer* iCmd, VkFence iFence);
-	void SubmitSync(VulkanCommandBuffer* iCmd, VkFence iFence);
+	void SubmitSync(VulkanCommandBuffer* iCmd, VulkanFence* iFence);
 
 	// A Semaphore representing the last command executed on GPU Before presenting
 	void Present(uint32_t iImageIndex, VkSemaphore iSemaphore);
