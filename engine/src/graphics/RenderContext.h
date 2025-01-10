@@ -30,6 +30,15 @@ public:
 
 	void Resize(int iWidth, int iHeight);
 
+	void CopyImage(VkCommandBuffer iCmd, VkImage iSrcImage,
+		VkImage iDstImage,
+		uint32_t iWidth,
+		uint32_t iHeight,
+		uint32_t iMipLevel = 0,
+		uint32_t iLayerCount = 1);
+
+	void BlitImage(VkCommandBuffer iCmd, VkImage iSrcImage, VkImage iDstImage, VkOffset3D iSrcOffset, VkOffset3D iDstOffset);
+
 	std::unique_ptr<VulkanInstance> mInstance = nullptr;
 	std::unique_ptr<VulkanDebugCallback> mDebugCallback = nullptr;
 	std::unique_ptr<VulkanPhysicalDevice> mPhysicalDevice = nullptr;

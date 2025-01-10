@@ -30,6 +30,7 @@ struct FrameResources
 	FrameUB FrameUB;
 	VulkanGPUBuffer* mFrameUniformBuffer = nullptr;
 	VulkanGPUBuffer* mObjectsUniformBuffer = nullptr;
+	VulkanImage* mColorRenderTarget = nullptr;
 };
 
 class Renderer
@@ -47,6 +48,7 @@ public:
 	std::unique_ptr<MainPass> mMainPass = nullptr;
 
 	Window* mWindow = nullptr;
+	std::unique_ptr<VulkanImage> mColorRenderTarget = nullptr;
 	std::unique_ptr<VulkanGPUBuffer> mFrameUB = nullptr;
 	std::unique_ptr<VulkanGPUBuffer> mObjectsUB = nullptr;
 

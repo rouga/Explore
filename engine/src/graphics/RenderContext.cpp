@@ -72,6 +72,52 @@ void RenderContext::Resize(int iWidth, int iHeight)
 	mSwapchain->Resize(VkExtent2D{ (uint32_t)iWidth, (uint32_t)iHeight });
 }
 
+void RenderContext::CopyImage(VkCommandBuffer iCmd, VkImage iSrcImage, VkImage iDstImage,
+															uint32_t iWidth, uint32_t iHeight, uint32_t iMipLevel, uint32_t iLayerCount)
+{
+	// Define the image copy region
+	VkImageCopy wCopyRegion{};
+	wCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	wCopyRegion.srcSubresource.mipLevel = iMipLevel;
+	wCopyRegion.srcSubresource.baseArrayLayer = 0;
+	wCopyRegion.srcSubresource.layerCount = iLayerCount;
+	wCopyRegion.srcOffset = { 0, 0, 0 };
+
+	wCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	wCopyRegion.dstSubresource.mipLevel = iMipLevel;
+	wCopyRegion.dstSubresource.baseArrayLayer = 0;
+	wCopyRegion.dstSubresource.layerCount = iLayerCount;
+	wCopyRegion.dstOffset = { 0, 0, 0 };
+
+	wCopyRegion.extent.width = iWidth;
+	wCopyRegion.extent.height = iHeight;
+	wCopyRegion.extent.depth = 1;
+
+	// Record the image copy command
+	vkCmdCopyImage(
+		iCmd,
+		iSrcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+		iDstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		1, // regionCount
+		&wCopyRegion
+	);
+}
+
+void RenderContext::BlitImage(VkCommandBuffer iCmd, VkImage iSrcImage, VkImage iDstImage, VkOffset3D iSrcOffset, VkOffset3D iDstOffset)
+{
+	VkImageBlit blitRegion{};
+	blitRegion.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+	blitRegion.srcOffsets[0] = { 0, 0, 0 };
+	blitRegion.srcOffsets[1] = iSrcOffset;
+	blitRegion.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+	blitRegion.dstOffsets[0] = { 0, 0, 0 };
+	blitRegion.dstOffsets[1] = iDstOffset;
+
+	vkCmdBlitImage(iCmd, iSrcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+		iDstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blitRegion,
+		VK_FILTER_LINEAR);
+}
+
 void RenderContext::CreateAllocator()
 {
 	// initialize the memory allocator

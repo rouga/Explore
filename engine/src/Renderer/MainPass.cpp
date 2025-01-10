@@ -13,7 +13,7 @@ MainPass::MainPass(RenderContext* iContext)
 {
 }
 
-void MainPass::Setup(VkCommandBuffer iCmd)
+void MainPass::Setup(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 {
 	mRenderPass = std::make_unique<VulkanRenderPass>(mContext->mLogicalDevice->mDevice);
 
@@ -44,7 +44,7 @@ void MainPass::Setup(VkCommandBuffer iCmd)
 
 	wPipeline.pipelineLayout = mContext->mPipelineLayoutManager->GetLayout("main");
 
-	wPipeline.renderingInfo.pColorAttachmentFormats = &mContext->mSwapchain->mColorFormat;
+	wPipeline.renderingInfo.pColorAttachmentFormats = &iFrameResources->mColorRenderTarget->GetFormat();
 	wPipeline.renderingInfo.depthAttachmentFormat = mContext->mDepthBuffer->GetFormat();
 	wPipeline.renderingInfo.stencilAttachmentFormat = mContext->mDepthBuffer->GetFormat();
 
@@ -54,12 +54,12 @@ void MainPass::Setup(VkCommandBuffer iCmd)
 	spdlog::info("Main pass setup completed.");
 }
 
-void MainPass::Begin(VkCommandBuffer iCmd)
+void MainPass::Begin(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 {
 	uint32_t wCurrentImageIndex = mContext->mQueue->GetCurrentImageIndex();
-	std::vector<VkImageView> wBackbuffer{ mContext->mSwapchain->mImageViews[wCurrentImageIndex] };
+	std::vector<VkImageView> wBackbuffer{ iFrameResources->mColorRenderTarget->mImageView };
 
-	mRenderPass->Begin(iCmd, wBackbuffer, mContext->mDepthBuffer->mImageView, 
+	mRenderPass->Begin(iCmd, wBackbuffer, mContext->mDepthBuffer->mImageView,
 		VkExtent2D{(uint32_t)Engine::Get().GetWindow()->GetWidth(), (uint32_t)Engine::Get().GetWindow()->GetHeight()});
 }
 
@@ -130,7 +130,7 @@ void MainPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 	}
 }
 
-void MainPass::End(VkCommandBuffer iCmd)
+void MainPass::End(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 {
 	mRenderPass->End(iCmd);
 }

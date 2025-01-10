@@ -136,7 +136,7 @@ void VulkanSwapchain::CreateSwapchain()
 		.flags = 0,
 		.surface = mSurface,
 		.minImageCount = mNumSwapchainImages,
-		.imageFormat = VK_FORMAT_B8G8R8A8_SRGB,
+		.imageFormat = VK_FORMAT_R8G8B8A8_SRGB,
 		.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
 		.imageExtent = mSurfaceCapabilites.currentExtent,
 		.imageArrayLayers = 1,
@@ -162,7 +162,7 @@ void VulkanSwapchain::CreateSwapchain()
 	for(uint32_t i = 0; i < mNumSwapchainImages; i++)
 	{
 		mImageViews[i] = CreateImageView(mLogicalDevice->mDevice, mImages[i],
-															VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_VIEW_TYPE_2D, 1,1);
+			VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_VIEW_TYPE_2D, 1,1);
 	}
 
 	spdlog::info("Swapchain created with {:d} images", mNumSwapchainImages);

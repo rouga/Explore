@@ -36,8 +36,25 @@ void Renderer::Initialize(Window* iWindow)
 
 	mContext->mDescriptorSetManager->CreateLayout(wFrameUBBinding, "FrameUB");
 
+	VulkanImage::ImageConfig wImageConfig{};
+	wImageConfig.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+	wImageConfig.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+	wImageConfig.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+
+	mColorRenderTarget = std::make_unique<VulkanImage>(mContext->mLogicalDevice->mDevice, mContext->mAllocator);
+	mColorRenderTarget->Initialize(VkExtent3D{
+		.width = (uint32_t)mContext->mWindow->GetWidth(),
+		.height = (uint32_t)mContext->mWindow->GetHeight(),
+		.depth = 1
+		}, wImageConfig);
+
+	FrameResources wFrameResources =
+	{
+		.mColorRenderTarget = mColorRenderTarget.get()
+	};
+
 	mMainPass = std::make_unique<MainPass>(mContext.get());
-	mMainPass->Setup(nullptr);
+	mMainPass->Setup(nullptr, &wFrameResources);
 }
 
 void Renderer::UploadModel(Model* iModel)
@@ -83,16 +100,23 @@ void Renderer::Render()
 	{
 		.FrameUB = wFrameUB,
 		.mFrameUniformBuffer = mFrameUB.get(),
-		.mObjectsUniformBuffer = mObjectsUB.get()
+		.mObjectsUniformBuffer = mObjectsUB.get(),
+		.mColorRenderTarget = mColorRenderTarget.get()
 	};
 
 	wCmd->Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+	mColorRenderTarget->Transition(wCmd->mCmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+	mMainPass->Begin(wCmd->mCmd, &wFrameResources);
+	mMainPass->Draw(wCmd->mCmd, &wFrameResources);
+	mMainPass->End(wCmd->mCmd, &wFrameResources);
+
+	mColorRenderTarget->Transition(wCmd->mCmd,VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
 	mContext->mSwapchain->TransitionImageToDraw(wCmd, wCurrentImageIndex);
 
-	mMainPass->Begin(wCmd->mCmd);
-	mMainPass->Draw(wCmd->mCmd, &wFrameResources);
-	mMainPass->End(wCmd->mCmd);
+	mContext->BlitImage(wCmd->mCmd, mColorRenderTarget->mImage, mContext->mSwapchain->mImages[wCurrentImageIndex],
+		VkOffset3D{mWindow->GetWidth(), mWindow->GetHeight(), 1}, VkOffset3D{ mWindow->GetWidth(), mWindow->GetHeight(), 1 });
 
 	mContext->mSwapchain->TransitionImageToPresent(wCmd, wCurrentImageIndex);
 
@@ -110,6 +134,7 @@ void Renderer::Flush()
 void Renderer::Resize(int iWidth, int iHeight)
 {
 	Flush();
+	mColorRenderTarget->Resize(VkExtent3D{(uint32_t)iWidth, (uint32_t)iHeight, 1});
 	mContext->Resize(iWidth, iHeight);
 }
 

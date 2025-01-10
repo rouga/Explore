@@ -50,6 +50,31 @@ void VulkanImage::Transition(VkCommandBuffer iCmd, VkImageLayout iOldLayout, VkI
 		wDestinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 
 	}
+	else if (iOldLayout == VK_IMAGE_LAYOUT_UNDEFINED && iNewLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+	{
+		wBarrier.srcAccessMask = 0;
+		wBarrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+		wSourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		wDestinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	}
+	else if (iOldLayout == VK_IMAGE_LAYOUT_UNDEFINED && iNewLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+	{
+		wBarrier.srcAccessMask = 0;
+		wBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+		wSourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		wDestinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	}
+	else if (iOldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && iNewLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
+	{
+		wBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		wBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+		wSourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		wDestinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+	}
 	else if (iOldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && iNewLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) 
 	{
 		wBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -59,17 +84,10 @@ void VulkanImage::Transition(VkCommandBuffer iCmd, VkImageLayout iOldLayout, VkI
 		wDestinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
 	}
-	else if(iOldLayout == VK_IMAGE_LAYOUT_UNDEFINED && iNewLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-	{
-		wBarrier.srcAccessMask = 0;
-		wBarrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-		wSourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-		wDestinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-	}
 	else 
 	{
 		spdlog::error("Unsupported Image layout transition");
+		exit(EXIT_FAILURE);
 	}
 
 	vkCmdPipelineBarrier(
