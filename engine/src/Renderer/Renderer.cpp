@@ -20,23 +20,18 @@ Renderer::Renderer()
 	mContext = std::make_unique<RenderContext>();
 }
 
-Renderer::~Renderer()
-{
-	TextureManager::Get().Shutdown();
-}
-
 void Renderer::Initialize(Window* iWindow)
 {
 	mWindow = iWindow;
 	mContext->Initialize(iWindow);
+
+	TextureManager::Get().Initialize(mContext.get());
 
 	mFrameUB = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 	mFrameUB->Initialize(mContext->mLogicalDevice.get(), sizeof(FrameUB), mContext->mAllocator);
 
 	mObjectsUB = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 	mObjectsUB->Initialize(mContext->mLogicalDevice.get(), sizeof(ObjectUB) * mMaxNumberMeshes * mContext->mSwapchain->GetNumImages(), mContext->mAllocator);
-
-	TextureManager::Get().Initialize(mContext.get());
 
 	std::vector<DescriptorSetManager::Binding> wFrameUBBinding =
 	{
@@ -79,6 +74,8 @@ void Renderer::UploadGeometry(Model* iModel)
 	iCopyCmd->End();
 
 	mContext->mQueue->SubmitSync(iCopyCmd, mContext->mCopyFence.get());
+
+	TextureManager::Get().LoadPending();
 }
 
 void Renderer::Render()
@@ -101,8 +98,6 @@ void Renderer::Render()
 	memcpy(wMappedMem, &wFrameUB, sizeof(FrameUB));
 	mFrameUB->UnmapMemory();
 
-	FillUniformBuffer();
-
 	FrameResources wFrameResources =
 	{
 		.FrameUB = wFrameUB,
@@ -114,9 +109,13 @@ void Renderer::Render()
 	wCmd->Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 	mColorRenderTarget->Transition(wCmd->mCmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
-	mMainPass->Begin(wCmd->mCmd, &wFrameResources);
-	mMainPass->Draw(wCmd->mCmd, &wFrameResources);
-	mMainPass->End(wCmd->mCmd, &wFrameResources);
+	if(Engine::Get().GetModel())
+	{
+		UpdateObjectsUniformBuffer();
+		mMainPass->Begin(wCmd->mCmd, &wFrameResources);
+		mMainPass->Draw(wCmd->mCmd, &wFrameResources);
+		mMainPass->End(wCmd->mCmd, &wFrameResources);
+	}
 
 	mColorRenderTarget->Transition(wCmd->mCmd,VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
@@ -145,7 +144,7 @@ void Renderer::Resize(int iWidth, int iHeight)
 	mContext->Resize(iWidth, iHeight);
 }
 
-void Renderer::FillUniformBuffer()
+void Renderer::UpdateObjectsUniformBuffer()
 {
 	uint32_t wCurrentImageIndex = mContext->mQueue->GetCurrentImageIndex();
 

@@ -4,6 +4,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Graphics/RenderContext.h"
+#include "Renderer/TextureManager.h"
 
 StaticMesh::StaticMesh()
 {
@@ -122,6 +123,12 @@ void StaticMesh::FreeGPU()
 	{
 		mUVBuffer->FreeGPU();
 	}
+
+	if(mAlbedoTexture.mTexture)
+	{
+		mAlbedoTexture.mTexture.reset();
+		TextureManager::Get().DereferenceTexture(mAlbedoTexture.mPath);
+	}
 }
 
 void StaticMesh::FreeCPU()
@@ -130,4 +137,10 @@ void StaticMesh::FreeCPU()
 	mIndices.clear();
 	mNormals.clear();
 	mUVs.clear();
+}
+
+void StaticMesh::SetAlbedo(std::shared_ptr<VulkanImage> iTexture, const std::string& iPath)
+{
+	mAlbedoTexture.mTexture = iTexture;
+	mAlbedoTexture.mPath = iPath;
 }

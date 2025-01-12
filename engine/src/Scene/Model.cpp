@@ -41,12 +41,12 @@ void Model::LoadModel(const std::string& iPath)
 	}
 
 	mDirectory = iPath.substr(0, iPath.find_last_of('/'));
+	mMeshes.reserve(wScene->mNumMeshes);
 	ProcessNode(wScene->mRootNode, wScene, mTranformation);
 }
 
 void Model::ProcessNode(aiNode* iNode, const aiScene* iScene, std::shared_ptr<Transformation> iTransformation)
 {
-	mMeshes.reserve(iScene->mNumMeshes);
 	for (unsigned int i = 0; i < iNode->mNumMeshes; i++)
 	{
 		aiMesh* wMesh = iScene->mMeshes[iNode->mMeshes[i]];
@@ -58,7 +58,7 @@ void Model::ProcessNode(aiNode* iNode, const aiScene* iScene, std::shared_ptr<Tr
 	for (unsigned int i = 0; i < iNode->mNumChildren; i++) 
 	{
 		// TO FIX: Currently a hack is implemented for the transform, the last mesh added controls the transform of all children
-		ProcessNode(iNode->mChildren[i], iScene, iNode == iScene->mRootNode ? mTranformation : mMeshes.back().get()->GetTransform());
+		ProcessNode(iNode->mChildren[i], iScene, iNode == iScene->mRootNode || mMeshes.empty() ? mTranformation : mMeshes.back().get()->GetTransform());
 	}
 }
 
@@ -108,5 +108,16 @@ void Model::ProcessMesh(aiMesh* iAiMesh, const aiScene* iScene, StaticMesh* iSta
 		iStaticMesh->LoadUVs(wUVs);
 	}
 
-	iStaticMesh->SetAlbedoTexture(TextureManager::Get().sGridTexture);
+	if (iAiMesh->mMaterialIndex >= 0)
+	{
+		aiString wTexturePath;
+		aiMaterial* wMaterial = iScene->mMaterials[iAiMesh->mMaterialIndex];
+		wMaterial->GetTexture(aiTextureType_BASE_COLOR, 0, &wTexturePath);
+		std::string wPath = mDirectory + "/" + wTexturePath.C_Str();
+		iStaticMesh->SetAlbedo(TextureManager::Get().AddTexture(wPath), wPath);
+	}
+	else
+	{
+		iStaticMesh->SetAlbedo(TextureManager::Get().mGridTexture, "Grid");
+	}
 }

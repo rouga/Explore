@@ -16,16 +16,20 @@ TextureManager& TextureManager::Get()
 void TextureManager::Initialize(RenderContext* iContext)
 {
 	mContext = iContext;
-	sGridTexture = std::make_shared<VulkanImage>(mContext->mLogicalDevice->mDevice, mContext->mAllocator);
-	CreateTexture("resources/textures/grid.png", sGridTexture.get());
+	mGridTexture = std::make_shared<VulkanImage>(mContext->mLogicalDevice->mDevice, mContext->mAllocator);
+	CreateTexture("resources/textures/grid.png", mGridTexture.get());
 }
 
 void TextureManager::Shutdown()
 {
-	sGridTexture->FreeGPU();
+	if(mGridTexture)
+	{
+		mGridTexture->FreeGPU();
+		mGridTexture = nullptr;
+	}
 }
 
-std::shared_ptr<VulkanImage> TextureManager::AddTexture(std::string iPath)
+std::shared_ptr<VulkanImage> TextureManager::AddTexture(const std::string& iPath)
 {
 	// Check if texture exists in the cache
 	if (auto wCachedTexture = mTextureCache[iPath].lock())
@@ -37,6 +41,17 @@ std::shared_ptr<VulkanImage> TextureManager::AddTexture(std::string iPath)
 	mTextureCache[iPath] = wTexture; // Store a weak_ptr in the cache
 	mTexturePending.push_back(iPath);
 	return wTexture;
+}
+
+void TextureManager::DereferenceTexture(const std::string& iPath)
+{
+	if (mTextureCache.find(iPath) != mTextureCache.end())
+	{
+		if(mTextureCache[iPath].expired())
+		{
+			auto w = mTextureCache.erase(iPath);
+		}
+	}
 }
 
 void TextureManager::LoadPending()

@@ -29,7 +29,7 @@ public:
 private:
 	// Private constructor for Singleton
 	Engine() = default;
-	std::unique_ptr<Model> mModel;
+	std::unique_ptr<Model> mModel = nullptr;
 	Window* mWindow = nullptr;
 
 	std::unique_ptr<Renderer> mRenderer = nullptr;

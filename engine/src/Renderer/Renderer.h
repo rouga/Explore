@@ -38,7 +38,6 @@ class Renderer
 {
 public:
 	Renderer();
-	~Renderer();
 
 	void Initialize(Window* iWindow);
 	void UploadGeometry(Model* iModel);
@@ -55,7 +54,7 @@ public:
 	std::unique_ptr<VulkanGPUBuffer> mObjectsUB = nullptr;
 
 private:
-	void FillUniformBuffer();
+	void UpdateObjectsUniformBuffer();
 	static constexpr uint32_t mMaxNumberMeshes = 2000;
 
 };

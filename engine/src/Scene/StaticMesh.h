@@ -16,6 +16,12 @@ class StaticMesh
 {
 public:
 
+	struct TextureReference
+	{
+		std::shared_ptr<VulkanImage> mTexture = nullptr;
+		std::string mPath;
+	};
+
 	enum MeshAttributes {
 		NORMAL = 1 << 0,  // 0010
 		UV = 1 << 1,  // 0100
@@ -46,8 +52,8 @@ public:
 	VulkanGPUBuffer* GetUVBuffer() const { return mUVBuffer.get(); }
 	uint32_t GetIndexCount() const { return mIndexCount; }
 
-	VulkanImage* GetAlbedoTexture() const { return mAlbedoTexture.get(); }
-	void SetAlbedoTexture(std::shared_ptr<VulkanImage> iAlbedo) { mAlbedoTexture = iAlbedo; }
+	VulkanImage* GetAlbedoTexture() const { return mAlbedoTexture.mTexture.get(); }
+	void SetAlbedo(std::shared_ptr<VulkanImage>, const std::string& iPath);
 
 	void SetUniformBufferOffset(uint32_t iOffset) { mUniformBufferOffset = iOffset; }
 	uint32_t GetUniformBufferOffset() const { return mUniformBufferOffset; }
@@ -68,7 +74,7 @@ private:
 	std::unique_ptr<VulkanGPUBuffer> mIndexBuffer = nullptr;
 	std::unique_ptr<VulkanGPUBuffer> mNormalBuffer = nullptr;
 	std::unique_ptr<VulkanGPUBuffer> mUVBuffer = nullptr;
-	std::shared_ptr<VulkanImage> mAlbedoTexture = nullptr;
+	TextureReference mAlbedoTexture;
 
 	uint32_t mUniformBufferOffset = 0;
 

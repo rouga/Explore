@@ -17,14 +17,15 @@ public:
 	void Initialize(RenderContext* iContext);
 	void Shutdown();
 
-	std::shared_ptr<VulkanImage> AddTexture(std::string iPath);
+	std::shared_ptr<VulkanImage> AddTexture(const std::string& iPath);
+	void DereferenceTexture(const std::string& iPath);
 
 	void LoadPending();
 	
-	std::shared_ptr<VulkanImage> sGridTexture;
+	std::shared_ptr<VulkanImage> mGridTexture = nullptr;
 
 private:
-	TextureManager() = default;;
+	TextureManager() = default;
 	void CreateTexture(std::string iPath, VulkanImage* iTexture);
 	
 	std::unordered_map<std::string, std::weak_ptr<VulkanImage>> mTextureCache; // Map for loaded textures

@@ -10,6 +10,7 @@
 
 #include "Window.h"
 #include "Input.h"
+#include "Renderer/TextureManager.h"
 
 
 Engine& Engine::Get()
@@ -27,17 +28,22 @@ void Engine::Initialize(Window* iWindow)
 	mRenderer->Initialize(mWindow);
 	Input::Get().Initialize(mWindow->GetGLFWWindow());
 
-	mModel = std::make_unique<Model>("resources/cottage.obj");
-	mRenderer->UploadGeometry(mModel.get());
-	mModel->FreeCPU();
-	mModel->GetTransform()->SetScale(glm::vec3{0.5, 0.5, 0.5});
-	mModel->GetTransform()->SetRotation(glm::vec3{1.0, 0.0, 0.0}, 180);
+	mModel = std::make_unique<Model>("resources/Helmet/DamagedHelmet.gltf");
+	if(mModel)
+	{
+		mRenderer->UploadGeometry(mModel.get());
+		mModel->FreeCPU();
+	}
 }
 
 void Engine::Shutdown()
 {
 	mRenderer->Flush();
-	mModel->FreeGPU();
+	if(mModel)
+	{
+		mModel->FreeGPU();
+	}
+	TextureManager::Get().Shutdown();
 }
 
 void Engine::Run()
