@@ -7,14 +7,14 @@ class VulkanDescriptorPool
 public:
 	struct PoolSizes 
 	{
-		uint32_t uniformBuffers = 100;
-		uint32_t combinedImageSamplers = 100;
-		uint32_t storageBuffers = 100;
-		uint32_t storageImages = 100;
-		uint32_t inputAttachments = 100;
+		uint32_t uniformBuffers = 2500;
+		uint32_t combinedImageSamplers = 2500;
+		uint32_t storageBuffers = 2500;
+		uint32_t storageImages = 2500;
+		uint32_t inputAttachments = 2500;
 	};
 
-	VulkanDescriptorPool(VkDevice iDevice, uint32_t iMaxSets = 10, const PoolSizes& iPoolSizes = PoolSizes());
+	VulkanDescriptorPool(VkDevice iDevice, uint32_t iMaxSets = 2500, const PoolSizes& iPoolSizes = PoolSizes());
 	~VulkanDescriptorPool();
 
 	VulkanDescriptorPool(const VulkanDescriptorPool&) = delete;

@@ -112,9 +112,24 @@ void Model::ProcessMesh(aiMesh* iAiMesh, const aiScene* iScene, StaticMesh* iSta
 	{
 		aiString wTexturePath;
 		aiMaterial* wMaterial = iScene->mMaterials[iAiMesh->mMaterialIndex];
-		wMaterial->GetTexture(aiTextureType_BASE_COLOR, 0, &wTexturePath);
-		std::string wPath = mDirectory + "/" + wTexturePath.C_Str();
-		iStaticMesh->SetAlbedo(TextureManager::Get().AddTexture(wPath), wPath);
+		if(wMaterial->GetTextureCount(aiTextureType_DIFFUSE))
+		{
+			wMaterial->GetTexture(aiTextureType_DIFFUSE,0, &wTexturePath);
+			std::string wPath = mDirectory + "/" + wTexturePath.C_Str();
+			std::replace(wPath.begin(), wPath.end(), '\\', '/');
+			iStaticMesh->SetAlbedo(TextureManager::Get().AddTexture(wPath), wPath);
+		}
+		else if(wMaterial->GetTextureCount(aiTextureType_BASE_COLOR))
+		{
+			wMaterial->GetTexture(aiTextureType_BASE_COLOR, 0, &wTexturePath);
+			std::string wPath = mDirectory + "/" + wTexturePath.C_Str();
+			std::replace(wPath.begin(), wPath.end(), '\\', '/');
+			iStaticMesh->SetAlbedo(TextureManager::Get().AddTexture(wPath), wPath);
+		}
+		else
+		{
+			iStaticMesh->SetAlbedo(TextureManager::Get().mGridTexture, "Grid");
+		}
 	}
 	else
 	{

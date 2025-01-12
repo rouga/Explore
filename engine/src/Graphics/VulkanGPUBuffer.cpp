@@ -79,5 +79,4 @@ void VulkanGPUBuffer::FreeGPU()
 {
 	vmaDestroyBuffer(mAllocator, mBuffer, mAllocation);
 	mBuffer = VK_NULL_HANDLE;
-	spdlog::info("Buffer destroyed with size : {:d}", mAllocationInfo.size);
 }

@@ -28,7 +28,8 @@ void Engine::Initialize(Window* iWindow)
 	mRenderer->Initialize(mWindow);
 	Input::Get().Initialize(mWindow->GetGLFWWindow());
 
-	mModel = std::make_unique<Model>("resources/Helmet/DamagedHelmet.gltf");
+	mModel = std::make_unique<Model>("resources/Bistro_v5_2/BistroExterior.fbx");
+	spdlog::info("Number of meshes loaded to CPU : {:d}", mModel->GetNumMeshes());
 	if(mModel)
 	{
 		mRenderer->UploadGeometry(mModel.get());

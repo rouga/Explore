@@ -55,6 +55,6 @@ public:
 
 private:
 	void UpdateObjectsUniformBuffer();
-	static constexpr uint32_t mMaxNumberMeshes = 2000;
+	static constexpr uint32_t mMaxNumberMeshes = 2500;
 
 };

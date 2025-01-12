@@ -11,9 +11,6 @@ public:
 
 	VulkanDescriptorSet(VkDevice iDevice, VkDescriptorPool iPool, VkDescriptorSetLayout iLayout);
 
-	VulkanDescriptorSet(const VulkanDescriptorSet&) = delete;
-	VulkanDescriptorSet& operator=(const VulkanDescriptorSet&) = delete;
-
 	void Update(uint32_t iBinding, VkDescriptorType iType, VkDescriptorBufferInfo* iBufferInfo);
 	void Update(uint32_t iBinding, VkDescriptorImageInfo* iImageInfo);
 

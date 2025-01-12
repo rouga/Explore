@@ -81,7 +81,7 @@ glm::mat4 OrbitCamera::GetProjectionMatrix() const
 	return glm::perspectiveFov(glm::radians(45.f),
 		static_cast<float>(mWindow->GetWidth()),
 		static_cast<float>(mWindow->GetHeight()),
-		0.1f, 1000.f);
+		0.1f, 10000.f);
 }
 
 glm::vec3 OrbitCamera::getPosition() const {

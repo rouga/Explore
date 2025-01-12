@@ -158,7 +158,7 @@ void MainPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 			1, _countof(wObjectDSList), wObjectDSList,
 			0, nullptr);
 
-		vkCmdDraw(iCmd, wModel->GetMesh(i)->GetIndexCount(), 1, 0, 0);
+		vkCmdDraw(iCmd, wMesh->GetIndexCount(), 1, 0, 0);
 	}
 }
 
