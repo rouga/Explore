@@ -23,6 +23,10 @@ void VulkanImage::Initialize(VkExtent3D iExtent, const ImageConfig& iConfigInfo)
 {
 	mExtent = iExtent;
 	mImageConfig = iConfigInfo;
+	if(iConfigInfo.WithMips)
+	{
+		mNumMipLevels = ComputeMipLevels(mExtent);
+	}
 	CreateImage(mExtent, mImageConfig.format, mImageConfig.usage, mImageConfig.tiling);
 	CreateImageView(mImageConfig.format, mImageConfig.aspectFlags);
 }
@@ -38,7 +42,7 @@ void VulkanImage::Transition(VkCommandBuffer iCmd, VkImageLayout iOldLayout, VkI
 	wBarrier.image = mImage;
 	wBarrier.subresourceRange.aspectMask = mImageConfig.aspectFlags;
 	wBarrier.subresourceRange.baseMipLevel = 0;
-	wBarrier.subresourceRange.levelCount = 1;
+	wBarrier.subresourceRange.levelCount = mNumMipLevels;
 	wBarrier.subresourceRange.baseArrayLayer = 0;
 	wBarrier.subresourceRange.layerCount = 1;
 
@@ -88,6 +92,24 @@ void VulkanImage::Transition(VkCommandBuffer iCmd, VkImageLayout iOldLayout, VkI
 		wDestinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
 	}
+	else if (iOldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && iNewLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
+	{
+		wBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		wBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		wSourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		wDestinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+	}
+	else if (iOldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && iNewLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+	{
+		wBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		wBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		wSourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		wDestinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+	}
 	else 
 	{
 		spdlog::error("Unsupported Image layout transition");
@@ -106,10 +128,11 @@ void VulkanImage::Transition(VkCommandBuffer iCmd, VkImageLayout iOldLayout, VkI
 
 void VulkanImage::UploadData(VulkanCommandBuffer* iCmd, VulkanGPUBuffer* iStagingBuffer, VkDeviceSize iSize, VkDeviceSize iStagingBufferOffset, VkExtent3D iDstExtent)
 {
+	// Upload original Texture
 	VkBufferImageCopy wRegion{};
 	wRegion.bufferOffset = iStagingBufferOffset;
 	wRegion.bufferRowLength = 0;
-	wRegion.bufferImageHeight = 0; 
+	wRegion.bufferImageHeight = 0;
 	wRegion.imageSubresource.aspectMask = mImageConfig.aspectFlags;
 	wRegion.imageSubresource.mipLevel = 0;
 	wRegion.imageSubresource.baseArrayLayer = 0;
@@ -118,6 +141,96 @@ void VulkanImage::UploadData(VulkanCommandBuffer* iCmd, VulkanGPUBuffer* iStagin
 	wRegion.imageExtent = iDstExtent;
 
 	vkCmdCopyBufferToImage(iCmd->mCmd, iStagingBuffer->mBuffer, mImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &wRegion);
+
+	// Generate Mips if necessary
+	VkImageMemoryBarrier wBarrier{};
+	wBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	wBarrier.image = mImage;
+	wBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	wBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	wBarrier.subresourceRange.aspectMask = mImageConfig.aspectFlags;
+	wBarrier.subresourceRange.baseArrayLayer = 0;
+	wBarrier.subresourceRange.layerCount = 1;
+	wBarrier.subresourceRange.levelCount = 1;
+
+	uint32_t wMipWidth = mExtent.width;
+	int32_t wMipHeight = mExtent.height;
+
+	for (uint32_t i = 1; i < mNumMipLevels; i++) {
+		// Transition previous mip level to VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
+		wBarrier.subresourceRange.baseMipLevel = i - 1;
+		wBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		wBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		wBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		wBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+		vkCmdPipelineBarrier(
+			iCmd->mCmd,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			0,
+			0, nullptr,
+			0, nullptr,
+			1, &wBarrier
+		);
+
+		// Define the blit operation
+		VkImageBlit wBlit{};
+		wBlit.srcOffsets[0] = { 0, 0, 0 };
+		wBlit.srcOffsets[1] = { (int)wMipWidth,(int)wMipHeight, 1 };
+		wBlit.srcSubresource.aspectMask = mImageConfig.aspectFlags;
+		wBlit.srcSubresource.mipLevel = i - 1;
+		wBlit.srcSubresource.baseArrayLayer = 0;
+		wBlit.srcSubresource.layerCount = 1;
+
+		wBlit.dstOffsets[0] = { 0, 0, 0 };
+		wBlit.dstOffsets[1] = { wMipWidth > 1 ? (int)wMipWidth / 2 : 1, wMipHeight > 1 ? (int)wMipHeight / 2 : 1, 1 };
+		wBlit.dstSubresource.aspectMask = mImageConfig.aspectFlags;
+		wBlit.dstSubresource.mipLevel = i;
+		wBlit.dstSubresource.baseArrayLayer = 0;
+		wBlit.dstSubresource.layerCount = 1;
+
+		vkCmdBlitImage(
+			iCmd->mCmd,
+			mImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			mImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			1, &wBlit,
+			VK_FILTER_LINEAR
+		);
+
+		// Transition current mip level to VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
+		wBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		wBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		wBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		wBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		vkCmdPipelineBarrier(
+			iCmd->mCmd,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+			0,
+			0, nullptr,
+			0, nullptr,
+			1, &wBarrier
+		);
+
+		// Update dimensions for next level
+		wMipWidth = wMipWidth > 1 ? wMipWidth / 2 : 1;
+		wMipHeight = wMipHeight > 1 ? wMipHeight / 2 : 1;
+	}
+
+	// Transition last level (or first level if no mipmaps were generated)
+	wBarrier.subresourceRange.baseMipLevel = mNumMipLevels - 1;
+	wBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	wBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	wBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+	wBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+	vkCmdPipelineBarrier(iCmd->mCmd,
+		VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+		0, nullptr,
+		0, nullptr,
+		1, &wBarrier);
 }
 
 void VulkanImage::Resize(VkExtent3D iExtent)
@@ -151,7 +264,7 @@ void VulkanImage::CreateImage(VkExtent3D iExtent, VkFormat iFormat, VkImageUsage
 		.imageType = VK_IMAGE_TYPE_2D,
 		.format = iFormat,
 		.extent = iExtent,
-		.mipLevels = 1,
+		.mipLevels = mNumMipLevels,
 		.arrayLayers = 1,
 		.samples = VK_SAMPLE_COUNT_1_BIT,
 		.tiling = iTiling,
@@ -182,7 +295,7 @@ void VulkanImage::CreateImageView(VkFormat iFormat, VkImageAspectFlags iAspectFl
 		{
 			.aspectMask = iAspectFlags,
 			.baseMipLevel = 0,
-			.levelCount = 1,
+			.levelCount = mNumMipLevels,
 			.baseArrayLayer = 0,
 			.layerCount = 1,
 		}
@@ -190,4 +303,10 @@ void VulkanImage::CreateImageView(VkFormat iFormat, VkImageAspectFlags iAspectFl
 
 	VkResult wResult = vkCreateImageView(mDevice, &wViewInfo, nullptr, &mImageView);
 	CHECK_VK_RESULT(wResult, "Image View Creation");
+}
+
+uint32_t VulkanImage::ComputeMipLevels(VkExtent3D iExtent)
+{
+	uint32_t wLargestDimension = std::max({ iExtent.width, iExtent.height, iExtent.depth });
+	return static_cast<uint32_t>(std::floor(std::log2(wLargestDimension))) + 1;
 }

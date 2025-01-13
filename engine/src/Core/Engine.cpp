@@ -3,7 +3,10 @@
 #include <iostream>
 
 #include <vulkan/vulkan.h>
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_vulkan.h>
 
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
@@ -22,16 +25,17 @@ Engine& Engine::Get()
 void Engine::Initialize(Window* iWindow)
 {
 	mWindow = iWindow;
+	Input::Get().Initialize(mWindow->GetGLFWWindow());
 	mRenderer = std::make_unique<Renderer>();
 	mOrbitCamera = std::make_unique<OrbitCamera>(mWindow);
 
 	mRenderer->Initialize(mWindow);
-	Input::Get().Initialize(mWindow->GetGLFWWindow());
 
-	mModel = std::make_unique<Model>("resources/Bistro_v5_2/BistroExterior.fbx");
+	mModel = std::make_unique<Model>("resources/cottage.obj");
 	spdlog::info("Number of meshes loaded to CPU : {:d}", mModel->GetNumMeshes());
 	if(mModel)
 	{
+		mModel->GetTransform()->SetRotation(glm::vec3{1.0f, 0.0f, 0.0f}, 180);
 		mRenderer->UploadGeometry(mModel.get());
 		mModel->FreeCPU();
 	}
@@ -51,6 +55,11 @@ void Engine::Run()
 {
 	Input::Get().Setup();
 	glfwPollEvents();
+
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+
 	if(mWindow->IsMinimized())
 	{
 		return;

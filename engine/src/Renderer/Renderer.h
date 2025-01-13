@@ -8,11 +8,13 @@
 #include "Graphics/VulkanGraphicsPipeline.h"
 #include "Graphics/VulkanGPUBuffer.h"
 #include "MainPass.h"
+#include "UIPass.h"
 
 class Window;
 class StaticMesh;
 class OrbitCamera;
 class Model;
+
 
 struct FrameUB
 {
@@ -47,6 +49,7 @@ public:
 
 	std::unique_ptr<RenderContext> mContext = nullptr;
 	std::unique_ptr<MainPass> mMainPass = nullptr;
+	std::unique_ptr<UIPass> mUIPass = nullptr;
 
 	Window* mWindow = nullptr;
 	std::unique_ptr<VulkanImage> mColorRenderTarget = nullptr;

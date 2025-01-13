@@ -29,6 +29,7 @@ public:
 
 	void Transition(VkCommandBuffer iCmd, VkImageLayout iOldLayout, VkImageLayout iNewLayout);
 
+	// Upload data to GPU (with mips if enabled) and transition the layout to Shader Read Optimal
 	void UploadData(VulkanCommandBuffer* iCmd, VulkanGPUBuffer* iStagingBuffer, VkDeviceSize iSize, VkDeviceSize iStagingBufferOffset, VkExtent3D iDstExtent);
 
 	void Resize(VkExtent3D iExtent);
@@ -47,11 +48,14 @@ private:
 
 	void CreateImageView(VkFormat iFormat, VkImageAspectFlags iAspectFlags);
 
+	uint32_t ComputeMipLevels(VkExtent3D iExtent);
+
 	VkExtent3D mExtent{0,0,0};
 	VkDevice mDevice = VK_NULL_HANDLE;
 	VmaAllocator mAllocator = VK_NULL_HANDLE;
 	VmaAllocation mAllocation = VK_NULL_HANDLE;
 	VmaAllocationInfo mAllocationInfo{};
 	ImageConfig mImageConfig;
+	uint32_t mNumMipLevels = 1; // Number of mips including the original texture
 
 };

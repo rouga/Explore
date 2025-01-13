@@ -11,6 +11,8 @@ add_library(Engine STATIC src/Core/Engine.cpp
 						  src/Renderer/RenderPass.cpp
 						  src/Renderer/MainPass.h
 						  src/Renderer/MainPass.cpp
+						  src/Renderer/UIPass.h
+						  src/Renderer/UIPass.cpp
 						  src/Renderer/TextureManager.h
 						  src/Renderer/TextureManager.cpp
 						  src/Scene/StaticMesh.cpp
@@ -69,7 +71,8 @@ find_package(Vulkan REQUIRED)
 target_include_directories(Engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 										 ${Vulkan_INCLUDE_DIRS}
 										 ${CMAKE_SOURCE_DIR}/extern
-										 ${CMAKE_SOURCE_DIR}/extern/assimp-5.4.3/include)
+										 ${CMAKE_SOURCE_DIR}/extern/assimp-5.4.3/include
+										 ${CMAKE_SOURCE_DIR}/extern/imgui-1.91.6)
 
 # Link Vulkan to the engine
-target_link_libraries(Engine PRIVATE Vulkan::Vulkan glfw assimp)
+target_link_libraries(Engine PRIVATE Vulkan::Vulkan glfw assimp imgui)

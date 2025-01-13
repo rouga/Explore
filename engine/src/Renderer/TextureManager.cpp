@@ -84,7 +84,8 @@ void TextureManager::CreateTexture(std::string iPath, VulkanImage* iTexture)
 	VulkanImage::ImageConfig wImageConfig{};
 	wImageConfig.format = VK_FORMAT_R8G8B8A8_SRGB;
 	wImageConfig.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
-	wImageConfig.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+	wImageConfig.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	wImageConfig.WithMips = true;
 
 	iTexture->Initialize(VkExtent3D{ (uint32_t)wWidth, (uint32_t)wHeight,1 }, wImageConfig);
 
@@ -99,8 +100,6 @@ void TextureManager::CreateTexture(std::string iPath, VulkanImage* iTexture)
 	mContext->mStagingBuffer->UnmapMemory();
 
 	iTexture->UploadData(iCopyCmd, mContext->mStagingBuffer.get(), wImageSize, 0, VkExtent3D{ (uint32_t)wWidth, (uint32_t)wHeight,1 });
-
-	iTexture->Transition(iCopyCmd->mCmd, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	iCopyCmd->End();
 	mContext->mQueue->SubmitSync(iCopyCmd, mContext->mCopyFence.get());

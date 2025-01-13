@@ -59,6 +59,9 @@ void Renderer::Initialize(Window* iWindow)
 
 	mMainPass = std::make_unique<MainPass>(mContext.get());
 	mMainPass->Setup(nullptr, &wFrameResources);
+
+	mUIPass = std::make_unique<UIPass>(mContext.get());
+	mUIPass->Setup(nullptr, &wFrameResources);
 }
 
 void Renderer::UploadGeometry(Model* iModel)
@@ -115,6 +118,10 @@ void Renderer::Render()
 		mMainPass->Draw(wCmd->mCmd, &wFrameResources);
 		mMainPass->End(wCmd->mCmd, &wFrameResources);
 	}
+
+	mUIPass->Begin(wCmd->mCmd, &wFrameResources);
+	mUIPass->Draw(wCmd->mCmd, &wFrameResources);
+	mUIPass->End(wCmd->mCmd, &wFrameResources);
 
 	mColorRenderTarget->Transition(wCmd->mCmd,VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 

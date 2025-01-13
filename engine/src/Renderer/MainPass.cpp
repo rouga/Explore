@@ -202,7 +202,7 @@ void MainPass::CreateTextureSampler(VkDevice iDevice, VkPhysicalDevice iPhysical
 	wSamplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 	wSamplerInfo.mipLodBias = 0.0f;
 	wSamplerInfo.minLod = 0.0f;
-	wSamplerInfo.maxLod = 1.0f;
+	wSamplerInfo.maxLod = VK_LOD_CLAMP_NONE;
 
 	VkResult wResult = vkCreateSampler(iDevice, &wSamplerInfo, nullptr, &mSampler);
 	CHECK_VK_RESULT(wResult, "Sampler Creation");

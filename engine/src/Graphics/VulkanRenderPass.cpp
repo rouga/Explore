@@ -54,6 +54,24 @@ void VulkanRenderPass::Begin(VkCommandBuffer iCmd, std::vector<VkImageView> iCol
 	vkCmdBeginRendering(iCmd, &wRenderPassInfo);
 }
 
+void VulkanRenderPass::Begin(VkCommandBuffer iCmd, const std::vector<VkRenderingAttachmentInfo> iColorAttachmentsInfo, const VkRenderingAttachmentInfo* iDepthAttachmentInfo, VkExtent2D iExtent) const
+{
+	// Setup render pass info
+	VkRenderingInfo wRenderPassInfo =
+	{
+			.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+			.pNext = nullptr,
+			.flags = 0,
+			.renderArea = { {0, 0}, iExtent },
+			.layerCount = 1,
+			.colorAttachmentCount = (uint32_t)iColorAttachmentsInfo.size(),
+			.pColorAttachments = iColorAttachmentsInfo.data(),
+			.pDepthAttachment = iDepthAttachmentInfo,
+	};
+
+	vkCmdBeginRendering(iCmd, &wRenderPassInfo);
+}
+
 void VulkanRenderPass::End(VkCommandBuffer iCmd) const
 {
 	vkCmdEndRendering(iCmd);
