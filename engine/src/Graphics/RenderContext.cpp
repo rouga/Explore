@@ -42,17 +42,17 @@ void RenderContext::Initialize(Window* iWindow)
 
 	CreateAllocator();
 
-	mSwapchain->Initialize(mInstance->GetInstance(), mLogicalDevice.get(), iWindow, 2);
+	mSwapchain->Initialize(mInstance->GetInstance(), mLogicalDevice.get(), iWindow, 3);
 
 	mQueue->Initialize(mLogicalDevice->mDevice, mSwapchain.get(), mLogicalDevice->mPhysicalDevice->GetQueueFamilyIndex(), 0);
 
 	mStagingBuffer = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 
-	mDescriptorSetManager = std::make_unique<DescriptorSetManager>(mLogicalDevice->mDevice, mSwapchain->GetNumImages());
+	mDescriptorSetManager = std::make_unique<DescriptorSetManager>(mLogicalDevice->mDevice, GetNumFramesInFlight());
 	mPipelineLayoutManager = std::make_unique<PipelineLayoutManager>(mLogicalDevice->mDevice);
 
-	mCompleteFences.resize(mSwapchain->GetNumImages());
-	for (uint32_t i = 0; i < mSwapchain->GetNumImages(); i++)
+	mCompleteFences.resize(GetNumFramesInFlight());
+	for (uint32_t i = 0; i < GetNumFramesInFlight(); i++)
 	{
 		mCompleteFences[i] = std::make_unique<VulkanFence>(mLogicalDevice->mDevice, VK_FENCE_CREATE_SIGNALED_BIT);
 	}
@@ -145,16 +145,16 @@ void RenderContext::CreateCommandBuffers()
 	CHECK_VK_RESULT(wResult, "Command Pool Creation");
 
 	// Allocate Command Buffers
-	mCmds.resize(mSwapchain->GetNumImages());
+	mCmds.resize(GetNumFramesInFlight());
 
-	for(uint32_t i = 0; i < mSwapchain->GetNumImages(); i++)
+	for(uint32_t i = 0; i < GetNumFramesInFlight(); i++)
 	{
 		mCmds[i] = VulkanCommandBuffer{mCmdPool, mLogicalDevice->mDevice};
 	}
 
 	mCopyCmd = VulkanCommandBuffer{ mCmdPool, mLogicalDevice->mDevice };
 
-	spdlog::info("Command Pool Created with {:d} Command buffers.", mSwapchain->GetNumImages() + 1);
+	spdlog::info("Command Pool Created with {:d} Command buffers.", GetNumFramesInFlight() + 1);
 }
 
 void RenderContext::CreateStagingBuffer()

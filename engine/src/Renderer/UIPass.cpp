@@ -4,6 +4,9 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
+#define FMT_UNICODE 0
+#include <spdlog/spdlog.h>
+
 #include "Graphics/RenderContext.h"
 #include "Renderer/Renderer.h"
 #include "Core/Window.h"
@@ -53,19 +56,19 @@ void UIPass::Setup(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 	ImGui_ImplVulkan_Init(&wImguiInitInfo);
 
 	iFrameResources->mViewport->BindToImgui();
+
+	spdlog::info("UI pass setup completed.");
 }
 
 void UIPass::Begin(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 {
-	uint32_t wCurrentImageIndex = mContext->mQueue->GetCurrentImageIndex();
-
 	VkRenderingAttachmentInfo wColorAttachmentInfo = 
 	{
 		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
 		.pNext = nullptr,
 		.imageView = iFrameResources->mFrameRenderTarget->mImageView,
 		.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-		.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
+		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
 	};
 

@@ -67,4 +67,5 @@ void VulkanInstance::Initialize(const char* iAppName)
 	 VkResult wResult = vkCreateInstance(&wCreateInfo, nullptr, &mInstance);
 	 CHECK_VK_RESULT(wResult, "Instance Creation");
 	 spdlog::info("Vulkan Instance Created.");
+	 CmdDebug::SetupDebugUtils(mInstance);
 }

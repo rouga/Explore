@@ -15,6 +15,8 @@
 #include "Core/Window.h"
 #include "Core/Engine.h"
 
+#include "Graphics/Utils.h"
+
 Renderer::Renderer()
 {
 	mContext = std::make_unique<RenderContext>();
@@ -31,7 +33,7 @@ void Renderer::Initialize(Window* iWindow)
 	mFrameUB->Initialize(mContext->mLogicalDevice.get(), sizeof(FrameUB), mContext->mAllocator);
 
 	mObjectsUB = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
-	mObjectsUB->Initialize(mContext->mLogicalDevice.get(), sizeof(ObjectUB) * mMaxNumberMeshes * mContext->mSwapchain->GetNumImages(), mContext->mAllocator);
+	mObjectsUB->Initialize(mContext->mLogicalDevice.get(), sizeof(ObjectUB) * mMaxNumberMeshes * mContext->GetNumFramesInFlight(), mContext->mAllocator);
 
 	std::vector<DescriptorSetManager::Binding> wFrameUBBinding =
 	{
@@ -86,13 +88,19 @@ void Renderer::UploadGeometry(Model* iModel)
 
 void Renderer::Render()
 {
-	uint32_t wCurrentImageIndex = mContext->mQueue->AcquireNextImage(nullptr);
+	VulkanCommandBuffer* wCmd = &mContext->mCmds[mCurrentFrameInFlight];
+	mContext->mCompleteFences[mCurrentFrameInFlight]->Wait();
+	mContext->mCompleteFences[mCurrentFrameInFlight]->Reset();
+	if(mFrameNum == 1)
+	{
+		mContext->mCompleteFences[mCurrentFrameInFlight - 1]->Wait();
+	}
 
-	VulkanCommandBuffer* wCmd = &mContext->mCmds[wCurrentImageIndex];
-	mContext->mCompleteFences[wCurrentImageIndex]->Wait();
-	mContext->mCompleteFences[wCurrentImageIndex]->Reset();
+
+	uint32_t wCurrentImageIndex = mContext->mQueue->AcquireNextImage(nullptr, mCurrentFrameInFlight);
+
 	wCmd->Reset(0);
-	mContext->mDescriptorSetManager->ResetPool(wCurrentImageIndex);
+	mContext->mDescriptorSetManager->ResetPool(mCurrentFrameInFlight);
 
 	Engine::Get().GetUI()->BeginFrame();
 
@@ -114,8 +122,12 @@ void Renderer::Render()
 		.mFrameRenderTarget = mFrameRenderTarget.get(),
 		.mViewport = mViewport.get()
 	};
-
+	
 	wCmd->Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+
+#ifdef _DEBUG
+	CmdDebug::CmdBeginLabel(wCmd->mCmd, "Scene Pass", glm::vec4{ 0.0, 1.0, 0.0, 1.0 });
+#endif
 
 	if(Engine::Get().GetModel())
 	{
@@ -127,11 +139,22 @@ void Renderer::Render()
 		mViewport->EndFrame(wCmd->mCmd);
 	}
 
+#ifdef _DEBUG
+	CmdDebug::CmdEndLabel(wCmd->mCmd);
+#endif
+
+#ifdef _DEBUG
+	CmdDebug::CmdBeginLabel(wCmd->mCmd, "UI Pass", glm::vec4{ 1.0, 0.0, 0.0, 1.0 });
+#endif
 	mFrameRenderTarget->Transition(wCmd->mCmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 	mUIPass->Begin(wCmd->mCmd, &wFrameResources);
 	mUIPass->Draw(wCmd->mCmd, &wFrameResources);
 	mUIPass->End(wCmd->mCmd, &wFrameResources);
 	mFrameRenderTarget->Transition(wCmd->mCmd,VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+
+#ifdef _DEBUG
+	CmdDebug::CmdEndLabel(wCmd->mCmd);
+#endif
 
 	mContext->mSwapchain->TransitionImageToDraw(wCmd, wCurrentImageIndex);
 
@@ -142,8 +165,10 @@ void Renderer::Render()
 
 	wCmd->End();
 	
-	mContext->mQueue->SubmitAsync(wCmd, mContext->mCompleteFences[wCurrentImageIndex]->mFence);
+	mContext->mQueue->SubmitAsync(wCmd, mContext->mCompleteFences[mCurrentFrameInFlight]->mFence);
 	mContext->mQueue->Present(wCurrentImageIndex, wCmd->mCmdSubmitSemaphore->mSemaphore);
+	mCurrentFrameInFlight = (mCurrentFrameInFlight + 1) % mContext->GetNumFramesInFlight();
+	mFrameNum += 1;
 }
 
 void Renderer::Flush()
@@ -160,14 +185,14 @@ void Renderer::Resize(int iWidth, int iHeight)
 
 void Renderer::UpdateObjectsUniformBuffer()
 {
-	uint32_t wCurrentImageIndex = mContext->mQueue->GetCurrentImageIndex();
+	uint32_t wCurrentInFlightIndex = mContext->mQueue->GetCurrentInFlightFrame();
 
 	Model* wModel = Engine::Get().GetModel();
 	wModel->SetUniformBufferOffset(0);
 
 	uint32_t wCurrentOffset = 0;
 	uint32_t wUniformSize = sizeof(ObjectUB);
-	uint32_t wUniformStride = sizeof(ObjectUB) * mContext->mSwapchain->GetNumImages();
+	uint32_t wUniformStride = sizeof(ObjectUB) * mContext->GetNumFramesInFlight();
 	void* wMappedMem = mObjectsUB->MapMemory(0, 0);
 
 	for (uint32_t i = 0; i < wModel->GetNumMeshes(); i++)
@@ -178,7 +203,7 @@ void Renderer::UpdateObjectsUniformBuffer()
 			.HasUV = wModel->GetMesh(i)->isAttributeEnabled(StaticMesh::MeshAttributes::UV),
 		};
 		
-		memcpy((char*)wMappedMem + wCurrentOffset + wCurrentImageIndex * wUniformSize, &wObjectUB, sizeof(ObjectUB));
+		memcpy((char*)wMappedMem + wCurrentOffset + wCurrentInFlightIndex * wUniformSize, &wObjectUB, sizeof(ObjectUB));
 		wModel->GetMesh(i)->SetUniformBufferOffset(wModel->GetUniformBufferOffset() + wCurrentOffset);
 		wCurrentOffset += wUniformStride;
 	}

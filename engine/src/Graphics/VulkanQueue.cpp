@@ -22,15 +22,20 @@ void VulkanQueue::Initialize(VkDevice iDevice, VulkanSwapchain* iSwapchain, uint
 	mDevice = iDevice;
 	mSwapchain = iSwapchain;
 
-	mPresentSemaphore = std::make_unique<VulkanSemaphore>(iDevice);
+	mPresentSemaphore.resize(mSwapchain->GetNumImages() - 1);
+	for(uint32_t i = 0; i < mPresentSemaphore.size(); i++)
+	{
+		mPresentSemaphore[i] = std::make_unique<VulkanSemaphore>(iDevice);
+	}
 	
 	vkGetDeviceQueue(iDevice, iQueueFamily, iQueueIndex, &mQueue);
 	spdlog::info("Queue {0:d} Acquired from Family {1:d}", iQueueIndex, iQueueFamily);
 }
 
-uint32_t VulkanQueue::AcquireNextImage(VkFence iFence)
+uint32_t VulkanQueue::AcquireNextImage(VkFence iFence, uint32_t iFrameIndex)
 {
-	VkResult wResult = vkAcquireNextImageKHR(mDevice, mSwapchain->mSwapchain, UINT64_MAX, mPresentSemaphore->mSemaphore, iFence, &mCurrentImageIndex);
+	mCurrentFrameInFlight = iFrameIndex;
+	VkResult wResult = vkAcquireNextImageKHR(mDevice, mSwapchain->mSwapchain, UINT64_MAX, mPresentSemaphore[iFrameIndex]->mSemaphore, iFence, &mCurrentImageIndex);
 	CHECK_VK_RESULT(wResult, "Acquire Next Image");
 
 	return mCurrentImageIndex;
@@ -45,7 +50,7 @@ void VulkanQueue::SubmitAsync(VulkanCommandBuffer* iCmd, VkFence iFence)
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 		.pNext = nullptr,
 		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &mPresentSemaphore->mSemaphore,
+		.pWaitSemaphores = &mPresentSemaphore[mCurrentFrameInFlight]->mSemaphore,
 		.pWaitDstStageMask = &wWaitFlags,
 		.commandBufferCount = 1,
 		.pCommandBuffers = &iCmd->mCmd,

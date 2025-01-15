@@ -2,8 +2,10 @@
 
 #include <stdio.h>
 #include <exception>
+#include <string>
 
 #include <vulkan/vulkan.h>
+#include <glm/glm.hpp>
 
 #define CHECK_VK_RESULT(res, msg) \
 	if(res != VK_SUCCESS) \
@@ -18,3 +20,10 @@ const char* GetDebugSeverityStr(VkDebugUtilsMessageSeverityFlagBitsEXT iSeverity
 const char* GetDebugTypeStr(VkDebugUtilsMessageTypeFlagsEXT iType);
 
 uint32_t FindMemoryType(VkPhysicalDevice iPhysicalDevice, VkMemoryPropertyFlags iMemProps);
+
+namespace CmdDebug
+{
+	void SetupDebugUtils(VkInstance instance);
+	void CmdBeginLabel(VkCommandBuffer iCmdBuffer, std::string iCaption, glm::vec4 iColor);
+	void CmdEndLabel(VkCommandBuffer iCmdBuffer);
+}

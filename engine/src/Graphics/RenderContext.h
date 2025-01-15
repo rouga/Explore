@@ -38,6 +38,8 @@ public:
 		uint32_t iLayerCount = 1);
 
 	void BlitImage(VkCommandBuffer iCmd, VkImage iSrcImage, VkImage iDstImage, VkOffset3D iSrcOffset, VkOffset3D iDstOffset);
+	uint32_t GetNumSwapchainBuffers() { return mSwapchain->GetNumImages(); }
+	uint32_t GetNumFramesInFlight() { return GetNumSwapchainBuffers() - 1; }
 
 	std::unique_ptr<VulkanInstance> mInstance = nullptr;
 	std::unique_ptr<VulkanDebugCallback> mDebugCallback = nullptr;

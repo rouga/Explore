@@ -62,5 +62,7 @@ public:
 private:
 	void UpdateObjectsUniformBuffer();
 	static constexpr uint32_t mMaxNumberMeshes = 2500;
+	uint32_t mCurrentFrameInFlight = 0;
+	uint32_t mFrameNum = 0;
 
 };

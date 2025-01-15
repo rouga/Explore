@@ -76,7 +76,7 @@ void MainPass::Begin(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 
 void MainPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 {
-	uint32_t wCurrentImageIndex = mContext->mQueue->GetCurrentImageIndex();
+	uint32_t wCurrentInFlightIndex = mContext->mQueue->GetCurrentInFlightFrame();
 
 	// Bind Global Frame Uniform Buffer
 	mPipeline->Bind(iCmd, mContext->mWindow);
@@ -88,7 +88,7 @@ void MainPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 		.range = VK_WHOLE_SIZE
 	};
 
-	VulkanDescriptorSet wFrameUBDS = mContext->mDescriptorSetManager->AllocateDescriptorSet("FrameUB", wCurrentImageIndex);
+	VulkanDescriptorSet wFrameUBDS = mContext->mDescriptorSetManager->AllocateDescriptorSet("FrameUB", wCurrentInFlightIndex);
 	wFrameUBDS.Update(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &wFrameUBInfo);
 	VkDescriptorSet wFrameUBDSHandle = wFrameUBDS.GetHandle();
 	VkDescriptorSet wFrameDSList[] = { wFrameUBDSHandle };
@@ -120,7 +120,7 @@ void MainPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 		VkDescriptorBufferInfo wObjectUBInfo =
 		{
 			.buffer = iFrameResources->mObjectsUniformBuffer->mBuffer,
-			.offset = wModel->GetUniformBufferOffset() +  wMesh->GetUniformBufferOffset() + sizeof(ObjectUB) * wCurrentImageIndex,
+			.offset = wModel->GetUniformBufferOffset() +  wMesh->GetUniformBufferOffset() + sizeof(ObjectUB) * wCurrentInFlightIndex,
 			.range = sizeof(ObjectUB)
 		};
 
@@ -131,7 +131,7 @@ void MainPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 		};
 
-		VulkanDescriptorSet wDS = mContext->mDescriptorSetManager->AllocateDescriptorSet("ObjectDS", wCurrentImageIndex);
+		VulkanDescriptorSet wDS = mContext->mDescriptorSetManager->AllocateDescriptorSet("ObjectDS", wCurrentInFlightIndex);
 		wDS.Update(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wVertexBufferInfo);
 		wDS.Update(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wIndexBufferInfo);
 
