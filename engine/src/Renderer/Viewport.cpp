@@ -3,6 +3,9 @@
 #include <imgui_internal.h>
 #include <backends/imgui_impl_vulkan.h>
 
+#define FMT_UNICODE 0
+#include <spdlog/spdlog.h>
+
 #include "Graphics/RenderContext.h"
 #include "Graphics/Utils.h"
 
@@ -121,14 +124,24 @@ void Viewport::SetupUI()
 			ImVec2(4000, 4000)  // Maximum size
 		);
 		ImGui::Begin("Viewport");
+		
+		bool isHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
+		if(isHovered)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			io.WantCaptureMouse = false;
+		}
+
+		spdlog::info("CaptureMouse : {:d}", (int)isHovered);
+
 		mRequestedSize = ImGui::GetContentRegionAvail();
-		if(mRequestedSize.x > 0 && mRequestedSize.y > 0)
+
+		if (mRequestedSize.x > 0 && mRequestedSize.y > 0)
 		{
 			mWidth = (uint32_t)mRequestedSize.x;
 			mHeight = (uint32_t)mRequestedSize.y;
 		}
-		// Display the texture in ImGui
-		std::cout << mWidth  << " " << mHeight << std::endl;
+
 		ImGui::Image(mImGuiTextureID[mContext->mQueue->GetCurrentInFlightFrame()],
 			ImVec2{(float)mColorBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->GetExtent().width,
 											 (float)mColorBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->GetExtent().height });
