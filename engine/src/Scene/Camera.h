@@ -3,12 +3,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-class Window;
+class Viewport;
 
 class OrbitCamera
 {
 public:
-	OrbitCamera(Window* iWindow, float iDistance = 6.0f, float iPitch = 0.0f, float iYaw = 0.0f, const glm::vec3& iTarget = glm::vec3(0.0f));
+	OrbitCamera(Viewport* iWindow, float iDistance = 6.0f, float iPitch = 0.0f, float iYaw = 0.0f, const glm::vec3& iTarget = glm::vec3(0.0f));
 
 	void Update();
 
@@ -26,7 +26,7 @@ public:
 	glm::vec3 getPosition() const;
 
 private:
-	Window* mWindow;
+	Viewport* mViewport;
 	glm::vec3 mTarget;
 	float mDistance;
 	float mPitch; // Angle in degrees

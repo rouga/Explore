@@ -25,6 +25,10 @@ public:
 
 	bool IsMouseButtonPressed(int button);
 
+	bool IsCursorOnUI() const { return mIsCursorOnUI; };
+
+	void UpdateCursorOnUI(bool iValue) { mIsCursorOnUI = iValue; }
+
 	std::pair<double, double> GetMousePosition() const;
 
 	std::pair<double, double> GetMouseDelta() const;
@@ -49,6 +53,8 @@ private:
 
 	double mScrollOffsetX = 0.0;
 	double mScrollOffsetY = 0.0;
+
+	bool mIsCursorOnUI = false;
 
 	void ResetScrollOffset();
 

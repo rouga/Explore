@@ -1,0 +1,149 @@
+#include "Viewport.h"
+
+#include <imgui_internal.h>
+#include <backends/imgui_impl_vulkan.h>
+
+#include "Graphics/RenderContext.h"
+#include "Graphics/Utils.h"
+
+#include "Core/Engine.h"
+
+Viewport::Viewport(RenderContext* iContext)
+	:mContext(iContext)
+{
+}
+
+Viewport::~Viewport()
+{
+	vkDestroySampler(mContext->mLogicalDevice->mDevice, mSampler, nullptr);
+}
+
+void Viewport::Initialize()
+{
+	CreateColorBuffer();
+	CreateDepthBuffer();
+	CreateTextureSampler(mContext->mLogicalDevice->mDevice, mContext->mPhysicalDevice->GetDevice());
+	SetupUI();
+}
+
+void Viewport::BeginFrame(VkCommandBuffer iCmd)
+{
+	if (static_cast<uint32_t>(mRequestedSize.x) != mWidth || static_cast<uint32_t>(mRequestedSize.y) != mHeight)
+	{
+		ImGui_ImplVulkan_RemoveTexture((VkDescriptorSet)mImGuiTextureID);
+		Resize(static_cast<uint32_t>(mRequestedSize.x), static_cast<uint32_t>(mRequestedSize.y));
+	}
+	mColorBuffer->Transition(iCmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+}
+
+void Viewport::EndFrame(VkCommandBuffer iCmd)
+{
+	mColorBuffer->Transition(iCmd, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+}
+
+void Viewport::Resize(uint32_t iWidth, uint32_t iHeight)
+{
+	if (iWidth == 0 || iHeight == 0) return;
+	mWidth = iWidth;
+	mHeight = iHeight;
+	mColorBuffer->Resize(VkExtent3D{iWidth, iHeight, 1 });
+	mDepthBuffer->Resize(VkExtent3D{iWidth, iHeight, 1 });
+	BindToImgui();
+}
+
+void Viewport::CreateColorBuffer()
+{
+	VulkanImage::ImageConfig wImageConfig{};
+	wImageConfig.format = mColorFormat;
+	wImageConfig.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+	wImageConfig.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT ;
+
+	mColorBuffer = std::make_unique<VulkanImage>(mContext->mLogicalDevice->mDevice, mContext->mAllocator);
+	mColorBuffer->Initialize(VkExtent3D{
+		.width = mWidth,
+		.height = mHeight,
+		.depth = 1
+		}, wImageConfig);
+}
+
+void Viewport::CreateDepthBuffer()
+{
+	VulkanImage::ImageConfig wImageConfig{};
+	wImageConfig.format = VK_FORMAT_D24_UNORM_S8_UINT;
+	wImageConfig.aspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+	wImageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+	mDepthBuffer = std::make_unique<VulkanImage>(mContext->mLogicalDevice->mDevice, mContext->mAllocator);
+	mDepthBuffer->Initialize(VkExtent3D{
+		.width = mWidth,
+		.height = mHeight,
+		.depth = 1
+		}, wImageConfig);
+
+	mContext->mCopyCmd.Reset(0);
+	mContext->mCopyCmd.Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+	mDepthBuffer->Transition(mContext->mCopyCmd.mCmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+	mContext->mCopyCmd.End();
+
+	mContext->mQueue->SubmitSync(&mContext->mCopyCmd, mContext->mCopyFence.get());
+}
+
+void Viewport::SetupUI()
+{
+	Engine::Get().GetUI()->AddUIElement("Viewport", [&]() {
+
+		ImGui::SetNextWindowSizeConstraints(
+			ImVec2(64, 64), // Minimum size
+			ImVec2(FLT_MAX, FLT_MAX)  // Maximum size
+		);
+		ImGui::Begin("Viewport");
+		mRequestedSize = ImGui::GetContentRegionAvail();
+		// Display the texture in ImGui
+		std::cout << mWidth  << " " << mHeight << std::endl;
+		ImGui::Image(mImGuiTextureID, ImVec2{(float)mWidth, (float)mHeight});
+
+		ImGui::End(); }
+	);
+}
+
+void Viewport::BindToImgui()
+{
+	mImGuiTextureID = (ImTextureID)ImGui_ImplVulkan_AddTexture(
+		mSampler,    // You need a Vulkan sampler here
+		mColorBuffer->mImageView,
+		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	);
+}
+
+void Viewport::CreateTextureSampler(VkDevice iDevice, VkPhysicalDevice iPhysicalDevice)
+{
+	VkSamplerCreateInfo wSamplerInfo{};
+	wSamplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	wSamplerInfo.magFilter = VK_FILTER_LINEAR;
+	wSamplerInfo.minFilter = VK_FILTER_LINEAR;
+	wSamplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	wSamplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	wSamplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+	// Query device properties for anisotropy limits
+	VkPhysicalDeviceProperties properties{};
+	vkGetPhysicalDeviceProperties(iPhysicalDevice, &properties);
+
+	VkPhysicalDeviceFeatures deviceFeatures;
+	vkGetPhysicalDeviceFeatures(iPhysicalDevice, &deviceFeatures);
+
+	wSamplerInfo.anisotropyEnable = VK_FALSE;
+	wSamplerInfo.maxAnisotropy = 1.0f;
+
+	wSamplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+	wSamplerInfo.unnormalizedCoordinates = VK_FALSE;
+	wSamplerInfo.compareEnable = VK_FALSE;
+	wSamplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+	wSamplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	wSamplerInfo.mipLodBias = 0.0f;
+	wSamplerInfo.minLod = 0.0f;
+	wSamplerInfo.maxLod = 1.0;
+
+	VkResult wResult = vkCreateSampler(iDevice, &wSamplerInfo, nullptr, &mSampler);
+	CHECK_VK_RESULT(wResult, "Sampler Creation");
+}

@@ -26,10 +26,17 @@ void Engine::Initialize(Window* iWindow)
 {
 	mWindow = iWindow;
 	Input::Get().Initialize(mWindow->GetGLFWWindow());
-	mRenderer = std::make_unique<Renderer>();
-	mOrbitCamera = std::make_unique<OrbitCamera>(mWindow);
+	mUIManager = std::make_unique<UIManager>(mWindow);
 
+	mUIManager->AddUIElement("Simple Button",[]() {
+		ImGui::Begin("Test Window");
+		ImGui::Text("Hello, World!");
+		ImGui::End();
+		});
+
+	mRenderer = std::make_unique<Renderer>();
 	mRenderer->Initialize(mWindow);
+	mOrbitCamera = std::make_unique<OrbitCamera>(mRenderer->mViewport.get());
 
 	mModel = std::make_unique<Model>("resources/cottage.obj");
 	spdlog::info("Number of meshes loaded to CPU : {:d}", mModel->GetNumMeshes());
@@ -55,15 +62,13 @@ void Engine::Run()
 {
 	Input::Get().Setup();
 	glfwPollEvents();
-
-	ImGui_ImplVulkan_NewFrame();
-	ImGui_ImplGlfw_NewFrame();
-	ImGui::NewFrame();
+	
 
 	if(mWindow->IsMinimized())
 	{
 		return;
 	}
+
 	mOrbitCamera->Update();
 	mRenderer->Render();
 }

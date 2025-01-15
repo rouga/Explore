@@ -45,7 +45,6 @@ public:
 	std::shared_ptr<VulkanLogicalDevice> mLogicalDevice = nullptr;
 	VmaAllocator mAllocator = VK_NULL_HANDLE;
 	std::unique_ptr<VulkanSwapchain> mSwapchain = nullptr;
-	std::unique_ptr<VulkanImage> mDepthBuffer = nullptr;
 	std::unique_ptr<VulkanQueue> mQueue = nullptr;
 	std::unique_ptr<DescriptorSetManager> mDescriptorSetManager = nullptr;
 	std::unique_ptr<PipelineLayoutManager> mPipelineLayoutManager = nullptr;
@@ -62,8 +61,6 @@ public:
 
 private:
 	void CreateAllocator();
-	void CreateDepthBuffer();
 	void CreateCommandBuffers();
 	void CreateStagingBuffer();
-	void TransitionDepthBuffer();
 };

@@ -40,13 +40,16 @@ void Renderer::Initialize(Window* iWindow)
 
 	mContext->mDescriptorSetManager->CreateLayout(wFrameUBBinding, "FrameUB");
 
+	mViewport = std::make_unique<Viewport>(mContext.get());
+	mViewport->Initialize();
+
 	VulkanImage::ImageConfig wImageConfig{};
-	wImageConfig.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+	wImageConfig.format = VK_FORMAT_R8G8B8A8_UNORM;
 	wImageConfig.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 	wImageConfig.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
-	mColorRenderTarget = std::make_unique<VulkanImage>(mContext->mLogicalDevice->mDevice, mContext->mAllocator);
-	mColorRenderTarget->Initialize(VkExtent3D{
+	mFrameRenderTarget = std::make_unique<VulkanImage>(mContext->mLogicalDevice->mDevice, mContext->mAllocator);
+	mFrameRenderTarget->Initialize(VkExtent3D{
 		.width = (uint32_t)mContext->mWindow->GetWidth(),
 		.height = (uint32_t)mContext->mWindow->GetHeight(),
 		.depth = 1
@@ -54,7 +57,8 @@ void Renderer::Initialize(Window* iWindow)
 
 	FrameResources wFrameResources =
 	{
-		.mColorRenderTarget = mColorRenderTarget.get()
+		.mFrameRenderTarget = mFrameRenderTarget.get(),
+		.mViewport = mViewport.get()
 	};
 
 	mMainPass = std::make_unique<MainPass>(mContext.get());
@@ -82,13 +86,15 @@ void Renderer::UploadGeometry(Model* iModel)
 
 void Renderer::Render()
 {
-	uint32_t wCurrentImageIndex = mContext->mQueue->AcquireNextImage();
+	uint32_t wCurrentImageIndex = mContext->mQueue->AcquireNextImage(nullptr);
 
 	VulkanCommandBuffer* wCmd = &mContext->mCmds[wCurrentImageIndex];
 	mContext->mCompleteFences[wCurrentImageIndex]->Wait();
-	mContext->mDescriptorSetManager->ResetPool(wCurrentImageIndex);
 	mContext->mCompleteFences[wCurrentImageIndex]->Reset();
 	wCmd->Reset(0);
+	mContext->mDescriptorSetManager->ResetPool(wCurrentImageIndex);
+
+	Engine::Get().GetUI()->BeginFrame();
 
 	FrameUB wFrameUB =
 	{
@@ -105,29 +111,31 @@ void Renderer::Render()
 		.FrameUB = wFrameUB,
 		.mFrameUniformBuffer = mFrameUB.get(),
 		.mObjectsUniformBuffer = mObjectsUB.get(),
-		.mColorRenderTarget = mColorRenderTarget.get()
+		.mFrameRenderTarget = mFrameRenderTarget.get(),
+		.mViewport = mViewport.get()
 	};
 
 	wCmd->Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-	mColorRenderTarget->Transition(wCmd->mCmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
 	if(Engine::Get().GetModel())
 	{
 		UpdateObjectsUniformBuffer();
+		mViewport->BeginFrame(wCmd->mCmd);
 		mMainPass->Begin(wCmd->mCmd, &wFrameResources);
 		mMainPass->Draw(wCmd->mCmd, &wFrameResources);
 		mMainPass->End(wCmd->mCmd, &wFrameResources);
+		mViewport->EndFrame(wCmd->mCmd);
 	}
 
+	mFrameRenderTarget->Transition(wCmd->mCmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 	mUIPass->Begin(wCmd->mCmd, &wFrameResources);
 	mUIPass->Draw(wCmd->mCmd, &wFrameResources);
 	mUIPass->End(wCmd->mCmd, &wFrameResources);
-
-	mColorRenderTarget->Transition(wCmd->mCmd,VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+	mFrameRenderTarget->Transition(wCmd->mCmd,VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
 	mContext->mSwapchain->TransitionImageToDraw(wCmd, wCurrentImageIndex);
 
-	mContext->BlitImage(wCmd->mCmd, mColorRenderTarget->mImage, mContext->mSwapchain->mImages[wCurrentImageIndex],
+	mContext->BlitImage(wCmd->mCmd, mFrameRenderTarget->mImage, mContext->mSwapchain->mImages[wCurrentImageIndex],
 		VkOffset3D{mWindow->GetWidth(), mWindow->GetHeight(), 1}, VkOffset3D{ mWindow->GetWidth(), mWindow->GetHeight(), 1 });
 
 	mContext->mSwapchain->TransitionImageToPresent(wCmd, wCurrentImageIndex);
@@ -146,7 +154,7 @@ void Renderer::Flush()
 void Renderer::Resize(int iWidth, int iHeight)
 {
 	Flush();
-	mColorRenderTarget->Resize(VkExtent3D{(uint32_t)iWidth, (uint32_t)iHeight, 1});
+	mFrameRenderTarget->Resize(VkExtent3D{(uint32_t)iWidth, (uint32_t)iHeight, 1});
 	mContext->Resize(iWidth, iHeight);
 }
 

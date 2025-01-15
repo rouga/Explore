@@ -18,7 +18,7 @@ public:
 
 	void Initialize(VkDevice iDevice, VulkanSwapchain* iSwapchain, uint32_t iQueueFamily, uint32_t iQueueIndex);
 
-	uint32_t AcquireNextImage();
+	uint32_t AcquireNextImage(VkFence iFence);
 
 	void SubmitAsync(VulkanCommandBuffer* iCmd, VkFence iFence);
 	void SubmitSync(VulkanCommandBuffer* iCmd, VulkanFence* iFence);

@@ -9,6 +9,7 @@
 #include "Graphics/VulkanGPUBuffer.h"
 #include "MainPass.h"
 #include "UIPass.h"
+#include "Viewport.h"
 
 class Window;
 class StaticMesh;
@@ -33,7 +34,8 @@ struct FrameResources
 	FrameUB FrameUB;
 	VulkanGPUBuffer* mFrameUniformBuffer = nullptr;
 	VulkanGPUBuffer* mObjectsUniformBuffer = nullptr;
-	VulkanImage* mColorRenderTarget = nullptr;
+	VulkanImage* mFrameRenderTarget = nullptr;
+	Viewport* mViewport = nullptr;
 };
 
 class Renderer
@@ -52,9 +54,10 @@ public:
 	std::unique_ptr<UIPass> mUIPass = nullptr;
 
 	Window* mWindow = nullptr;
-	std::unique_ptr<VulkanImage> mColorRenderTarget = nullptr;
 	std::unique_ptr<VulkanGPUBuffer> mFrameUB = nullptr;
 	std::unique_ptr<VulkanGPUBuffer> mObjectsUB = nullptr;
+	std::unique_ptr<Viewport> mViewport = nullptr;
+	std::unique_ptr<VulkanImage> mFrameRenderTarget = nullptr;
 
 private:
 	void UpdateObjectsUniformBuffer();

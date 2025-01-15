@@ -37,7 +37,8 @@ void VulkanLogicalDevice::Initialize(VulkanPhysicalDevice* iPhysicalDevice)
 	std::vector<const char*> wDeviceExtensions =
 	{
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-		VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME
+		VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
+		VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
 	};
 
 	auto Core_1_2 = VkPhysicalDeviceVulkan12Features

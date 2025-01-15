@@ -58,6 +58,15 @@ void VulkanImage::Transition(VkCommandBuffer iCmd, VkImageLayout iOldLayout, VkI
 		wDestinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 
 	}
+	else if (iOldLayout == VK_IMAGE_LAYOUT_UNDEFINED && iNewLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+	{
+		wBarrier.srcAccessMask = 0;  // No access needed as the image is in undefined layout
+		wBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+		wSourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		wDestinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+	}
 	else if (iOldLayout == VK_IMAGE_LAYOUT_UNDEFINED && iNewLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
 	{
 		wBarrier.srcAccessMask = 0;
@@ -81,6 +90,15 @@ void VulkanImage::Transition(VkCommandBuffer iCmd, VkImageLayout iOldLayout, VkI
 
 		wSourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		wDestinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+	}
+	else if (iOldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && iNewLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	{
+		wBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		wBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		wSourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		wDestinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
 	}
 	else if (iOldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && iNewLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) 

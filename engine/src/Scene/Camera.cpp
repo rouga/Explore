@@ -2,11 +2,11 @@
 
 #include <iostream>
 
-#include "Core/Window.h"
+#include "Renderer/Viewport.h"
 #include "Core/Input.h"
 
-OrbitCamera::OrbitCamera(Window* iWindow, float iDistance, float iPitch, float iYaw, const glm::vec3& iTarget)
-	:mWindow(iWindow),
+OrbitCamera::OrbitCamera(Viewport* iViewport, float iDistance, float iPitch, float iYaw, const glm::vec3& iTarget)
+	:mViewport(iViewport),
 	mDistance(iDistance),
 	mPitch(iPitch),
 	mYaw(iYaw),
@@ -22,7 +22,7 @@ void OrbitCamera::Update()
 		setYaw(45.0f);
 		setDistance(10.0f);
 	}
-	else if (Input::Get().IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
+	else if (!Input::Get().IsCursorOnUI() && Input::Get().IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
 	{
 		auto wDelta = Input::Get().GetMouseDelta();
 
@@ -79,8 +79,8 @@ glm::mat4 OrbitCamera::getViewMatrix() const {
 glm::mat4 OrbitCamera::GetProjectionMatrix() const
 {
 	return glm::perspectiveFov(glm::radians(45.f),
-		static_cast<float>(mWindow->GetWidth()),
-		static_cast<float>(mWindow->GetHeight()),
+		static_cast<float>(mViewport->GetWidth()),
+		static_cast<float>(mViewport->GetHeight()),
 		0.1f, 10000.f);
 }
 

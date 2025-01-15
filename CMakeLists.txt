@@ -37,7 +37,7 @@ set(BUILD_ASSIMP_TOOLS  ON)
 set(ASSIMP_BUILD_STATIC_LIB ON)
 
 add_subdirectory(extern/glfw)
-add_subdirectory(extern/imgui-1.91.6)
+add_subdirectory(extern/imgui)
 add_subdirectory(engine)
 add_subdirectory(editor)
 

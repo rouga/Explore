@@ -14,21 +14,9 @@ UIPass::UIPass(RenderContext* iContext)
 {
 }
 
-UIPass::~UIPass()
-{
-	ImGui_ImplVulkan_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-}
-
 void UIPass::Setup(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 {
 	mRenderPass = std::make_unique<VulkanRenderPass>(mContext->mLogicalDevice->mDevice);
-
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
-	ImGui_ImplGlfw_InitForVulkan(mContext->mWindow->GetGLFWWindow(), true);
 
 	VulkanDescriptorPool::PoolSizes wPoolSize =
 	{
@@ -39,14 +27,14 @@ void UIPass::Setup(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 		.inputAttachments = 1000,
 	};
 
-	mPool = std::make_unique<VulkanDescriptorPool>(mContext->mLogicalDevice->mDevice, 1000, wPoolSize);
+	mPool = std::make_unique<VulkanDescriptorPool>(mContext->mLogicalDevice->mDevice, 10, wPoolSize);
 	
 	VkPipelineRenderingCreateInfo wRenderingInfo =
 	{
 		 .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
 		 .pNext = nullptr,
 		 .colorAttachmentCount = 1,
-		 .pColorAttachmentFormats = &iFrameResources->mColorRenderTarget->GetFormat(),
+		 .pColorAttachmentFormats = &iFrameResources->mFrameRenderTarget->GetFormat(),
 	};
 
 	ImGui_ImplVulkan_InitInfo wImguiInitInfo = {};
@@ -64,6 +52,7 @@ void UIPass::Setup(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 
 	ImGui_ImplVulkan_Init(&wImguiInitInfo);
 
+	iFrameResources->mViewport->BindToImgui();
 }
 
 void UIPass::Begin(VkCommandBuffer iCmd, FrameResources* iFrameResources)
@@ -74,7 +63,7 @@ void UIPass::Begin(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 	{
 		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
 		.pNext = nullptr,
-		.imageView = iFrameResources->mColorRenderTarget->mImageView,
+		.imageView = iFrameResources->mFrameRenderTarget->mImageView,
 		.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 		.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
 		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
@@ -88,10 +77,16 @@ void UIPass::Begin(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 
 void UIPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 {
-	ImGui::ShowDemoWindow();
+	Engine::Get().GetUI()->Execute();
 
 	ImGui::Render();
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), iCmd);
+
+	ImGuiIO& io = ImGui::GetIO();
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault(nullptr, (void*)iCmd);
+	}
 }
 
 void UIPass::End(VkCommandBuffer iCmd, FrameResources* iFrameResources)
