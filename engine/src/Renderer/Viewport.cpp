@@ -20,69 +20,93 @@ Viewport::~Viewport()
 
 void Viewport::Initialize()
 {
+	mImGuiTextureID.resize(mContext->GetNumFramesInFlight());
 	CreateColorBuffer();
 	CreateDepthBuffer();
 	CreateTextureSampler(mContext->mLogicalDevice->mDevice, mContext->mPhysicalDevice->GetDevice());
 	SetupUI();
 }
 
+void Viewport::ImguiSetup()
+{
+	for (uint32_t i = 0; i < mContext->GetNumFramesInFlight(); i++)
+	{
+		mImGuiTextureID[i] = (ImTextureID)ImGui_ImplVulkan_AddTexture(
+			mSampler,    // You need a Vulkan sampler here
+			mColorBuffer[i]->mImageView,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		);
+	}
+}
+
 void Viewport::BeginFrame(VkCommandBuffer iCmd)
 {
-	if (static_cast<uint32_t>(mRequestedSize.x) != mWidth || static_cast<uint32_t>(mRequestedSize.y) != mHeight)
+	if (mWidth != mColorBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->GetExtent().width 
+		|| mHeight != mColorBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->GetExtent().height )
 	{
-		ImGui_ImplVulkan_RemoveTexture((VkDescriptorSet)mImGuiTextureID);
-		Resize(static_cast<uint32_t>(mRequestedSize.x), static_cast<uint32_t>(mRequestedSize.y));
+		Resize(mWidth, mHeight);
 	}
-	mColorBuffer->Transition(iCmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+	mColorBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->Transition(iCmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 }
 
 void Viewport::EndFrame(VkCommandBuffer iCmd)
 {
-	mColorBuffer->Transition(iCmd, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	mColorBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->Transition(iCmd, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
-void Viewport::Resize(uint32_t iWidth, uint32_t iHeight)
+void Viewport::Resize(int iWidth, int iHeight)
 {
-	if (iWidth == 0 || iHeight == 0) return;
-	mWidth = iWidth;
-	mHeight = iHeight;
-	mColorBuffer->Resize(VkExtent3D{iWidth, iHeight, 1 });
-	mDepthBuffer->Resize(VkExtent3D{iWidth, iHeight, 1 });
+	ImGui_ImplVulkan_RemoveTexture((VkDescriptorSet)mImGuiTextureID[mContext->mQueue->GetCurrentInFlightFrame()]);
+	mColorBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->Resize(VkExtent3D{(uint32_t)iWidth, (uint32_t)iHeight, 1 });
+	mDepthBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->Resize(VkExtent3D{(uint32_t)iWidth,(uint32_t)iHeight, 1 });
 	BindToImgui();
 }
 
 void Viewport::CreateColorBuffer()
 {
+	mColorBuffer.resize(mContext->GetNumFramesInFlight());
+
 	VulkanImage::ImageConfig wImageConfig{};
 	wImageConfig.format = mColorFormat;
 	wImageConfig.aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
 	wImageConfig.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT ;
 
-	mColorBuffer = std::make_unique<VulkanImage>(mContext->mLogicalDevice->mDevice, mContext->mAllocator);
-	mColorBuffer->Initialize(VkExtent3D{
-		.width = mWidth,
-		.height = mHeight,
-		.depth = 1
-		}, wImageConfig);
+	for(uint32_t i = 0; i < mContext->GetNumFramesInFlight(); i++)
+	{
+		mColorBuffer[i] = std::make_unique<VulkanImage>(mContext->mLogicalDevice->mDevice, mContext->mAllocator);
+		mColorBuffer[i]->Initialize(VkExtent3D{
+			.width = mWidth,
+			.height = mHeight,
+			.depth = 1
+			}, wImageConfig);
+	}
 }
 
 void Viewport::CreateDepthBuffer()
 {
+	mDepthBuffer.resize(mContext->GetNumFramesInFlight());
+
 	VulkanImage::ImageConfig wImageConfig{};
 	wImageConfig.format = VK_FORMAT_D24_UNORM_S8_UINT;
 	wImageConfig.aspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 	wImageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-	mDepthBuffer = std::make_unique<VulkanImage>(mContext->mLogicalDevice->mDevice, mContext->mAllocator);
-	mDepthBuffer->Initialize(VkExtent3D{
-		.width = mWidth,
-		.height = mHeight,
-		.depth = 1
-		}, wImageConfig);
-
 	mContext->mCopyCmd.Reset(0);
 	mContext->mCopyCmd.Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-	mDepthBuffer->Transition(mContext->mCopyCmd.mCmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+
+	for (uint32_t i = 0; i < mContext->GetNumFramesInFlight(); i++)
+	{
+		mDepthBuffer[i] = std::make_unique<VulkanImage>(mContext->mLogicalDevice->mDevice, mContext->mAllocator);
+		mDepthBuffer[i]->Initialize(VkExtent3D{
+			.width = mWidth,
+			.height = mHeight,
+			.depth = 1
+			}, wImageConfig);
+
+
+		mDepthBuffer[i]->Transition(mContext->mCopyCmd.mCmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+	}
+
 	mContext->mCopyCmd.End();
 
 	mContext->mQueue->SubmitSync(&mContext->mCopyCmd, mContext->mCopyFence.get());
@@ -94,13 +118,20 @@ void Viewport::SetupUI()
 
 		ImGui::SetNextWindowSizeConstraints(
 			ImVec2(64, 64), // Minimum size
-			ImVec2(FLT_MAX, FLT_MAX)  // Maximum size
+			ImVec2(4000, 4000)  // Maximum size
 		);
 		ImGui::Begin("Viewport");
 		mRequestedSize = ImGui::GetContentRegionAvail();
+		if(mRequestedSize.x > 0 && mRequestedSize.y > 0)
+		{
+			mWidth = (uint32_t)mRequestedSize.x;
+			mHeight = (uint32_t)mRequestedSize.y;
+		}
 		// Display the texture in ImGui
 		std::cout << mWidth  << " " << mHeight << std::endl;
-		ImGui::Image(mImGuiTextureID, ImVec2{(float)mWidth, (float)mHeight});
+		ImGui::Image(mImGuiTextureID[mContext->mQueue->GetCurrentInFlightFrame()],
+			ImVec2{(float)mColorBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->GetExtent().width,
+											 (float)mColorBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->GetExtent().height });
 
 		ImGui::End(); }
 	);
@@ -108,9 +139,9 @@ void Viewport::SetupUI()
 
 void Viewport::BindToImgui()
 {
-	mImGuiTextureID = (ImTextureID)ImGui_ImplVulkan_AddTexture(
+	mImGuiTextureID[mContext->mQueue->GetCurrentInFlightFrame()] = (ImTextureID)ImGui_ImplVulkan_AddTexture(
 		mSampler,    // You need a Vulkan sampler here
-		mColorBuffer->mImageView,
+		mColorBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->mImageView,
 		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	);
 }

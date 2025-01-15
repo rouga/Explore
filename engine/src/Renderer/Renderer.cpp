@@ -91,11 +91,6 @@ void Renderer::Render()
 	VulkanCommandBuffer* wCmd = &mContext->mCmds[mCurrentFrameInFlight];
 	mContext->mCompleteFences[mCurrentFrameInFlight]->Wait();
 	mContext->mCompleteFences[mCurrentFrameInFlight]->Reset();
-	if(mFrameNum == 1)
-	{
-		mContext->mCompleteFences[mCurrentFrameInFlight - 1]->Wait();
-	}
-
 
 	uint32_t wCurrentImageIndex = mContext->mQueue->AcquireNextImage(nullptr, mCurrentFrameInFlight);
 

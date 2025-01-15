@@ -255,6 +255,12 @@ void VulkanImage::Resize(VkExtent3D iExtent)
 {
 	FreeGPU();
 
+	mExtent = iExtent;
+	if (mImageConfig.WithMips)
+	{
+		mNumMipLevels = ComputeMipLevels(mExtent);
+	}
+
 	CreateImage(iExtent, mImageConfig.format, mImageConfig.usage, mImageConfig.tiling);
 	CreateImageView(mImageConfig.format, mImageConfig.aspectFlags);
 }

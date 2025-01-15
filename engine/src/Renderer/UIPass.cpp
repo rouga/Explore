@@ -55,7 +55,7 @@ void UIPass::Setup(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 
 	ImGui_ImplVulkan_Init(&wImguiInitInfo);
 
-	iFrameResources->mViewport->BindToImgui();
+	iFrameResources->mViewport->ImguiSetup();
 
 	spdlog::info("UI pass setup completed.");
 }
