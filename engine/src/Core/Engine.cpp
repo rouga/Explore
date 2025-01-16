@@ -28,10 +28,21 @@ void Engine::Initialize(Window* iWindow)
 	Input::Get().Initialize(mWindow->GetGLFWWindow());
 	mUIManager = std::make_unique<UIManager>(mWindow);
 
-	mUIManager->AddUIElement("Simple Button",[]() {
-		ImGui::Begin("Test Window");
+	mUIManager->AddUIElement("Button",[]() {
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // Red title text
+		ImGui::Begin("Button", nullptr, ImGuiWindowFlags_NoMove);
 		ImGui::Text("Hello, World!");
 		ImGui::End();
+		ImGui::PopStyleColor(1);
+
+		ImGui::Begin("Button2", nullptr, ImGuiWindowFlags_NoMove);
+		ImGui::Text("Hello, World!");
+		ImGui::End();
+
+		ImGui::Begin("Logger", nullptr, ImGuiWindowFlags_NoMove);
+		ImGui::Text("Hello, World!");
+		ImGui::End();
+
 		});
 
 	mRenderer = std::make_unique<Renderer>();

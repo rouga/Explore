@@ -7,6 +7,8 @@
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
 
+#include <imgui_internal.h>
+
 #include <Core/Window.h>
 #include <Core/Input.h>
 
@@ -18,19 +20,65 @@ UIManager::UIManager(Window* iWindow)
 
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable keyboard navigation
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable docking
-	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-	ImGui::StyleColorsDark();
+	ImGui::StyleColorsLight();
 
 	ImGuiStyle& style = ImGui::GetStyle();
-	if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-		style.WindowRounding = 0.0f;  // No rounding for viewport windows
-		style.Colors[ImGuiCol_WindowBg].w = 1.0f;  // Opaque background for platform windows
-	}
 
 	ImGui_ImplGlfw_InitForVulkan(iWindow->GetGLFWWindow(), true);
 
 	spdlog::info("UIManager Created.");
+
+	AddUIElement("Docking", []()
+		{
+			// Retrieve the main viewport (usually the entire window area)
+			ImGuiViewport* viewport = ImGui::GetMainViewport();
+			ImGui::SetNextWindowPos(viewport->WorkPos);
+			ImGui::SetNextWindowSize(viewport->WorkSize);
+			ImGui::SetNextWindowViewport(viewport->ID);
+
+			// Create a window to host the dock space
+			ImGuiWindowFlags dockspace_window_flags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar |
+				ImGuiWindowFlags_NoCollapse  |
+				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus |
+				ImGuiWindowFlags_NoNavFocus;
+
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+			ImGui::Begin("DockSpaceWindow", nullptr, dockspace_window_flags);
+			ImGui::PopStyleVar(2);
+
+			// Create the main dock space
+			ImGuiID dockspace_id = ImGui::GetID("A");
+			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+			static auto first_time = true;
+			// Customize the layout using DockBuilder API
+			if (first_time)
+			{
+				first_time = false;
+				// Reset and split the dock space
+				ImGui::DockBuilderRemoveNode(dockspace_id); // Clear any previous layout
+				ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace); // Add a new dock node
+				ImGui::DockBuilderSetNodeSize(dockspace_id, ImGui::GetWindowSize());
+
+				// Split the dock space into two horizontally
+				ImGuiID leftDock, rightDock;
+				ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.2f, &leftDock, &rightDock);
+				ImGuiID UpDock, DownDock;
+				ImGui::DockBuilderSplitNode(rightDock, ImGuiDir_Up, 0.75f, &UpDock, &DownDock);
+
+				// Dock windows into the split spaces
+				ImGui::DockBuilderDockWindow("Button", leftDock);
+				ImGui::DockBuilderDockWindow("Button2", leftDock);
+				ImGui::DockBuilderDockWindow("Viewport", UpDock);
+				ImGui::DockBuilderDockWindow("Logger", DownDock);
+
+				// Commit the dock layout
+				ImGui::DockBuilderFinish(dockspace_id);
+			}
+
+			ImGui::End();
+		});
 }
 
 UIManager::~UIManager()
@@ -52,16 +100,11 @@ void UIManager::BeginFrame()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
-
 }
 
 void UIManager::EndFrame()
 {
-	if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-		ImGui::UpdatePlatformWindows();
-		ImGui::RenderPlatformWindowsDefault();
-	}
+
 }
 
 void UIManager::Execute()

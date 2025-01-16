@@ -119,11 +119,7 @@ void Viewport::SetupUI()
 {
 	Engine::Get().GetUI()->AddUIElement("Viewport", [&]() {
 
-		ImGui::SetNextWindowSizeConstraints(
-			ImVec2(64, 64), // Minimum size
-			ImVec2(4000, 4000)  // Maximum size
-		);
-		ImGui::Begin("Viewport");
+		ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoMove);
 		
 		bool isHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
 		if(isHovered)
