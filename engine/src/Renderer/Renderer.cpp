@@ -201,7 +201,6 @@ void Renderer::Present()
 	VulkanCommandBuffer* wCmd = &mContext->mUICmds[mCurrentFrameInFlight];
 	mContext->mQueue->Present(mCurrentSwapchainImageIndex, wCmd->mCmdSubmitSemaphore->mSemaphore);
 	mCurrentFrameInFlight = (mCurrentFrameInFlight + 1) % mContext->GetNumFramesInFlight();
-	mFrameNum += 1;
 }
 
 void Renderer::UpdateObjectsUniformBuffer()

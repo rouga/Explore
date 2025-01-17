@@ -12,6 +12,9 @@
 #include <Core/Window.h>
 #include <Core/Input.h>
 
+#include "Scene/Entity.h"
+#include "Scene/Camera.h"
+
 UIManager::UIManager(Window* iWindow)
 {
 	IMGUI_CHECKVERSION();
@@ -23,11 +26,21 @@ UIManager::UIManager(Window* iWindow)
 
 	io.Fonts->AddFontFromFileTTF("resources/fonts/DroidSans.ttf", 16);
 
-	ImGui::StyleColorsLight();
+	ImGui::StyleColorsDark();
 
 	ImGui_ImplGlfw_InitForVulkan(iWindow->GetGLFWWindow(), true);
 
 	spdlog::info("UIManager Created.");
+
+	mPropertiesUI[EntityType::eCamera] = [](void* iCamera)
+		{
+			Camera* wCamera = reinterpret_cast<Camera*>(iCamera);
+			ImGui::Text("Camera Position : %.3f | %.3f | %.3f", wCamera->getPosition().x, wCamera->getPosition().y, wCamera->getPosition().z);
+			ImGui::DragFloat("FOV", &wCamera->mFov, 1.0f, 10.0f, 100.0f );
+			ImGui::DragFloat("Distance", &wCamera->mDistance, 1.0f, 0.1f, 10000.0f);
+			ImGui::DragFloat("Z Near", &wCamera->mNear, 0.1f, 0.1f, 100.0f);
+			ImGui::DragFloat("Z Far", &wCamera->mFar, 100.0f, 100.f, 10000.0f);
+		};
 
 	AddUIElement("Docking", []()
 		{
@@ -72,8 +85,9 @@ UIManager::UIManager(Window* iWindow)
 				ImGui::DockBuilderSplitNode(leftDock, ImGuiDir_Up, 0.6f, &SceneDock, &PropertiesDock);
 
 				// Dock windows into the split spaces
+				ImGui::DockBuilderDockWindow("Scene", SceneDock);
 				ImGui::DockBuilderDockWindow("Statistics", SceneDock);
-				ImGui::DockBuilderDockWindow("Properties", PropertiesDock);
+				ImGui::DockBuilderDockWindow("Property", PropertiesDock);
 				ImGui::DockBuilderDockWindow("Viewport", ViewportDock);
 				ImGui::DockBuilderDockWindow("Logger", LogDock);
 
@@ -127,4 +141,9 @@ void UIManager::RemoveUIElement(const std::string& iName)
 void UIManager::ClearUIElements()
 {
 	mUIElements.clear();
+}
+
+void UIManager::DrawUIProperties(Entity* iEntity)
+{
+	mPropertiesUI[iEntity->GetType()](iEntity);
 }

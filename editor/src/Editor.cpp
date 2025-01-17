@@ -6,10 +6,14 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <backends/imgui_impl_vulkan.h>
+#include <algorithm>
+#include <vector>
 
 #include "Renderer/Renderer.h"
 #include "Core/Input.h"
 #include "Core/Timer.h"
+
+#include "Scene/Entity.h"
 
 Editor::Editor()
 {
@@ -35,8 +39,10 @@ void Editor::Run()
 {
 	Timer wTimer;
 	Timer wTimer2;
+	Timer wTimer3;
 	while (!mWindow->ShouldClose())
 	{
+		wTimer3.Start();
 		wTimer.Start();
 		Engine::Get().Update();
 		mEngineCPU = wTimer.Peek();
@@ -50,6 +56,9 @@ void Editor::Run()
 		mRenderer->Present();
 		mRenderCPU = wTimer2.Stop();
 		mCPUFrameTime = wTimer.Stop();
+		mFrameTime = wTimer3.Stop();
+		mFrameTimes[mFrameNum % mFrameTimes.size()] = mFrameTime;
+		mFrameNum += 1;
 	}
 }
 
@@ -62,14 +71,34 @@ void Editor::Shutdown()
 void Editor::SetupUI()
 {
 	mUIManager->AddUIElement("Button", [&]() {
+		ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoMove);
+
+		std::vector<Entity*> wEntites = { Engine::Get().GetCamera() };
+
+		bool selectedItem = false;
+		static int wItemSelectedID = -1;
+		for (int i = 0; i < wEntites.size() ; i++)
+		{
+			bool isSelected = (wItemSelectedID == i);
+			if (ImGui::Selectable(wEntites[i]->GetName().c_str(), isSelected))
+				wItemSelectedID = i;
+		}
+		ImGui::End();
+
 		ImGui::Begin("Statistics", nullptr, ImGuiWindowFlags_NoMove);
+		ImGui::Text("Frame Time : %.3f ms | %d FPS", mFrameTime, (int)(1000.f / mFrameTime));
+		ImGui::PlotLines("##", mFrameTimes.data(), mFrameTimes.size(), 0, nullptr, 0.0f, 20.0f, ImVec2(0, 50));
 		ImGui::Text("CPU Time : %.3f ms", mCPUFrameTime);
 		ImGui::Text("Engine Update CPU Time : %.3f ms", mEngineCPU);
 		ImGui::Text("Renderer Update CPU Time : %.3f ms", mRenderCPU);
 		ImGui::End();
 
-		ImGui::Begin("Properties", nullptr, ImGuiWindowFlags_NoMove);
-		ImGui::Text("Hello, World!");
+		ImGui::Begin("Property", nullptr, ImGuiWindowFlags_NoMove);
+		if(wItemSelectedID >= 0)
+		{
+			ImGui::Text(" === %s Properties ===", wEntites[wItemSelectedID]->GetName().c_str());
+			mUIManager->DrawUIProperties(wEntites[wItemSelectedID]);
+		}
 		ImGui::End();
 
 		ImGui::Begin("Logger", nullptr, ImGuiWindowFlags_NoMove);
@@ -77,7 +106,7 @@ void Editor::SetupUI()
 		ImGui::End();
 		});
 
-	mUIManager->AddUIElement("Viewport", [&]() {
+		mUIManager->AddUIElement("Viewport", [&]() {
 
 		ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoMove);
 

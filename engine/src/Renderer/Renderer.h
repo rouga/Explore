@@ -13,7 +13,7 @@
 
 class Window;
 class StaticMesh;
-class OrbitCamera;
+class Camera;
 class Model;
 class UIManager;
 

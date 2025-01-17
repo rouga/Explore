@@ -28,7 +28,7 @@ void Engine::Initialize(Window* iWindow)
 
 	mRenderer = std::make_unique<Renderer>();
 	mRenderer->Initialize(mWindow);
-	mOrbitCamera = std::make_unique<OrbitCamera>(mRenderer->mViewport.get());
+	mOrbitCamera = std::make_unique<Camera>(mRenderer->mViewport.get());
 	mModel = std::make_unique<Model>("resources/cottage.obj");
 	spdlog::info("Number of meshes loaded to CPU : {:d}", mModel->GetNumMeshes());
 	if(mModel)

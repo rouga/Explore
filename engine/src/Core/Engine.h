@@ -24,11 +24,9 @@ public:
 	void OnResize(int iWidth, int iHeight);
 
 	Model* GetModel() { return mModel.get(); }
-	OrbitCamera* GetCamera() {return mOrbitCamera.get(); }
+	Camera* GetCamera() {return mOrbitCamera.get(); }
 	Window* GetWindow() { return mWindow; }
 	Renderer* GetRenderer() { return mRenderer.get(); }
-
-	float mFrameTime = 0;
 
 private:
 	// Private constructor for Singleton
@@ -37,6 +35,8 @@ private:
 	Window* mWindow = nullptr;
 
 	std::unique_ptr<Renderer> mRenderer = nullptr;
-	std::unique_ptr<OrbitCamera> mOrbitCamera = nullptr;
+	std::unique_ptr<Camera> mOrbitCamera = nullptr;
+
+	uint32_t mFrameNum = 0;
 
 };

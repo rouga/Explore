@@ -4,9 +4,11 @@
 
 #include "Renderer/Viewport.h"
 #include "Core/Input.h"
+#include "Entity.h"
 
-OrbitCamera::OrbitCamera(Viewport* iViewport, float iDistance, float iPitch, float iYaw, const glm::vec3& iTarget)
-	:mViewport(iViewport),
+Camera::Camera(Viewport* iViewport, float iDistance, float iPitch, float iYaw, const glm::vec3& iTarget)
+	:Entity(EntityType::eCamera),
+	mViewport(iViewport),
 	mDistance(iDistance),
 	mPitch(iPitch),
 	mYaw(iYaw),
@@ -14,7 +16,7 @@ OrbitCamera::OrbitCamera(Viewport* iViewport, float iDistance, float iPitch, flo
 {
 }
 
-void OrbitCamera::Update()
+void Camera::Update()
 {
 	if (Input::Get().IsKeyDown(GLFW_KEY_R))
 	{
@@ -40,35 +42,35 @@ void OrbitCamera::Update()
 	adjustDistance(Input::Get().GetScrollOffset().second);
 }
 
-void OrbitCamera::setTarget(const glm::vec3& iTarget) {
+void Camera::setTarget(const glm::vec3& iTarget) {
 	mTarget = iTarget;
 }
 
-void OrbitCamera::setDistance(float iDistance) {
+void Camera::setDistance(float iDistance) {
 	mDistance = glm::clamp(iDistance, 1.0f, iDistance); // Prevent negative or extreme zoom
 }
 
-void OrbitCamera::setPitch(float iPitch) {
+void Camera::setPitch(float iPitch) {
 	mPitch = glm::clamp(iPitch, -89.0f, 89.0f); // Prevent flipping
 }
 
-void OrbitCamera::setYaw(float iYaw) {
+void Camera::setYaw(float iYaw) {
 	mYaw = iYaw;
 }
 
-void OrbitCamera::adjustDistance(float iDelta) {
+void Camera::adjustDistance(float iDelta) {
 	setDistance(mDistance + iDelta);
 }
 
-void OrbitCamera::adjustPitch(float iDelta) {
+void Camera::adjustPitch(float iDelta) {
 	setPitch(mPitch + iDelta);
 }
 
-void OrbitCamera::adjustYaw(float iDelta) {
+void Camera::adjustYaw(float iDelta) {
 	setYaw(mYaw + iDelta);
 }
 
-glm::mat4 OrbitCamera::getViewMatrix() const {
+glm::mat4 Camera::getViewMatrix() const {
 	// Calculate camera position
 	glm::vec3 position = getPosition();
 
@@ -76,15 +78,15 @@ glm::mat4 OrbitCamera::getViewMatrix() const {
 	return glm::lookAt(position, mTarget, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
-glm::mat4 OrbitCamera::GetProjectionMatrix() const
+glm::mat4 Camera::GetProjectionMatrix() const
 {
-	return glm::perspectiveFov(glm::radians(45.f),
+	return glm::perspectiveFov(glm::radians(mFov),
 		static_cast<float>(mViewport->GetWidth()),
 		static_cast<float>(mViewport->GetHeight()),
-		0.1f, 10000.f);
+		mNear, mFar);
 }
 
-glm::vec3 OrbitCamera::getPosition() const {
+glm::vec3 Camera::getPosition() const {
 	// Convert spherical coordinates to Cartesian
 	float wPitchRad = glm::radians(mPitch);
 	float wYawRad = glm::radians(mYaw);

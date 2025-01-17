@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include "Core/Engine.h"
 #include "Core/Window.h"
 #include "Renderer/UIManager.h"
@@ -26,4 +28,7 @@ private:
 	float mEngineCPU = 0;
 	float mRenderCPU = 0;
 	float mCPUFrameTime = 0;
+	float mFrameTime = 0;
+	std::array<float, 300> mFrameTimes;
+	uint32_t mFrameNum = 0;
 };
