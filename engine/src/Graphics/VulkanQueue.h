@@ -22,7 +22,7 @@ public:
 
 	uint32_t AcquireNextImage(VkFence iFence, uint32_t iFrameIndex);
 
-	void SubmitAsync(VulkanCommandBuffer* iCmd, VkFence iFence);
+	void SubmitAsync(VulkanCommandBuffer* iCmd, VkFence iFence, VkSemaphore iWaitSemaphore = nullptr);
 	void SubmitSync(VulkanCommandBuffer* iCmd, VulkanFence* iFence);
 
 	// A Semaphore representing the last command executed on GPU Before presenting

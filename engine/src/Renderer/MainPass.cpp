@@ -55,9 +55,9 @@ void MainPass::Setup(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 
 	wPipeline.pipelineLayout = mContext->mPipelineLayoutManager->GetLayout("main");
 
-	wPipeline.renderingInfo.pColorAttachmentFormats = &iFrameResources->mViewport->GetColorTarget(0)->GetFormat();
-	wPipeline.renderingInfo.depthAttachmentFormat = iFrameResources->mViewport->GetDepthTarget(0)->GetFormat();
-	wPipeline.renderingInfo.stencilAttachmentFormat = iFrameResources->mViewport->GetDepthTarget(0)->GetFormat();
+	wPipeline.renderingInfo.pColorAttachmentFormats = &iFrameResources->mViewport->GetColorTarget()->GetFormat();
+	wPipeline.renderingInfo.depthAttachmentFormat = iFrameResources->mViewport->GetDepthTarget()->GetFormat();
+	wPipeline.renderingInfo.stencilAttachmentFormat = iFrameResources->mViewport->GetDepthTarget()->GetFormat();
 
 	mPipeline = std::make_unique<VulkanGraphicsPipeline>();
 	mPipeline->Initialize(mContext->mLogicalDevice->mDevice, wPipeline, mVS->mShader, mFS->mShader);
@@ -67,9 +67,9 @@ void MainPass::Setup(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 
 void MainPass::Begin(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 {
-	std::vector<VkImageView> wBackbuffer{ iFrameResources->mViewport->GetColorTarget(mContext->mQueue->GetCurrentInFlightFrame())->mImageView };
+	std::vector<VkImageView> wBackbuffer{ iFrameResources->mViewport->GetColorTarget()->mImageView };
 
-	mRenderPass->Begin(iCmd, wBackbuffer, iFrameResources->mViewport->GetDepthTarget(mContext->mQueue->GetCurrentInFlightFrame())->mImageView,
+	mRenderPass->Begin(iCmd, wBackbuffer, iFrameResources->mViewport->GetDepthTarget()->mImageView,
 		VkExtent2D{ iFrameResources->mViewport->GetWidth(), iFrameResources->mViewport->GetHeight()}
 	);
 }

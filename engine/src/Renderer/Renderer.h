@@ -15,6 +15,7 @@ class Window;
 class StaticMesh;
 class OrbitCamera;
 class Model;
+class UIManager;
 
 
 struct FrameUB
@@ -45,9 +46,14 @@ public:
 
 	void Initialize(Window* iWindow);
 	void UploadGeometry(Model* iModel);
-	void Render();
 	void Flush();
+
 	void Resize(int iWidth, int iHeight);
+
+	void StartFrame();
+	void RenderScene();
+	void FinishFrame(UIManager* iUIManager);
+	void Present();
 
 	std::unique_ptr<RenderContext> mContext = nullptr;
 	std::unique_ptr<MainPass> mMainPass = nullptr;
@@ -63,6 +69,7 @@ private:
 	void UpdateObjectsUniformBuffer();
 	static constexpr uint32_t mMaxNumberMeshes = 2500;
 	uint32_t mCurrentFrameInFlight = 0;
+	uint32_t mCurrentSwapchainImageIndex = 0;
 	uint32_t mFrameNum = 0;
 
 };

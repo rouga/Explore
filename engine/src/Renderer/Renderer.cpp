@@ -6,6 +6,7 @@
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
 
+#include "UIManager.h"
 #include "TextureManager.h"
 
 #include "Scene/StaticMesh.h"
@@ -86,18 +87,31 @@ void Renderer::UploadGeometry(Model* iModel)
 	TextureManager::Get().LoadPending();
 }
 
-void Renderer::Render()
+void Renderer::Flush()
 {
-	VulkanCommandBuffer* wCmd = &mContext->mCmds[mCurrentFrameInFlight];
+	mContext->mQueue->Flush();
+}
+
+void Renderer::Resize(int iWidth, int iHeight)
+{
+	Flush();
+	mFrameRenderTarget->Resize(VkExtent3D{(uint32_t)iWidth, (uint32_t)iHeight, 1});
+	mContext->Resize(iWidth, iHeight);
+}
+
+void Renderer::StartFrame()
+{
 	mContext->mCompleteFences[mCurrentFrameInFlight]->Wait();
 	mContext->mCompleteFences[mCurrentFrameInFlight]->Reset();
 
-	uint32_t wCurrentImageIndex = mContext->mQueue->AcquireNextImage(nullptr, mCurrentFrameInFlight);
+	mCurrentSwapchainImageIndex = mContext->mQueue->AcquireNextImage(nullptr, mCurrentFrameInFlight);
 
-	wCmd->Reset(0);
 	mContext->mDescriptorSetManager->ResetPool(mCurrentFrameInFlight);
+}
 
-	Engine::Get().GetUI()->BeginFrame();
+void Renderer::RenderScene()
+{
+	VulkanCommandBuffer* wCmd = &mContext->mCmds[mCurrentFrameInFlight];
 
 	FrameUB wFrameUB =
 	{
@@ -117,14 +131,14 @@ void Renderer::Render()
 		.mFrameRenderTarget = mFrameRenderTarget.get(),
 		.mViewport = mViewport.get()
 	};
-	
+
 	wCmd->Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
 #ifdef _DEBUG
 	CmdDebug::CmdBeginLabel(wCmd->mCmd, "Scene Pass", glm::vec4{ 0.0, 1.0, 0.0, 1.0 });
 #endif
 
-	if(Engine::Get().GetModel())
+	if (Engine::Get().GetModel())
 	{
 		UpdateObjectsUniformBuffer();
 		mViewport->BeginFrame(wCmd->mCmd);
@@ -138,44 +152,56 @@ void Renderer::Render()
 	CmdDebug::CmdEndLabel(wCmd->mCmd);
 #endif
 
+	wCmd->End();
+
+	mContext->mQueue->SubmitAsync(wCmd, nullptr);
+}
+
+void Renderer::FinishFrame(UIManager* iUIManager)
+{
+	VulkanCommandBuffer* wCmd = &mContext->mUICmds[mCurrentFrameInFlight];
+	FrameResources wFrameResources =
+	{
+		.mFrameUniformBuffer = mFrameUB.get(),
+		.mObjectsUniformBuffer = mObjectsUB.get(),
+		.mFrameRenderTarget = mFrameRenderTarget.get(),
+		.mViewport = mViewport.get()
+	};
+
+	wCmd->Begin(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+
 #ifdef _DEBUG
 	CmdDebug::CmdBeginLabel(wCmd->mCmd, "UI Pass", glm::vec4{ 1.0, 0.0, 0.0, 1.0 });
 #endif
 	mFrameRenderTarget->Transition(wCmd->mCmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 	mUIPass->Begin(wCmd->mCmd, &wFrameResources);
+	iUIManager->Execute();
 	mUIPass->Draw(wCmd->mCmd, &wFrameResources);
 	mUIPass->End(wCmd->mCmd, &wFrameResources);
-	mFrameRenderTarget->Transition(wCmd->mCmd,VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+	mFrameRenderTarget->Transition(wCmd->mCmd, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
 #ifdef _DEBUG
 	CmdDebug::CmdEndLabel(wCmd->mCmd);
 #endif
 
-	mContext->mSwapchain->TransitionImageToDraw(wCmd, wCurrentImageIndex);
+	mContext->mSwapchain->TransitionImageToDraw(wCmd, mCurrentSwapchainImageIndex);
 
-	mContext->BlitImage(wCmd->mCmd, mFrameRenderTarget->mImage, mContext->mSwapchain->mImages[wCurrentImageIndex],
-		VkOffset3D{mWindow->GetWidth(), mWindow->GetHeight(), 1}, VkOffset3D{ mWindow->GetWidth(), mWindow->GetHeight(), 1 });
+	mContext->BlitImage(wCmd->mCmd, mFrameRenderTarget->mImage, mContext->mSwapchain->mImages[mCurrentSwapchainImageIndex],
+		VkOffset3D{ mWindow->GetWidth(), mWindow->GetHeight(), 1 }, VkOffset3D{ mWindow->GetWidth(), mWindow->GetHeight(), 1 });
 
-	mContext->mSwapchain->TransitionImageToPresent(wCmd, wCurrentImageIndex);
+	mContext->mSwapchain->TransitionImageToPresent(wCmd, mCurrentSwapchainImageIndex);
 
 	wCmd->End();
-	
-	mContext->mQueue->SubmitAsync(wCmd, mContext->mCompleteFences[mCurrentFrameInFlight]->mFence);
-	mContext->mQueue->Present(wCurrentImageIndex, wCmd->mCmdSubmitSemaphore->mSemaphore);
+
+	mContext->mQueue->SubmitAsync(wCmd, mContext->mCompleteFences[mCurrentFrameInFlight]->mFence, mContext->mCmds[mCurrentFrameInFlight].mCmdSubmitSemaphore->mSemaphore);
+}
+
+void Renderer::Present()
+{
+	VulkanCommandBuffer* wCmd = &mContext->mUICmds[mCurrentFrameInFlight];
+	mContext->mQueue->Present(mCurrentSwapchainImageIndex, wCmd->mCmdSubmitSemaphore->mSemaphore);
 	mCurrentFrameInFlight = (mCurrentFrameInFlight + 1) % mContext->GetNumFramesInFlight();
 	mFrameNum += 1;
-}
-
-void Renderer::Flush()
-{
-	mContext->mQueue->Flush();
-}
-
-void Renderer::Resize(int iWidth, int iHeight)
-{
-	Flush();
-	mFrameRenderTarget->Resize(VkExtent3D{(uint32_t)iWidth, (uint32_t)iHeight, 1});
-	mContext->Resize(iWidth, iHeight);
 }
 
 void Renderer::UpdateObjectsUniformBuffer()

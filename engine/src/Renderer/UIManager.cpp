@@ -21,9 +21,9 @@ UIManager::UIManager(Window* iWindow)
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable keyboard navigation
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable docking
 
-	ImGui::StyleColorsLight();
+	io.Fonts->AddFontFromFileTTF("resources/fonts/DroidSans.ttf", 16);
 
-	ImGuiStyle& style = ImGui::GetStyle();
+	ImGui::StyleColorsLight();
 
 	ImGui_ImplGlfw_InitForVulkan(iWindow->GetGLFWWindow(), true);
 
@@ -64,14 +64,18 @@ UIManager::UIManager(Window* iWindow)
 				// Split the dock space into two horizontally
 				ImGuiID leftDock, rightDock;
 				ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.2f, &leftDock, &rightDock);
-				ImGuiID UpDock, DownDock;
-				ImGui::DockBuilderSplitNode(rightDock, ImGuiDir_Up, 0.75f, &UpDock, &DownDock);
+
+				ImGuiID ViewportDock, LogDock;
+				ImGui::DockBuilderSplitNode(rightDock, ImGuiDir_Up, 0.75f, &ViewportDock, &LogDock);
+
+				ImGuiID SceneDock, PropertiesDock;
+				ImGui::DockBuilderSplitNode(leftDock, ImGuiDir_Up, 0.6f, &SceneDock, &PropertiesDock);
 
 				// Dock windows into the split spaces
-				ImGui::DockBuilderDockWindow("Button", leftDock);
-				ImGui::DockBuilderDockWindow("Button2", leftDock);
-				ImGui::DockBuilderDockWindow("Viewport", UpDock);
-				ImGui::DockBuilderDockWindow("Logger", DownDock);
+				ImGui::DockBuilderDockWindow("Statistics", SceneDock);
+				ImGui::DockBuilderDockWindow("Properties", PropertiesDock);
+				ImGui::DockBuilderDockWindow("Viewport", ViewportDock);
+				ImGui::DockBuilderDockWindow("Logger", LogDock);
 
 				// Commit the dock layout
 				ImGui::DockBuilderFinish(dockspace_id);
@@ -99,12 +103,6 @@ void UIManager::BeginFrame()
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
-
-}
-
-void UIManager::EndFrame()
-{
-
 }
 
 void UIManager::Execute()

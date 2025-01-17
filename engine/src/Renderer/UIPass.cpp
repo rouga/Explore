@@ -12,6 +12,7 @@
 #include "Core/Window.h"
 #include "Core/Engine.h"
 
+
 UIPass::UIPass(RenderContext* iContext)
 	:RenderPass(iContext)
 {
@@ -55,33 +56,19 @@ void UIPass::Setup(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 
 	ImGui_ImplVulkan_Init(&wImguiInitInfo);
 
-	iFrameResources->mViewport->ImguiSetup();
-
 	spdlog::info("UI pass setup completed.");
 }
 
 void UIPass::Begin(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 {
-	VkRenderingAttachmentInfo wColorAttachmentInfo = 
-	{
-		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-		.pNext = nullptr,
-		.imageView = iFrameResources->mFrameRenderTarget->mImageView,
-		.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-	};
+	std::vector<VkImageView> wBackbuffer{ iFrameResources->mFrameRenderTarget->mImageView };
 
-	std::vector<VkRenderingAttachmentInfo> wColorAttachments {wColorAttachmentInfo};
-
-	mRenderPass->Begin(iCmd, wColorAttachments,nullptr,
+	mRenderPass->Begin(iCmd, wBackbuffer, nullptr,
 		VkExtent2D{ (uint32_t)Engine::Get().GetWindow()->GetWidth(), (uint32_t)Engine::Get().GetWindow()->GetHeight() });
 }
 
 void UIPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 {
-	Engine::Get().GetUI()->Execute();
-
 	ImGui::Render();
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), iCmd);
 

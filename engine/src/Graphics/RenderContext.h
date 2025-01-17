@@ -55,6 +55,7 @@ public:
 
 	VkCommandPool mCmdPool = VK_NULL_HANDLE;
 	std::vector<VulkanCommandBuffer> mCmds;
+	std::vector<VulkanCommandBuffer> mUICmds;
 	VulkanCommandBuffer mCopyCmd;
 
 	Window* mWindow = nullptr;

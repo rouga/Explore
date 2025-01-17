@@ -1,10 +1,8 @@
 #include "Viewport.h"
 
-#include <imgui_internal.h>
-#include <backends/imgui_impl_vulkan.h>
-
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
+#include <backends/imgui_impl_vulkan.h>
 
 #include "Graphics/RenderContext.h"
 #include "Graphics/Utils.h"
@@ -27,7 +25,6 @@ void Viewport::Initialize()
 	CreateColorBuffer();
 	CreateDepthBuffer();
 	CreateTextureSampler(mContext->mLogicalDevice->mDevice, mContext->mPhysicalDevice->GetDevice());
-	SetupUI();
 }
 
 void Viewport::ImguiSetup()
@@ -63,6 +60,16 @@ void Viewport::Resize(int iWidth, int iHeight)
 	mColorBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->Resize(VkExtent3D{(uint32_t)iWidth, (uint32_t)iHeight, 1 });
 	mDepthBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->Resize(VkExtent3D{(uint32_t)iWidth,(uint32_t)iHeight, 1 });
 	BindToImgui();
+}
+
+VulkanImage* Viewport::GetColorTarget() const
+{
+	return mColorBuffer[mContext->mQueue->GetCurrentInFlightFrame()].get();
+}
+
+VulkanImage* Viewport::GetDepthTarget() const
+{
+	return mDepthBuffer[mContext->mQueue->GetCurrentInFlightFrame()].get();
 }
 
 void Viewport::CreateColorBuffer()
@@ -115,35 +122,9 @@ void Viewport::CreateDepthBuffer()
 	mContext->mQueue->SubmitSync(&mContext->mCopyCmd, mContext->mCopyFence.get());
 }
 
-void Viewport::SetupUI()
+ImTextureID Viewport::GetImGuiTextureID() const
 {
-	Engine::Get().GetUI()->AddUIElement("Viewport", [&]() {
-
-		ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoMove);
-		
-		bool isHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
-		if(isHovered)
-		{
-			ImGuiIO& io = ImGui::GetIO();
-			io.WantCaptureMouse = false;
-		}
-
-		spdlog::info("CaptureMouse : {:d}", (int)isHovered);
-
-		mRequestedSize = ImGui::GetContentRegionAvail();
-
-		if (mRequestedSize.x > 0 && mRequestedSize.y > 0)
-		{
-			mWidth = (uint32_t)mRequestedSize.x;
-			mHeight = (uint32_t)mRequestedSize.y;
-		}
-
-		ImGui::Image(mImGuiTextureID[mContext->mQueue->GetCurrentInFlightFrame()],
-			ImVec2{(float)mColorBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->GetExtent().width,
-											 (float)mColorBuffer[mContext->mQueue->GetCurrentInFlightFrame()]->GetExtent().height });
-
-		ImGui::End(); }
-	);
+	return mImGuiTextureID[mContext->mQueue->GetCurrentInFlightFrame()];
 }
 
 void Viewport::BindToImgui()

@@ -15,7 +15,6 @@ public:
 	~UIManager();
 
 	void BeginFrame();
-	void EndFrame();
 	void Execute();
 
 	void AddUIElement(const std::string& iName, const UIElementCallback& iCallback);

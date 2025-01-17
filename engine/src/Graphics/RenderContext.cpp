@@ -146,15 +146,17 @@ void RenderContext::CreateCommandBuffers()
 
 	// Allocate Command Buffers
 	mCmds.resize(GetNumFramesInFlight());
+	mUICmds.resize(GetNumFramesInFlight());
 
 	for(uint32_t i = 0; i < GetNumFramesInFlight(); i++)
 	{
 		mCmds[i] = VulkanCommandBuffer{mCmdPool, mLogicalDevice->mDevice};
+		mUICmds[i] = VulkanCommandBuffer{ mCmdPool, mLogicalDevice->mDevice };
 	}
 
 	mCopyCmd = VulkanCommandBuffer{ mCmdPool, mLogicalDevice->mDevice };
 
-	spdlog::info("Command Pool Created with {:d} Command buffers.", GetNumFramesInFlight() + 1);
+	spdlog::info("Command Pool Created with {:d} Command buffers.", GetNumFramesInFlight() * 2 + 1);
 }
 
 void RenderContext::CreateStagingBuffer()

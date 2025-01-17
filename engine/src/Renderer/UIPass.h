@@ -16,5 +16,4 @@ public:
 	virtual void End(VkCommandBuffer iCmd, FrameResources* iFrameResources) override;
 
 	std::unique_ptr<VulkanDescriptorPool> mPool;
-
 };

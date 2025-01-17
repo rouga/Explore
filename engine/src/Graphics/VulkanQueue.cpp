@@ -41,7 +41,7 @@ uint32_t VulkanQueue::AcquireNextImage(VkFence iFence, uint32_t iFrameIndex)
 	return mCurrentImageIndex;
 }
 
-void VulkanQueue::SubmitAsync(VulkanCommandBuffer* iCmd, VkFence iFence)
+void VulkanQueue::SubmitAsync(VulkanCommandBuffer* iCmd, VkFence iFence, VkSemaphore iWaitSemaphore)
 {
 	VkPipelineStageFlags wWaitFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
@@ -50,7 +50,7 @@ void VulkanQueue::SubmitAsync(VulkanCommandBuffer* iCmd, VkFence iFence)
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 		.pNext = nullptr,
 		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &mPresentSemaphore[mCurrentFrameInFlight]->mSemaphore,
+		.pWaitSemaphores = iWaitSemaphore ? &iWaitSemaphore : &mPresentSemaphore[mCurrentFrameInFlight]->mSemaphore,
 		.pWaitDstStageMask = &wWaitFlags,
 		.commandBufferCount = 1,
 		.pCommandBuffers = &iCmd->mCmd,

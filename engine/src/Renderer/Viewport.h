@@ -20,18 +20,22 @@ public:
 
 	void Resize(int iWidth, int iHeight);
 
-	VulkanImage* GetColorTarget(uint32_t iFrameIndex) const {return mColorBuffer[iFrameIndex].get(); }
-	VulkanImage* GetDepthTarget(uint32_t iFrameIndex) const { return mDepthBuffer[iFrameIndex].get(); }
+	VulkanImage* GetColorTarget() const;
+	VulkanImage* GetDepthTarget() const;
 
 	uint32_t GetWidth() const { return mWidth; }
 	uint32_t GetHeight() const { return mHeight; }
+
+	void SetWidth(uint32_t iWidth) { mWidth = iWidth; }
+	void SetHeight(uint32_t iHeight) { mHeight = iHeight; }
+
+	ImTextureID GetImGuiTextureID() const;
 
 	void BindToImgui();
 
 private:
 	void CreateColorBuffer();
 	void CreateDepthBuffer();
-	void SetupUI();
 
 	std::vector<ImTextureID> mImGuiTextureID;
 	ImVec2 mRequestedSize{0, 0};
