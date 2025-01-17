@@ -5,6 +5,8 @@ add_library(Engine STATIC src/Core/Engine.cpp
 						  src/Core/Window.h
 						  src/Core/Input.cpp
 						  src/Core/Input.h
+						  src/Core/Timer.cpp
+						  src/Core/Timer.h
 						  src/Renderer/Renderer.cpp
 						  src/Renderer/Renderer.h
 						  src/Renderer/Viewport.h
@@ -15,8 +17,8 @@ add_library(Engine STATIC src/Core/Engine.cpp
 						  src/Renderer/MainPass.cpp
 						  src/Renderer/UIPass.h
 						  src/Renderer/UIPass.cpp
-						  src/Renderer/UIManager.h
 						  src/Renderer/UIManager.cpp
+						  src/Renderer/UIManager.h
 						  src/Renderer/TextureManager.h
 						  src/Renderer/TextureManager.cpp
 						  src/Scene/StaticMesh.cpp

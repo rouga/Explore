@@ -5,7 +5,6 @@
 
 #include "Scene/Model.h"
 #include "Scene/Camera.h"
-#include "Renderer/UIManager.h"
 
 class Window;
 
@@ -20,13 +19,16 @@ public:
 
 	void Initialize(Window* iWindow);
 	void Shutdown();
-	void Run();
+	void Update();
+
 	void OnResize(int iWidth, int iHeight);
 
 	Model* GetModel() { return mModel.get(); }
 	OrbitCamera* GetCamera() {return mOrbitCamera.get(); }
 	Window* GetWindow() { return mWindow; }
-	UIManager* GetUI() { return mUIManager.get(); }
+	Renderer* GetRenderer() { return mRenderer.get(); }
+
+	float mFrameTime = 0;
 
 private:
 	// Private constructor for Singleton
@@ -35,7 +37,6 @@ private:
 	Window* mWindow = nullptr;
 
 	std::unique_ptr<Renderer> mRenderer = nullptr;
-	std::unique_ptr<UIManager> mUIManager = nullptr;
 	std::unique_ptr<OrbitCamera> mOrbitCamera = nullptr;
 
 };
