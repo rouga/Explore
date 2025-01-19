@@ -2,8 +2,8 @@
 
 #include <exception>
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "VulkanInstance.h"
 #include "Utils.h"
@@ -38,13 +38,13 @@ VulkanDebugCallback::~VulkanDebugCallback()
 
 	if(!vkDestroyDebugUtilsMessenger)
 	{
-		spdlog::error("Failed to find address of vkDestroyDebugUtilsMessenger.");
+		Logger::Get().mLogger->error("Failed to find address of vkDestroyDebugUtilsMessenger.");
 		exit(EXIT_FAILURE);
 	}
 
 	vkDestroyDebugUtilsMessenger(mInstance, mDebugMessenger, nullptr);
 
-	spdlog::info("Debug Callback Destoryed.");
+	Logger::Get().mLogger->info("Debug Callback Destoryed.");
 }
 
 void VulkanDebugCallback::Initialize(VulkanInstance* iInstance)
@@ -75,5 +75,5 @@ void VulkanDebugCallback::Initialize(VulkanInstance* iInstance)
 	VkResult wResult = vkCreateDebugUtilsMessenger(mInstance, &wMessengerCreateInfo, nullptr, &mDebugMessenger);
 	CHECK_VK_RESULT(wResult, "Create Debug Utils Messenger");
 
-	spdlog::info("Debug Callback created.");
+	Logger::Get().mLogger->info("Debug Callback created.");
 }

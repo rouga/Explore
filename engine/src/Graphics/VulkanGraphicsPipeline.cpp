@@ -1,7 +1,7 @@
 #include "VulkanGraphicsPipeline.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "Core/Window.h"
 #include "Utils.h"
@@ -60,7 +60,7 @@ void VulkanGraphicsPipeline::Initialize(VkDevice iDevice, const PipelineInfo iPi
 	VkResult wResult = vkCreateGraphicsPipelines(mDevice, nullptr, 1, &wCreateInfo, nullptr, &mPipeline);
 	CHECK_VK_RESULT(wResult, "Graphics Pipeline Creation");
 
-	spdlog::info("Graphics Pipeline Created");
+	Logger::Get().mLogger->info("Graphics Pipeline Created");
 }
 
 void VulkanGraphicsPipeline::Bind(VkCommandBuffer iCmd, Window* iWindow)

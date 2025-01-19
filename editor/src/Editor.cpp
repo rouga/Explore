@@ -1,8 +1,5 @@
 #include "Editor.h"
 
-#define FMT_UNICODE 0
-#include "spdlog/spdlog.h"
-
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <backends/imgui_impl_vulkan.h>
@@ -14,6 +11,7 @@
 #include "Core/Timer.h"
 
 #include "Scene/Entity.h"
+#include "Core/Logger.h"
 
 Editor::Editor()
 {
@@ -28,9 +26,7 @@ void Editor::Initialize()
 	Input::Get().Initialize(mWindow->GetGLFWWindow());
 	mUIManager = std::make_unique<UIManager>(mWindow.get());
 	SetupUI();
-	
 	Engine::Get().Initialize(mWindow.get());
-
 	mRenderer = Engine::Get().GetRenderer();
 	mRenderer->mViewport->ImguiSetup();
 }
@@ -64,7 +60,7 @@ void Editor::Run()
 
 void Editor::Shutdown()
 {
-	spdlog::info("Closing Editor.");
+	Logger::Get().mLogger->info("Closing Editor.");
 	Engine::Get().Shutdown();
 }
 
@@ -102,7 +98,11 @@ void Editor::SetupUI()
 		ImGui::End();
 
 		ImGui::Begin("Logger", nullptr, ImGuiWindowFlags_NoMove);
-		ImGui::Text("Hello, World!");
+		const auto& wLogMsgs = Logger::Get().mImguiSink->get_messages();
+		for (const auto& wMsg : wLogMsgs)
+		{
+			ImGui::TextUnformatted(wMsg.c_str());
+		}
 		ImGui::End();
 		});
 

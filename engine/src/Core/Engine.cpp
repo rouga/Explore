@@ -8,8 +8,7 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+#include "Logger.h"
 
 #include "Window.h"
 #include "Input.h"
@@ -30,7 +29,7 @@ void Engine::Initialize(Window* iWindow)
 	mRenderer->Initialize(mWindow);
 	mOrbitCamera = std::make_unique<Camera>(mRenderer->mViewport.get());
 	mModel = std::make_unique<Model>("resources/cottage.obj");
-	spdlog::info("Number of meshes loaded to CPU : {:d}", mModel->GetNumMeshes());
+	Logger::Get().mLogger->info("Number of meshes loaded to CPU : {:d}", mModel->GetNumMeshes());
 	if(mModel)
 	{
 		mModel->GetTransform()->SetRotation(glm::vec3{1.0f, 0.0f, 0.0f}, 180);

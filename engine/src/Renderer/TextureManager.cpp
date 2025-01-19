@@ -1,7 +1,7 @@
 #include "TextureManager.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -75,7 +75,7 @@ void TextureManager::CreateTexture(std::string iPath, VulkanImage* iTexture)
 
 	if (!wPixelData)
 	{
-		spdlog::error("Failed to load texture: {:s}", iPath);
+		Logger::Get().mLogger->error("Failed to load texture: {:s}", iPath);
 		exit(EXIT_FAILURE);
 	}
 

@@ -5,8 +5,8 @@
 #include "Core/Window.h"
 #include "Renderer.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "Graphics/Utils.h"
 
@@ -62,7 +62,7 @@ void MainPass::Setup(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 	mPipeline = std::make_unique<VulkanGraphicsPipeline>();
 	mPipeline->Initialize(mContext->mLogicalDevice->mDevice, wPipeline, mVS->mShader, mFS->mShader);
 
-	spdlog::info("Main pass setup completed.");
+	Logger::Get().mLogger->info("Main pass setup completed.");
 }
 
 void MainPass::Begin(VkCommandBuffer iCmd, FrameResources* iFrameResources)

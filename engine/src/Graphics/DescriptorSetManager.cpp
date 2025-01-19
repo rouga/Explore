@@ -1,7 +1,7 @@
 #include "DescriptorSetManager.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "Utils.h"
 
@@ -70,7 +70,7 @@ void DescriptorSetManager::CreateLayout(const std::vector<Binding>& iBindings, c
 
 	mLayouts[iName] = wLayout;
 
-	spdlog::info("New Descriptor Set Layout ({0:s}) created with {1:d} bindings", iName, iBindings.size());
+	Logger::Get().mLogger->info("New Descriptor Set Layout ({0:s}) created with {1:d} bindings", iName, iBindings.size());
 }
 
 VkDescriptorSetLayout DescriptorSetManager::GetLayout(const std::string& iName) const

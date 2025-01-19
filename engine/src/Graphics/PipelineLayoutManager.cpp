@@ -1,7 +1,7 @@
 #include "PipelineLayoutManager.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "Utils.h"
 
@@ -35,7 +35,7 @@ void PipelineLayoutManager::CreateLayout(const std::vector<VkDescriptorSetLayout
 	CHECK_VK_RESULT(wResult, "Pipeline Layout Creation");
 	mLayouts[iName] = wLayout;
 
-	spdlog::info("New Pipeline Layout ({0:s}) created with {1:d} Descriptor Set Layouts and {2:d} Push Constant Ranges",
+	Logger::Get().mLogger->info("New Pipeline Layout ({0:s}) created with {1:d} Descriptor Set Layouts and {2:d} Push Constant Ranges",
 					iName, iDescriptorSetLayouts.size(), iPushConstantRanges.size());
 }
 

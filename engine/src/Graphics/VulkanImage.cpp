@@ -1,7 +1,7 @@
 #include "VulkanImage.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "VulkanGPUBuffer.h"
 #include "VulkanCommandBuffer.h"
@@ -130,7 +130,7 @@ void VulkanImage::Transition(VkCommandBuffer iCmd, VkImageLayout iOldLayout, VkI
 	}
 	else 
 	{
-		spdlog::error("Unsupported Image layout transition");
+		Logger::Get().mLogger->error("Unsupported Image layout transition");
 		exit(EXIT_FAILURE);
 	}
 
@@ -303,7 +303,7 @@ void VulkanImage::CreateImage(VkExtent3D iExtent, VkFormat iFormat, VkImageUsage
 	VkResult wResult = vmaCreateImage(mAllocator, &wImageInfo, &allocInfo, &mImage, &mAllocation, &mAllocationInfo);
 	CHECK_VK_RESULT(wResult, "Image Creation");
 
-	spdlog::info("Image Create with dimensions {0:d}x{1:d} (Allocation Size : {2:d} MB)", iExtent.width, iExtent.height, mAllocationInfo.size / 1024 / 1024);
+	Logger::Get().mLogger->debug("Image Create with dimensions {0:d}x{1:d} (Allocation Size : {2:d} MB)", iExtent.width, iExtent.height, mAllocationInfo.size / 1024 / 1024);
 }
 
 void VulkanImage::CreateImageView(VkFormat iFormat, VkImageAspectFlags iAspectFlags)

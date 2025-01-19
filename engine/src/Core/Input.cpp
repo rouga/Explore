@@ -1,7 +1,7 @@
 #include "Input.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 // Get the singleton instance
 Input& Input::Get() {
@@ -22,7 +22,7 @@ void Input::Initialize(GLFWwindow* iWindow)
 	// Initialize mouse position
 	glfwGetCursorPos(mWindow, &mLastMouseX, &mLastMouseY);
 
-	spdlog::info("Input System Initialized");
+	Logger::Get().mLogger->info("Input System Initialized");
 }
 
 void Input::Setup()

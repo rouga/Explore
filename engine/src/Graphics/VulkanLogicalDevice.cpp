@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "VulkanPhysicalDevice.h"
 #include "Utils.h"
@@ -15,7 +15,7 @@ VulkanLogicalDevice::VulkanLogicalDevice()
 VulkanLogicalDevice::~VulkanLogicalDevice()
 {
 	vkDestroyDevice(mDevice, nullptr);
-	spdlog::info("Logical Device Destoryed.");
+	Logger::Get().mLogger->info("Logical Device Destoryed.");
 }
 
 void VulkanLogicalDevice::Initialize(VulkanPhysicalDevice* iPhysicalDevice)
@@ -72,5 +72,5 @@ void VulkanLogicalDevice::Initialize(VulkanPhysicalDevice* iPhysicalDevice)
 	VkResult wResult = vkCreateDevice(iPhysicalDevice->GetDevice(), &wCreateInfo, nullptr, &mDevice);
 	CHECK_VK_RESULT(wResult, "Logical Device Creation");
 	
-	spdlog::info("Logical Device Created.");
+	Logger::Get().mLogger->info("Logical Device Created.");
 }

@@ -3,8 +3,8 @@
 #include <fstream>
 #include <vector>
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "Utils.h"
 
@@ -28,7 +28,7 @@ void VulkanShader::Initialize(VkDevice iDevice, const std::string& iFilePath)
 
 	if (!file.is_open()) 
 	{
-		spdlog::error("Failed to load shader file {:s}", wBaseFilename);
+		Logger::Get().mLogger->error("Failed to load shader file {:s}", wBaseFilename);
 	}
 
 	// find what the size of the file is by looking up the location of the cursor
@@ -85,5 +85,5 @@ void VulkanShader::Initialize(VkDevice iDevice, const std::string& iFilePath)
 		mStage = EStage::Unknown;
 	}
 
-	spdlog::info("{0:s} Shader Module for {1:s} is created.", wStageStr, wBaseFilename);
+	Logger::Get().mLogger->info("{0:s} Shader Module for {1:s} is created.", wStageStr, wBaseFilename);
 }

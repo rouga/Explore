@@ -1,7 +1,7 @@
 #include "VulkanQueue.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "VulkanCommandBuffer.h"
 #include "VulkanSwapchain.h"
@@ -29,7 +29,7 @@ void VulkanQueue::Initialize(VkDevice iDevice, VulkanSwapchain* iSwapchain, uint
 	}
 	
 	vkGetDeviceQueue(iDevice, iQueueFamily, iQueueIndex, &mQueue);
-	spdlog::info("Queue {0:d} Acquired from Family {1:d}", iQueueIndex, iQueueFamily);
+	Logger::Get().mLogger->info("Queue {0:d} Acquired from Family {1:d}", iQueueIndex, iQueueFamily);
 }
 
 uint32_t VulkanQueue::AcquireNextImage(VkFence iFence, uint32_t iFrameIndex)

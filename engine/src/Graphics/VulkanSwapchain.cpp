@@ -3,8 +3,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "Core/Window.h"
 
@@ -23,12 +23,12 @@ VulkanSwapchain::~VulkanSwapchain()
 
 	if (!vkDestroySurfaceKHR)
 	{
-		spdlog::error("Failed to find address of vkDestroySurfaceKHR.");
+		Logger::Get().mLogger->error("Failed to find address of vkDestroySurfaceKHR.");
 		exit(EXIT_FAILURE);
 	}
 
 	vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
-	spdlog::info("GLFW Window Surface Destroyed.");
+	Logger::Get().mLogger->info("GLFW Window Surface Destroyed.");
 }
 
 void VulkanSwapchain::Initialize(VkInstance iInstance, VulkanLogicalDevice* iLogicalDevice, Window* iWindow, uint32_t iNumSwapchainImages)
@@ -120,7 +120,7 @@ void VulkanSwapchain::CreateSurface()
 		exit(EXIT_FAILURE);
 	}
 
-	spdlog::info("GLFW Window surface created.");
+	Logger::Get().mLogger->info("GLFW Window surface created.");
 }
 
 void VulkanSwapchain::CreateSwapchain()
@@ -165,7 +165,7 @@ void VulkanSwapchain::CreateSwapchain()
 			VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_VIEW_TYPE_2D, 1,1);
 	}
 
-	spdlog::info("Swapchain created with {:d} images", mNumSwapchainImages);
+	Logger::Get().mLogger->info("Swapchain created with {:d} images", mNumSwapchainImages);
 }
 
 void VulkanSwapchain::DestroySwapchain()
@@ -176,5 +176,5 @@ void VulkanSwapchain::DestroySwapchain()
 	}
 
 	vkDestroySwapchainKHR(mLogicalDevice->mDevice, mSwapchain, nullptr);
-	spdlog::info("Swapchain Destroyed.");
+	Logger::Get().mLogger->info("Swapchain Destroyed.");
 }

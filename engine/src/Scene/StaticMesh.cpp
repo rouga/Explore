@@ -1,7 +1,7 @@
 #include "StaticMesh.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "Graphics/RenderContext.h"
 #include "Renderer/TextureManager.h"
@@ -99,7 +99,7 @@ void StaticMesh::UploadGeometry(VulkanCommandBuffer* iCmd, RenderContext* iRende
 
 	mUploaded = true;
 
-	spdlog::info("Mesh {:s} uploaded", mName);
+	Logger::Get().mLogger->info("Mesh {:s} uploaded", mName);
 }
 
 void StaticMesh::FreeGPU()

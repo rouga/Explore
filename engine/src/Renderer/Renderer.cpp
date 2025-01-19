@@ -3,8 +3,8 @@
 #include <vma/vk_mem_alloc.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "UIManager.h"
 #include "TextureManager.h"

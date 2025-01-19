@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "Utils.h"
 
@@ -61,7 +61,7 @@ void VulkanDescriptorPool::CreatePool(const PoolSizes& iPoolSizes, uint32_t iMax
 	VkResult wResult = vkCreateDescriptorPool(mDevice, &wPoolInfo, nullptr, &mPools);
 	CHECK_VK_RESULT(wResult, "Descriptor Pool Creation");
 
-	spdlog::info("Descriptor Pool Created");
+	Logger::Get().mLogger->info("Descriptor Pool Created");
 }
 
 

@@ -4,8 +4,8 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include <imgui_internal.h>
 
@@ -30,7 +30,7 @@ UIManager::UIManager(Window* iWindow)
 
 	ImGui_ImplGlfw_InitForVulkan(iWindow->GetGLFWWindow(), true);
 
-	spdlog::info("UIManager Created.");
+	Logger::Get().mLogger->info("UIManager Created.");
 
 	mPropertiesUI[EntityType::eCamera] = [](void* iCamera)
 		{
@@ -105,7 +105,7 @@ UIManager::~UIManager()
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
-	spdlog::info("UIManager Destroyed.");
+	Logger::Get().mLogger->info("UIManager Destroyed.");
 }
 
 void UIManager::BeginFrame()

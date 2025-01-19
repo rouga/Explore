@@ -1,7 +1,7 @@
 #include "Viewport.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 #include <backends/imgui_impl_vulkan.h>
 
 #include "Graphics/RenderContext.h"

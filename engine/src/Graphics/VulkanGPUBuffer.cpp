@@ -5,8 +5,8 @@
 #include "VulkanPhysicalDevice.h"
 #include "VulkanCommandBuffer.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 VulkanGPUBuffer::VulkanGPUBuffer(VkBufferUsageFlags iUsageFlags, VmaAllocationCreateFlags iAllocationFlags)
 	:mUsageFlags(iUsageFlags),

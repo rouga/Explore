@@ -1,7 +1,7 @@
 #include "VulkanPhysicalDevice.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "Utils.h"
 
@@ -31,7 +31,7 @@ void VulkanPhysicalDevice::QueryDevice()
 	VkResult wResult = vkEnumeratePhysicalDevices(mInstance, &wNumDevices, nullptr);
 	CHECK_VK_RESULT(wResult, "Enumerate Physical Devices");
 
-	spdlog::info("Number of Physical Devices : {:d}", wNumDevices);
+	Logger::Get().mLogger->info("Number of Physical Devices : {:d}", wNumDevices);
 	wDevices.resize(wNumDevices);
 
 	wResult = vkEnumeratePhysicalDevices(mInstance, &wNumDevices, wDevices.data());
@@ -60,7 +60,7 @@ void VulkanPhysicalDevice::QueryDevice()
 
 	if (!wPotentialDevice)
 	{
-		spdlog::error("No Physical Device was found.");
+		Logger::Get().mLogger->error("No Physical Device was found.");
 		exit(EXIT_FAILURE);
 	}
 
@@ -86,22 +86,22 @@ void VulkanPhysicalDevice::QueryQueueFamily()
 		if(wQueueFamilyProperties[i].queueFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT))
 		{
 			mQueueFamilyIndex = i;
-			spdlog::info("A Queue Family supporting Graphics, Compute and Transfer was found (Queue Family {:d}).", i);
+			Logger::Get().mLogger->info("A Queue Family supporting Graphics, Compute and Transfer was found (Queue Family {:d}).", i);
 			break;
 		}
 	}
 
 	if(mQueueFamilyIndex < 0)
 	{
-		spdlog::error("No Queue family supporting Graphics, Compute and Transfer was found.");
+		Logger::Get().mLogger->error("No Queue family supporting Graphics, Compute and Transfer was found.");
 		exit(EXIT_FAILURE);
 	}
 }
 
 void VulkanPhysicalDevice::LogSelectedDevice()
 {
-	spdlog::info("A Physical Device was Selected : \n");
-	spdlog::info("\tDevice Name : {:s}", mDeviceProperties.deviceName);
+	Logger::Get().mLogger->info("A Physical Device was Selected : \n");
+	Logger::Get().mLogger->info("\tDevice Name : {:s}", mDeviceProperties.deviceName);
 
 	std::string wDeviceTypeStr;
 	switch (mDeviceProperties.deviceType)
@@ -122,12 +122,12 @@ void VulkanPhysicalDevice::LogSelectedDevice()
 		wDeviceTypeStr = "CPU";
 		break;
 	}
-	spdlog::info("\tDevice Type : {:s}", wDeviceTypeStr);
+	Logger::Get().mLogger->info("\tDevice Type : {:s}", wDeviceTypeStr);
 
-	spdlog::info("\tDevice Vendor ID : {:d}", mDeviceProperties.vendorID);
-	spdlog::info("\tDevice Driver Version : {:d}", mDeviceProperties.driverVersion);
+	Logger::Get().mLogger->info("\tDevice Vendor ID : {:d}", mDeviceProperties.vendorID);
+	Logger::Get().mLogger->info("\tDevice Driver Version : {:d}", mDeviceProperties.driverVersion);
 
 	uint32_t wAPIversion = mDeviceProperties.apiVersion;
-	spdlog::info("\tDevice Vulkan API Version : {0:d}.{1:d}.{2:d}.{3:d}", 
+	Logger::Get().mLogger->info("\tDevice Vulkan API Version : {0:d}.{1:d}.{2:d}.{3:d}", 
 		VK_API_VERSION_VARIANT(wAPIversion), VK_API_VERSION_MAJOR(wAPIversion), VK_API_VERSION_MINOR(wAPIversion), VK_API_VERSION_PATCH(wAPIversion));
 }

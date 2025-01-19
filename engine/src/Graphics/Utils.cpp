@@ -1,7 +1,7 @@
 #include "Utils.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 VkImageView CreateImageView(VkDevice iDevice, VkImage iImage, VkFormat iFormat, VkImageAspectFlags iAspect, VkImageViewType iViewType, uint32_t iLayerCount, uint32_t iMipCount)
 {
@@ -84,7 +84,7 @@ uint32_t FindMemoryType(VkPhysicalDevice iPhysicalDevice, VkMemoryPropertyFlags 
 		}
 	}
 
-	spdlog::error("Cannot Find Memory Type");
+	Logger::Get().mLogger->error("Cannot Find Memory Type");
 	exit(EXIT_FAILURE);
 }
 

@@ -3,8 +3,8 @@
 #define VMA_IMPLEMENTATION
 #include "vma/vk_mem_alloc.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "Core/Window.h"
 #include "Utils.h"
@@ -127,7 +127,7 @@ void RenderContext::CreateAllocator()
 
 	CHECK_VK_RESULT(wResult, "Allocator Creation");
 
-	spdlog::info("VMA Allocator Created");
+	Logger::Get().mLogger->info("VMA Allocator Created");
 }
 
 void RenderContext::CreateCommandBuffers()
@@ -156,7 +156,7 @@ void RenderContext::CreateCommandBuffers()
 
 	mCopyCmd = VulkanCommandBuffer{ mCmdPool, mLogicalDevice->mDevice };
 
-	spdlog::info("Command Pool Created with {:d} Command buffers.", GetNumFramesInFlight() * 2 + 1);
+	Logger::Get().mLogger->info("Command Pool Created with {:d} Command buffers.", GetNumFramesInFlight() * 2 + 1);
 }
 
 void RenderContext::CreateStagingBuffer()

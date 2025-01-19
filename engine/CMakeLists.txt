@@ -7,6 +7,8 @@ add_library(Engine STATIC src/Core/Engine.cpp
 						  src/Core/Input.h
 						  src/Core/Timer.cpp
 						  src/Core/Timer.h
+						  src/Core/Logger.cpp
+						  src/Core/Logger.h
 						  src/Renderer/Renderer.cpp
 						  src/Renderer/Renderer.h
 						  src/Renderer/Viewport.h

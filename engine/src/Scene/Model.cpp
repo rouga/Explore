@@ -1,7 +1,7 @@
 #include "Model.h"
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+#include "Core/Logger.h"
+#include "Core/Logger.h"
 
 #include "Renderer/TextureManager.h"
 
@@ -36,7 +36,7 @@ void Model::LoadModel(const std::string& iPath)
 
 	if (!wScene || wScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !wScene->mRootNode) 
 	{
-		spdlog::error("Error while loading Model. Assimp Error : {0:s}", wImporter.GetErrorString());
+		Logger::Get().mLogger->error("Error while loading Model. Assimp Error : {0:s}", wImporter.GetErrorString());
 		exit(EXIT_FAILURE);
 	}
 

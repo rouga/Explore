@@ -4,8 +4,8 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
-#define FMT_UNICODE 0
-#include <spdlog/spdlog.h>
+
+#include "Core/Logger.h"
 
 #include "Graphics/RenderContext.h"
 #include "Renderer/Renderer.h"
@@ -56,7 +56,7 @@ void UIPass::Setup(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 
 	ImGui_ImplVulkan_Init(&wImguiInitInfo);
 
-	spdlog::info("UI pass setup completed.");
+	Logger::Get().mLogger->info("UI pass setup completed.");
 }
 
 void UIPass::Begin(VkCommandBuffer iCmd, FrameResources* iFrameResources)

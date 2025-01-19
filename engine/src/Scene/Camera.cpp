@@ -18,28 +18,31 @@ Camera::Camera(Viewport* iViewport, float iDistance, float iPitch, float iYaw, c
 
 void Camera::Update()
 {
-	if (Input::Get().IsKeyDown(GLFW_KEY_R))
+	if(!Input::Get().IsCursorOnUI())
 	{
-		setPitch(20.f);
-		setYaw(45.0f);
-		setDistance(10.0f);
-	}
-	else if (!Input::Get().IsCursorOnUI() && Input::Get().IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
-	{
-		auto wDelta = Input::Get().GetMouseDelta();
-
-		if (wDelta.first == 0 && wDelta.second == 0)
+		if (Input::Get().IsKeyDown(GLFW_KEY_R))
 		{
-			return;
+			setPitch(20.f);
+			setYaw(45.0f);
+			setDistance(10.0f);
 		}
-		else
+		else if (Input::Get().IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
 		{
-			adjustYaw(static_cast<float>(wDelta.first * 0.4f));
-			adjustPitch(static_cast<float>(-wDelta.second * 0.4f));
-		}
-	}
+			auto wDelta = Input::Get().GetMouseDelta();
 
-	adjustDistance(Input::Get().GetScrollOffset().second);
+			if (wDelta.first == 0 && wDelta.second == 0)
+			{
+				return;
+			}
+			else
+			{
+				adjustYaw(static_cast<float>(wDelta.first * 0.4f));
+				adjustPitch(static_cast<float>(-wDelta.second * 0.4f));
+			}
+		}
+
+		adjustDistance(Input::Get().GetScrollOffset().second);
+	}
 }
 
 void Camera::setTarget(const glm::vec3& iTarget) {
