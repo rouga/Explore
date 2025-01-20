@@ -35,11 +35,43 @@ UIManager::UIManager(Window* iWindow)
 	mPropertiesUI[EntityType::eCamera] = [](void* iCamera)
 		{
 			Camera* wCamera = reinterpret_cast<Camera*>(iCamera);
-			ImGui::Text("Camera Position : %.3f | %.3f | %.3f", wCamera->getPosition().x, wCamera->getPosition().y, wCamera->getPosition().z);
-			ImGui::DragFloat("FOV", &wCamera->mFov, 1.0f, 10.0f, 100.0f );
-			ImGui::DragFloat("Distance", &wCamera->mDistance, 1.0f, 0.1f, 10000.0f);
-			ImGui::DragFloat("Z Near", &wCamera->mNear, 0.1f, 0.1f, 100.0f);
-			ImGui::DragFloat("Z Far", &wCamera->mFar, 100.0f, 100.f, 10000.0f);
+			if(wCamera->GetMode() == CameraMode::eOrbit)
+			{
+				ImGui::Text("Camera Position : %.3f | %.3f | %.3f", wCamera->GetOrbit()->mPosition.x, wCamera->GetOrbit()->mPosition.y, wCamera->GetOrbit()->mPosition.z);
+				ImGui::DragFloat("FOV", &wCamera->GetOrbit()->mFov, 1.0f, 10.0f, 100.0f);
+				ImGui::DragFloat("Z Near", &wCamera->GetOrbit()->mNear, 0.1f, 0.1f, 100.0f);
+				ImGui::DragFloat("Z Far", &wCamera->GetOrbit()->mFar, 100.0f, 100.f, 10000.0f);
+				ImGui::DragFloat("Orbit Distance", &wCamera->GetOrbit()->mOrbitDistance, 1.0f, 0.1f, 10000.0f);
+			}
+			else
+			{
+				ImGui::Text("Camera Position : %.3f | %.3f | %.3f", wCamera->GetFreeFly()->mPosition.x, wCamera->GetFreeFly()->mPosition.y, wCamera->GetFreeFly()->mPosition.z);
+				ImGui::DragFloat("FOV", &wCamera->GetFreeFly()->mFov, 1.0f, 10.0f, 100.0f);
+				ImGui::DragFloat("Z Near", &wCamera->GetFreeFly()->mNear, 0.1f, 0.1f, 100.0f);
+				ImGui::DragFloat("Z Far", &wCamera->GetFreeFly()->mFar, 100.0f, 100.f, 10000.0f);
+				ImGui::DragFloat("Mouse Sensitivity", &wCamera->GetFreeFly()->mSensitivity, 0.1f, 0.1f, 10.0f);
+				ImGui::DragFloat("Camera Speed", &wCamera->GetFreeFly()->mSpeed, 1.0f, 1.0f, 100.0f);
+			}
+
+			const char* wCameraModes[] = { "FreeFly", "Orbit" };
+			static int wItemSelectedIndex = 0; // Here we store our selection data as an index.
+
+			// Pass in the preview value visible before opening the combo (it could technically be different contents or not pulled from items[])
+			const char* wComboPreviewValue = wCameraModes[wItemSelectedIndex];
+
+			if (ImGui::BeginCombo("Camera Mode", wComboPreviewValue, 0))
+			{
+				for (int n = 0; n < IM_ARRAYSIZE(wCameraModes); n++)
+				{
+					const bool is_selected = (wItemSelectedIndex == n);
+					if (ImGui::Selectable(wCameraModes[n], is_selected))
+						wItemSelectedIndex = n;
+				}
+				ImGui::EndCombo();
+			}
+
+			wCamera->SetMode((CameraMode)wItemSelectedIndex);
+
 		};
 
 	AddUIElement("Docking", []()

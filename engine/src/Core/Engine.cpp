@@ -27,12 +27,11 @@ void Engine::Initialize(Window* iWindow)
 
 	mRenderer = std::make_unique<Renderer>();
 	mRenderer->Initialize(mWindow);
-	mOrbitCamera = std::make_unique<Camera>(mRenderer->mViewport.get());
+	mCamera = std::make_unique<Camera>(mRenderer->mViewport.get());
 	mModel = std::make_unique<Model>("resources/cottage.obj");
 	Logger::Get().mLogger->info("Number of meshes loaded to CPU : {:d}", mModel->GetNumMeshes());
 	if(mModel)
 	{
-		mModel->GetTransform()->SetRotation(glm::vec3{1.0f, 0.0f, 0.0f}, 180);
 		mRenderer->UploadGeometry(mModel.get());
 		mModel->FreeCPU();
 	}
@@ -48,7 +47,7 @@ void Engine::Shutdown()
 	TextureManager::Get().Shutdown();
 }
 
-void Engine::Update()
+void Engine::Update(float iDeltaTime)
 {
 	Input::Get().Setup();
 	glfwPollEvents();
@@ -58,7 +57,7 @@ void Engine::Update()
 		return;
 	}
 
-	mOrbitCamera->Update();
+	mCamera->Update(iDeltaTime);
 }
 
 void Engine::OnResize(int iWidth, int iHeight)

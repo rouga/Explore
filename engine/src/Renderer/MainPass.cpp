@@ -79,7 +79,7 @@ void MainPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 	uint32_t wCurrentInFlightIndex = mContext->mQueue->GetCurrentInFlightFrame();
 
 	// Bind Global Frame Uniform Buffer
-	mPipeline->Bind(iCmd, mContext->mWindow);
+	mPipeline->Bind(iCmd, mContext->mWindow, true);
 
 	VkDescriptorBufferInfo wFrameUBInfo =
 	{

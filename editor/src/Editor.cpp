@@ -40,7 +40,7 @@ void Editor::Run()
 	{
 		wTimer3.Start();
 		wTimer.Start();
-		Engine::Get().Update();
+		Engine::Get().Update(mFrameTime / 1000.f);
 		mEngineCPU = wTimer.Peek();
 		wTimer.Pause();
 		mRenderer->StartFrame();

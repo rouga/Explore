@@ -63,14 +63,14 @@ void VulkanGraphicsPipeline::Initialize(VkDevice iDevice, const PipelineInfo iPi
 	Logger::Get().mLogger->info("Graphics Pipeline Created");
 }
 
-void VulkanGraphicsPipeline::Bind(VkCommandBuffer iCmd, Window* iWindow)
+void VulkanGraphicsPipeline::Bind(VkCommandBuffer iCmd, Window* iWindow, bool iFlip)
 {
 	VkViewport wViewport =
 	{
 		.x = 0.0f,
-		.y = 0.0f,
+		.y = iFlip ? (float)iWindow->GetHeight() : 0.0f,
 		.width = (float)iWindow->GetWidth(),
-		.height = (float)iWindow->GetHeight(),
+		.height = iFlip ? -(float)iWindow->GetHeight() : (float)iWindow->GetHeight(),
 		.minDepth = 0.0f,
 		.maxDepth = 1.0f
 	};
@@ -123,7 +123,7 @@ void VulkanGraphicsPipeline::DefaultPipelineConfigInfo(PipelineInfo& iPipelineIn
 	iPipelineInfo.rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
 	iPipelineInfo.rasterizationInfo.lineWidth = 1.0f;
 	iPipelineInfo.rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
-	iPipelineInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	iPipelineInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	iPipelineInfo.rasterizationInfo.depthBiasEnable = VK_FALSE;
 
 	iPipelineInfo.multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;

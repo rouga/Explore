@@ -115,7 +115,7 @@ void Renderer::RenderScene()
 
 	FrameUB wFrameUB =
 	{
-		.ViewMatrix = Engine::Get().GetCamera()->getViewMatrix(),
+		.ViewMatrix = Engine::Get().GetCamera()->GetViewMatrix(),
 		.ProjectionMatrix = Engine::Get().GetCamera()->GetProjectionMatrix(),
 	};
 

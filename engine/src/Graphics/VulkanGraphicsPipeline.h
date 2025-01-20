@@ -29,7 +29,7 @@ public:
 	~VulkanGraphicsPipeline();
 
 	void Initialize(VkDevice iDevice, const PipelineInfo iPipelineInfo, const VkShaderModule iVS, VkShaderModule iFS);
-	void Bind(VkCommandBuffer iCmd, Window* iWindow);
+	void Bind(VkCommandBuffer iCmd, Window* iWindow, bool iFlip = false);
 	void Bind(VkCommandBuffer iCmd);
 
 	static void DefaultPipelineConfigInfo(PipelineInfo& iConfigInfo);

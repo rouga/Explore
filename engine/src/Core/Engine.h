@@ -19,12 +19,12 @@ public:
 
 	void Initialize(Window* iWindow);
 	void Shutdown();
-	void Update();
+	void Update(float iDeltaTime);
 
 	void OnResize(int iWidth, int iHeight);
 
 	Model* GetModel() { return mModel.get(); }
-	Camera* GetCamera() {return mOrbitCamera.get(); }
+	Camera* GetCamera() {return mCamera.get(); }
 	Window* GetWindow() { return mWindow; }
 	Renderer* GetRenderer() { return mRenderer.get(); }
 
@@ -35,7 +35,7 @@ private:
 	Window* mWindow = nullptr;
 
 	std::unique_ptr<Renderer> mRenderer = nullptr;
-	std::unique_ptr<Camera> mOrbitCamera = nullptr;
+	std::unique_ptr<Camera> mCamera = nullptr;
 
 	uint32_t mFrameNum = 0;
 

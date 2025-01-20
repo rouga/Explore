@@ -6,17 +6,16 @@
 #include "Core/Input.h"
 #include "Entity.h"
 
-Camera::Camera(Viewport* iViewport, float iDistance, float iPitch, float iYaw, const glm::vec3& iTarget)
-	:Entity(EntityType::eCamera),
-	mViewport(iViewport),
-	mDistance(iDistance),
-	mPitch(iPitch),
-	mYaw(iYaw),
-	mTarget(iTarget)
+OrbitCamera::OrbitCamera(float iDistance, float iPitch, float iYaw, const glm::vec3& iTarget)
+	:mOrbitDistance(iDistance)
 {
+	mPitch = iPitch;
+	mYaw = iYaw;
+	mTarget = iTarget;
+	UpdatePosition();
 }
 
-void Camera::Update()
+void OrbitCamera::Update(float iDeltaTime)
 {
 	if(!Input::Get().IsCursorOnUI())
 	{
@@ -30,73 +29,144 @@ void Camera::Update()
 		{
 			auto wDelta = Input::Get().GetMouseDelta();
 
-			if (wDelta.first == 0 && wDelta.second == 0)
-			{
-				return;
-			}
-			else
+			if (wDelta.first != 0 || wDelta.second != 0)
 			{
 				adjustYaw(static_cast<float>(wDelta.first * 0.4f));
 				adjustPitch(static_cast<float>(-wDelta.second * 0.4f));
 			}
 		}
-
 		adjustDistance(Input::Get().GetScrollOffset().second);
+		UpdatePosition();
 	}
 }
 
-void Camera::setTarget(const glm::vec3& iTarget) {
+void OrbitCamera::setTarget(const glm::vec3& iTarget) {
 	mTarget = iTarget;
 }
 
-void Camera::setDistance(float iDistance) {
-	mDistance = glm::clamp(iDistance, 1.0f, iDistance); // Prevent negative or extreme zoom
+void OrbitCamera::setDistance(float iDistance) {
+	mOrbitDistance = glm::clamp(iDistance, 1.0f, iDistance); // Prevent negative or extreme zoom
 }
 
-void Camera::setPitch(float iPitch) {
+void OrbitCamera::setPitch(float iPitch) {
 	mPitch = glm::clamp(iPitch, -89.0f, 89.0f); // Prevent flipping
 }
 
-void Camera::setYaw(float iYaw) {
+void OrbitCamera::setYaw(float iYaw) {
 	mYaw = iYaw;
 }
 
-void Camera::adjustDistance(float iDelta) {
-	setDistance(mDistance + iDelta);
+void OrbitCamera::adjustDistance(float iDelta) {
+	setDistance(mOrbitDistance + iDelta);
 }
 
-void Camera::adjustPitch(float iDelta) {
+void OrbitCamera::adjustPitch(float iDelta) {
 	setPitch(mPitch + iDelta);
 }
 
-void Camera::adjustYaw(float iDelta) {
+void OrbitCamera::adjustYaw(float iDelta) {
 	setYaw(mYaw + iDelta);
 }
 
-glm::mat4 Camera::getViewMatrix() const {
-	// Calculate camera position
-	glm::vec3 position = getPosition();
-
-	// Look at the target
-	return glm::lookAt(position, mTarget, glm::vec3(0.0f, 1.0f, 0.0f));
-}
-
-glm::mat4 Camera::GetProjectionMatrix() const
-{
-	return glm::perspectiveFov(glm::radians(mFov),
-		static_cast<float>(mViewport->GetWidth()),
-		static_cast<float>(mViewport->GetHeight()),
-		mNear, mFar);
-}
-
-glm::vec3 Camera::getPosition() const {
+void OrbitCamera::UpdatePosition() {
 	// Convert spherical coordinates to Cartesian
 	float wPitchRad = glm::radians(mPitch);
 	float wYawRad = glm::radians(mYaw);
 
-	float wX = mDistance * cos(wPitchRad) * sin(wYawRad);
-	float wY = mDistance * sin(wPitchRad);
-	float wZ = mDistance * cos(wPitchRad) * cos(wYawRad);
+	float wX = mOrbitDistance * cos(wPitchRad) * sin(wYawRad);
+	float wY = mOrbitDistance * sin(wPitchRad);
+	float wZ = mOrbitDistance * cos(wPitchRad) * cos(wYawRad);
 
-	return mTarget + glm::vec3(wX, wY, wZ);
+	mPosition = mTarget + glm::vec3(wX, wY, wZ);
+}
+
+FreeFlyCamera::FreeFlyCamera()
+{
+	UpdateVectors();
+}
+
+void FreeFlyCamera::Update(float iDeltaTime)
+{
+	if (!Input::Get().IsCursorOnUI())
+	{
+		float wVelocity = mSpeed * iDeltaTime;
+		if (Input::Get().IsKeyPressed(GLFW_KEY_W)) mPosition += mFront * wVelocity;   // Move forward
+		if (Input::Get().IsKeyPressed(GLFW_KEY_S)) mPosition -= mFront * wVelocity;   // Move backward
+		if (Input::Get().IsKeyPressed(GLFW_KEY_A)) mPosition -= mRight * wVelocity;   // Move left
+		if (Input::Get().IsKeyPressed(GLFW_KEY_D)) mPosition += mRight * wVelocity;   // Move right
+		if (Input::Get().IsKeyPressed(GLFW_KEY_E)) mPosition += mWorldUp * wVelocity; // Move up
+		if (Input::Get().IsKeyPressed(GLFW_KEY_Q)) mPosition -= mWorldUp * wVelocity; // Move down
+
+		mFov = glm::clamp(mFov + Input::Get().GetScrollOffset().second, 1.0, 100.0);
+
+		if(Input::Get().IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
+		{
+			auto wDelta = Input::Get().GetMouseDelta();
+			if (wDelta.first != 0 || wDelta.second != 0)
+			{
+				mYaw = mYaw + mSensitivity * wDelta.first;
+				mPitch = glm::clamp(mPitch + mSensitivity * wDelta.second, -89.0, 89.0);
+				UpdateVectors();
+			}
+		}
+		mTarget = mPosition + mFront;
+	};
+}
+
+void FreeFlyCamera::UpdateVectors()
+{
+	glm::vec3 wNewFront;
+	wNewFront.x = cos(glm::radians(mYaw)) * cos(glm::radians(mPitch));
+	wNewFront.y = sin(glm::radians(mPitch));
+	wNewFront.z = sin(glm::radians(mYaw)) * cos(glm::radians(mPitch));
+	mFront = glm::normalize(wNewFront);
+
+	mRight = glm::normalize(glm::cross(mFront, mWorldUp));
+	mUp = glm::normalize(glm::cross(mRight, mFront));
+}
+
+Camera::Camera(Viewport* iWindow)
+	:Entity(EntityType::eCamera),
+	mViewport(iWindow)
+{
+	mOrbitCamera = std::make_unique<OrbitCamera>();
+	mFreeFlyCamera = std::make_unique<FreeFlyCamera>();
+}
+
+void Camera::Update(float iDeltaTime)
+{
+	mMode == CameraMode::eOrbit ? mOrbitCamera->Update(iDeltaTime) : mFreeFlyCamera->Update(iDeltaTime);
+}
+
+glm::mat4 Camera::GetViewMatrix() const
+{
+	if(mMode == CameraMode::eOrbit)
+	{
+		return glm::lookAt(mOrbitCamera->mPosition, mOrbitCamera->mTarget, glm::vec3(0.0f, 1.0f, 0.0f));
+	}
+	else
+	{
+		return glm::lookAt(mFreeFlyCamera->mPosition, mFreeFlyCamera->mTarget, mFreeFlyCamera->mUp);
+	}
+
+}
+
+glm::mat4 Camera::GetProjectionMatrix() const
+{
+	glm::mat4 wProjMatrix;
+	if (mMode == CameraMode::eOrbit)
+	{
+		wProjMatrix = glm::perspectiveFov(glm::radians(mOrbitCamera->mFov),
+			static_cast<float>(mViewport->GetWidth()),
+			static_cast<float>(mViewport->GetHeight()),
+			mOrbitCamera->mNear, mOrbitCamera->mFar);
+	}
+	else
+	{
+		wProjMatrix = glm::perspectiveFov(glm::radians(mFreeFlyCamera->mFov),
+			static_cast<float>(mViewport->GetWidth()),
+			static_cast<float>(mViewport->GetHeight()),
+			mFreeFlyCamera->mNear, mFreeFlyCamera->mFar);
+	}
+	return wProjMatrix;
 }
