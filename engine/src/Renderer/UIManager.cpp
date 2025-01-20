@@ -71,7 +71,6 @@ UIManager::UIManager(Window* iWindow)
 			}
 
 			wCamera->SetMode((CameraMode)wItemSelectedIndex);
-
 		};
 
 	AddUIElement("Docking", []()

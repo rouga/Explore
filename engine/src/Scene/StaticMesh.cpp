@@ -1,6 +1,5 @@
 #include "StaticMesh.h"
 
-
 #include "Core/Logger.h"
 
 #include "Graphics/RenderContext.h"
@@ -124,10 +123,40 @@ void StaticMesh::FreeGPU()
 		mUVBuffer->FreeGPU();
 	}
 
-	if(mAlbedoTexture.mTexture)
+	if(mMaterial.albedoMap.mTexture)
 	{
-		mAlbedoTexture.mTexture.reset();
-		TextureManager::Get().DereferenceTexture(mAlbedoTexture.mPath);
+		mMaterial.albedoMap.mTexture.reset();
+		TextureManager::Get().DereferenceTexture(mMaterial.albedoMap.mPath);
+	}
+
+	if (mMaterial.normalMap.mTexture)
+	{
+		mMaterial.normalMap.mTexture.reset();
+		TextureManager::Get().DereferenceTexture(mMaterial.normalMap.mPath);
+	}
+
+	if (mMaterial.roughnessMap.mTexture)
+	{
+		mMaterial.roughnessMap.mTexture.reset();
+		TextureManager::Get().DereferenceTexture(mMaterial.roughnessMap.mPath);
+	}
+
+	if (mMaterial.emissiveMap.mTexture)
+	{
+		mMaterial.emissiveMap.mTexture.reset();
+		TextureManager::Get().DereferenceTexture(mMaterial.emissiveMap.mPath);
+	}
+
+	if (mMaterial.aoMap.mTexture)
+	{
+		mMaterial.aoMap.mTexture.reset();
+		TextureManager::Get().DereferenceTexture(mMaterial.aoMap.mPath);
+	}
+
+	if (mMaterial.metallicMap.mTexture)
+	{
+		mMaterial.metallicMap.mTexture.reset();
+		TextureManager::Get().DereferenceTexture(mMaterial.metallicMap.mPath);
 	}
 }
 
@@ -141,6 +170,6 @@ void StaticMesh::FreeCPU()
 
 void StaticMesh::SetAlbedo(std::shared_ptr<VulkanImage> iTexture, const std::string& iPath)
 {
-	mAlbedoTexture.mTexture = iTexture;
-	mAlbedoTexture.mPath = iPath;
+	mMaterial.albedoMap.mTexture = iTexture;
+	mMaterial.albedoMap.mPath = iPath;
 }

@@ -116,7 +116,8 @@ void Model::ProcessMesh(aiMesh* iAiMesh, const aiScene* iScene, StaticMesh* iSta
 		{
 			wMaterial->GetTexture(aiTextureType_DIFFUSE,0, &wTexturePath);
 			std::string wPath = mDirectory + "/" + wTexturePath.C_Str();
-			iStaticMesh->SetAlbedo(TextureManager::Get().AddTexture(wPath), wPath);
+			iStaticMesh->GetMaterial().albedoMap.mTexture = TextureManager::Get().AddTexture(wPath);
+			iStaticMesh->GetMaterial().albedoMap.mPath = wPath;
 		}
 		else if(wMaterial->GetTextureCount(aiTextureType_BASE_COLOR))
 		{
@@ -128,9 +129,71 @@ void Model::ProcessMesh(aiMesh* iAiMesh, const aiScene* iScene, StaticMesh* iSta
 		{
 			iStaticMesh->SetAlbedo(TextureManager::Get().mGridTexture, "Grid");
 		}
+
+		if (wMaterial->GetTextureCount(aiTextureType_NORMALS))
+		{
+			wMaterial->GetTexture(aiTextureType_NORMALS, 0, &wTexturePath);
+			std::string wPath = mDirectory + "/" + wTexturePath.C_Str();
+			iStaticMesh->GetMaterial().normalMap.mTexture = TextureManager::Get().AddTexture(wPath);
+			iStaticMesh->GetMaterial().normalMap.mPath = wPath;
+		}
+		else if (wMaterial->GetTextureCount(aiTextureType_NORMAL_CAMERA))
+		{
+			wMaterial->GetTexture(aiTextureType_NORMAL_CAMERA, 0, &wTexturePath);
+			std::string wPath = mDirectory + "/" + wTexturePath.C_Str();
+			iStaticMesh->GetMaterial().normalMap.mTexture = TextureManager::Get().AddTexture(wPath);
+			iStaticMesh->GetMaterial().normalMap.mPath = wPath;
+		}
+
+		if (wMaterial->GetTextureCount(aiTextureType_EMISSIVE))
+		{
+			wMaterial->GetTexture(aiTextureType_EMISSIVE, 0, &wTexturePath);
+			std::string wPath = mDirectory + "/" + wTexturePath.C_Str();
+			iStaticMesh->GetMaterial().emissiveMap.mTexture = TextureManager::Get().AddTexture(wPath);
+			iStaticMesh->GetMaterial().emissiveMap.mPath = wPath;
+		}
+		else if (wMaterial->GetTextureCount(aiTextureType_EMISSION_COLOR))
+		{
+			wMaterial->GetTexture(aiTextureType_EMISSION_COLOR, 0, &wTexturePath);
+			std::string wPath = mDirectory + "/" + wTexturePath.C_Str();
+			iStaticMesh->GetMaterial().emissiveMap.mTexture = TextureManager::Get().AddTexture(wPath);
+			iStaticMesh->GetMaterial().emissiveMap.mPath = wPath;
+		}
+
+		if (wMaterial->GetTextureCount(aiTextureType_METALNESS))
+		{
+			wMaterial->GetTexture(aiTextureType_METALNESS, 0, &wTexturePath);
+			std::string wPath = mDirectory + "/" + wTexturePath.C_Str();
+			iStaticMesh->GetMaterial().metallicMap.mTexture = TextureManager::Get().AddTexture(wPath);
+			iStaticMesh->GetMaterial().metallicMap.mPath = wPath;
+		}
+
+		if (wMaterial->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS))
+		{
+			wMaterial->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, 0, &wTexturePath);
+			std::string wPath = mDirectory + "/" + wTexturePath.C_Str();
+			iStaticMesh->GetMaterial().roughnessMap.mTexture = TextureManager::Get().AddTexture(wPath);
+			iStaticMesh->GetMaterial().roughnessMap.mPath = wPath;
+		}
+
+		if (wMaterial->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION))
+		{
+			wMaterial->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &wTexturePath);
+			std::string wPath = mDirectory + "/" + wTexturePath.C_Str();
+			iStaticMesh->GetMaterial().aoMap.mTexture = TextureManager::Get().AddTexture(wPath);
+			iStaticMesh->GetMaterial().aoMap.mPath = wPath;
+		}
+		else if (wMaterial->GetTextureCount(aiTextureType_LIGHTMAP))
+		{
+			wMaterial->GetTexture(aiTextureType_LIGHTMAP, 0, &wTexturePath);
+			std::string wPath = mDirectory + "/" + wTexturePath.C_Str();
+			iStaticMesh->GetMaterial().aoMap.mTexture = TextureManager::Get().AddTexture(wPath);
+			iStaticMesh->GetMaterial().aoMap.mPath = wPath;
+		}
 	}
 	else
 	{
-		iStaticMesh->SetAlbedo(TextureManager::Get().mGridTexture, "Grid");
+		iStaticMesh->GetMaterial().albedoMap.mTexture = TextureManager::Get().mGridTexture;
+		iStaticMesh->GetMaterial().albedoMap.mPath = "Grid";
 	}
 }
