@@ -28,6 +28,8 @@ void Engine::Initialize(Window* iWindow)
 	mRenderer = std::make_unique<Renderer>();
 	mRenderer->Initialize(mWindow);
 	mCamera = std::make_unique<Camera>(mRenderer->mViewport.get());
+	Light::DirectionalLightConfig wLightConfig;
+	mDirLight = std::make_unique<Light>(wLightConfig);
 	mModel = std::make_unique<Model>("resources/Helmet/DamagedHelmet.gltf");
 	Logger::Get().mLogger->info("Number of meshes loaded to CPU : {:d}", mModel->GetNumMeshes());
 	if(mModel)
@@ -56,7 +58,7 @@ void Engine::Update(float iDeltaTime)
 	{
 		return;
 	}
-
+	mDirLight->Update();
 	mCamera->Update(iDeltaTime);
 }
 

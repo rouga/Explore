@@ -17,11 +17,26 @@ class OrbitCamera;
 class Model;
 class UIManager;
 
+static constexpr uint32_t sMaxNumberMeshes = 2500;
+static constexpr uint32_t sMaxNumberLights = 8;
 
-struct FrameUB
+struct LightUB
+{
+	alignas(16) glm::vec3 Color;
+	alignas(16) glm::vec3 Position;
+	alignas(16) glm::vec3 Direction;
+	float Intensity;
+	int isDirectional = false;
+	int IsPoint = false;
+	int isSpot = false;
+};
+
+struct alignas(64) FrameUB
 {
 	glm::mat4 ViewMatrix = glm::mat4();
 	glm::mat4 ProjectionMatrix = glm::mat4();
+	alignas(64) LightUB Light[sMaxNumberLights];
+	int LightsCount = 0;
 };
 
 struct alignas(64) ObjectUB
@@ -66,10 +81,10 @@ public:
 	std::unique_ptr<VulkanImage> mFrameRenderTarget = nullptr;
 
 private:
-	void UpdateObjectsUniformBuffer();
-	static constexpr uint32_t mMaxNumberMeshes = 2500;
+	FrameUB UpdateFrameUB();
+	void UpdateObjectsUB();
+
 	uint32_t mCurrentFrameInFlight = 0;
 	uint32_t mCurrentSwapchainImageIndex = 0;
 	uint32_t mFrameNum = 0;
-
 };

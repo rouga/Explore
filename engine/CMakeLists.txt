@@ -32,6 +32,8 @@ add_library(Engine STATIC src/Core/Engine.cpp
 						  src/Scene/Entity.h
 						  src/Scene/Transformation.cpp
 						  src/Scene/Transformation.h
+						  src/Scene/Light.h
+						  src/Scene/Light.cpp
 						  src/Graphics/VulkanInstance.cpp
 						  src/Graphics/VulkanInstance.h
 						  src/Graphics/RenderContext.cpp

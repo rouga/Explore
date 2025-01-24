@@ -1,7 +1,6 @@
 #include "Model.h"
 
 #include "Core/Logger.h"
-#include "Core/Logger.h"
 
 #include "Renderer/TextureManager.h"
 

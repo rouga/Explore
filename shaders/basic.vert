@@ -5,10 +5,23 @@ struct PositionData
 	float x, y ,z;
 };
 
+struct Light
+{
+	vec3 Color;
+	vec3 Position;
+	vec3 Direction;
+	float Intensity;
+	int isDirectional;
+	int IsPoint;
+	int isSpot;
+};
+
 layout (binding=0) readonly uniform FrameUB
 {
 	mat4 ViewMatrix;
 	mat4 ProjectionMatrix;
+	Light[8] LightData;
+	int LightCount;
 } in_FrameUB;
 
 layout (set=1,binding=0) readonly buffer Vertices 
@@ -41,7 +54,7 @@ void main()
     gl_Position = in_FrameUB.ProjectionMatrix * in_FrameUB.ViewMatrix  * in_ObjectUB.ModelMatrix * vec4(vertex.x, vertex.y, vertex.z, 1.0);
 	if(in_ObjectUB.HasUV != 0)
 	{
-		out_UVs = vec2(in_UVs.data[index]);
+		out_UVs = vec2(in_UVs.data[index]) * in_FrameUB.LightData[0].Intensity;
 	}
 	else
 	{

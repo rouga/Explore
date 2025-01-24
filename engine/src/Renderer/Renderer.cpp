@@ -34,11 +34,11 @@ void Renderer::Initialize(Window* iWindow)
 	mFrameUB->Initialize(mContext->mLogicalDevice.get(), sizeof(FrameUB), mContext->mAllocator);
 
 	mObjectsUB = std::make_unique<VulkanGPUBuffer>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
-	mObjectsUB->Initialize(mContext->mLogicalDevice.get(), sizeof(ObjectUB) * mMaxNumberMeshes * mContext->GetNumFramesInFlight(), mContext->mAllocator);
+	mObjectsUB->Initialize(mContext->mLogicalDevice.get(), sizeof(ObjectUB) * sMaxNumberMeshes * mContext->GetNumFramesInFlight(), mContext->mAllocator);
 
 	std::vector<DescriptorSetManager::Binding> wFrameUBBinding =
 	{
-		{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE}
+		{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, VK_NULL_HANDLE}
 	};
 
 	mContext->mDescriptorSetManager->CreateLayout(wFrameUBBinding, "FrameUB");
@@ -113,15 +113,7 @@ void Renderer::RenderScene()
 {
 	VulkanCommandBuffer* wCmd = &mContext->mCmds[mCurrentFrameInFlight];
 
-	FrameUB wFrameUB =
-	{
-		.ViewMatrix = Engine::Get().GetCamera()->GetViewMatrix(),
-		.ProjectionMatrix = Engine::Get().GetCamera()->GetProjectionMatrix(),
-	};
-
-	void* wMappedMem = mFrameUB->MapMemory(0, 0);
-	memcpy(wMappedMem, &wFrameUB, sizeof(FrameUB));
-	mFrameUB->UnmapMemory();
+	auto wFrameUB = UpdateFrameUB();
 
 	FrameResources wFrameResources =
 	{
@@ -140,7 +132,7 @@ void Renderer::RenderScene()
 
 	if (Engine::Get().GetModel())
 	{
-		UpdateObjectsUniformBuffer();
+		UpdateObjectsUB();
 		mViewport->BeginFrame(wCmd->mCmd);
 		mMainPass->Begin(wCmd->mCmd, &wFrameResources);
 		mMainPass->Draw(wCmd->mCmd, &wFrameResources);
@@ -203,7 +195,36 @@ void Renderer::Present()
 	mCurrentFrameInFlight = (mCurrentFrameInFlight + 1) % mContext->GetNumFramesInFlight();
 }
 
-void Renderer::UpdateObjectsUniformBuffer()
+FrameUB Renderer::UpdateFrameUB()
+{
+	FrameUB wFrameUB =
+	{
+		.ViewMatrix = Engine::Get().GetCamera()->GetViewMatrix(),
+		.ProjectionMatrix = Engine::Get().GetCamera()->GetProjectionMatrix(),
+		.LightsCount = 1,
+	};
+
+	LightUB wLightUB;
+	Light* wLight = Engine::Get().GetLight();
+	
+	if(wLight->GetType() == Light::LightType::eDirectional)
+	{
+		wLightUB.Intensity = wLight->mIntensity;
+		wLightUB.Color = wLight->mColor;
+		wLightUB.Direction = wLight->GetDirection();
+		wLightUB.isDirectional = true;
+	}
+
+	wFrameUB.Light[0] = wLightUB;
+
+	void* wMappedMem = mFrameUB->MapMemory(0, 0);
+	memcpy(wMappedMem, &wFrameUB, sizeof(FrameUB));
+	mFrameUB->UnmapMemory();
+
+	return wFrameUB;
+}
+
+void Renderer::UpdateObjectsUB()
 {
 	uint32_t wCurrentInFlightIndex = mContext->mQueue->GetCurrentInFlightFrame();
 

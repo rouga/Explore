@@ -5,6 +5,7 @@
 
 #include "Scene/Model.h"
 #include "Scene/Camera.h"
+#include "Scene/Light.h"
 
 class Window;
 
@@ -26,6 +27,7 @@ public:
 	Model* GetModel() { return mModel.get(); }
 	Camera* GetCamera() {return mCamera.get(); }
 	Window* GetWindow() { return mWindow; }
+	Light* GetLight() { return mDirLight.get(); }
 	Renderer* GetRenderer() { return mRenderer.get(); }
 
 private:
@@ -36,6 +38,7 @@ private:
 
 	std::unique_ptr<Renderer> mRenderer = nullptr;
 	std::unique_ptr<Camera> mCamera = nullptr;
+	std::unique_ptr<Light> mDirLight = nullptr;
 
 	uint32_t mFrameNum = 0;
 

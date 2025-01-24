@@ -4,7 +4,6 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
-
 #include "Core/Logger.h"
 
 #include <imgui_internal.h>
