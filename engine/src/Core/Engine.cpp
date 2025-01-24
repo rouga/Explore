@@ -30,7 +30,7 @@ void Engine::Initialize(Window* iWindow)
 	mCamera = std::make_unique<Camera>(mRenderer->mViewport.get());
 	Light::DirectionalLightConfig wLightConfig;
 	mDirLight = std::make_unique<Light>(wLightConfig);
-	mModel = std::make_unique<Model>("resources/Helmet/DamagedHelmet.gltf");
+	mModel = std::make_unique<Model>("resources/cottage.obj");
 	Logger::Get().mLogger->info("Number of meshes loaded to CPU : {:d}", mModel->GetNumMeshes());
 	if(mModel)
 	{

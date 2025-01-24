@@ -17,7 +17,7 @@ public:
 
 	struct DirectionalLightConfig
 	{
-		float mIntensity = 1000;
+		float mIntensity = 1.0f;
 		float mAzimuth = 0; // Degrees
 		float mElevation = 60; // Degrees
 		glm::vec3 mColor = {1.f, 1.f, 1.f};

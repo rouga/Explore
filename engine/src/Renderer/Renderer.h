@@ -42,6 +42,7 @@ struct alignas(64) FrameUB
 struct alignas(64) ObjectUB
 {
 	glm::mat4 ModelMatrix = glm::mat4();
+	glm::mat4 NormalMatrix = glm::mat4();
 	int HasUV = false;
 };
 

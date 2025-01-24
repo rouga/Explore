@@ -31,9 +31,10 @@ void MainPass::Setup(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 	{
 		{0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT},
 		{1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT},
-		{2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE, true},
-		{3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT},
-		{4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, mSampler}
+		{2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT},
+		{3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, VK_NULL_HANDLE, true},
+		{4, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT},
+		{5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, mSampler}
 	};
 
 	mContext->mDescriptorSetManager->CreateLayout(wBinding, "ObjectDS");
@@ -117,6 +118,13 @@ void MainPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 			.range = VK_WHOLE_SIZE
 		};
 
+		VkDescriptorBufferInfo wNormalBufferInfo =
+		{
+			.buffer = wMesh->GetNormalBuffer()->mBuffer,
+			.offset = 0,
+			.range = VK_WHOLE_SIZE
+		};
+
 		VkDescriptorBufferInfo wObjectUBInfo =
 		{
 			.buffer = iFrameResources->mObjectsUniformBuffer->mBuffer,
@@ -134,6 +142,7 @@ void MainPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 		VulkanDescriptorSet wDS = mContext->mDescriptorSetManager->AllocateDescriptorSet("ObjectDS", wCurrentInFlightIndex);
 		wDS.Update(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wVertexBufferInfo);
 		wDS.Update(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wIndexBufferInfo);
+		wDS.Update(2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wNormalBufferInfo);
 
 		if(wMesh->isAttributeEnabled(StaticMesh::MeshAttributes::UV))
 		{
@@ -144,11 +153,11 @@ void MainPass::Draw(VkCommandBuffer iCmd, FrameResources* iFrameResources)
 				.range = VK_WHOLE_SIZE
 			};
 
-			wDS.Update(2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wUVInfo);
+			wDS.Update(3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &wUVInfo);
 		}
 
-		wDS.Update(3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &wObjectUBInfo);
-		wDS.Update(4, &wImageInfo);
+		wDS.Update(4, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &wObjectUBInfo);
+		wDS.Update(5, &wImageInfo);
 
 		VkDescriptorSet wDSHandle = wDS.GetHandle();
 

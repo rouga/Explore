@@ -31,5 +31,6 @@ glm::vec3 Light::ComputeDirection(float azimuth, float elevation)
 	float y = glm::sin(wElevationRad);                        // Vertical (Up-Down)
 	float z = glm::cos(wElevationRad) * glm::cos(wAzimuthRad); // North-South component
 
-	return glm::vec3(x, y, z);
+
+	return glm::normalize(glm::vec3(x, y, z));
 }

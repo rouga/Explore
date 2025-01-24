@@ -211,7 +211,7 @@ FrameUB Renderer::UpdateFrameUB()
 	{
 		wLightUB.Intensity = wLight->mIntensity;
 		wLightUB.Color = wLight->mColor;
-		wLightUB.Direction = wLight->GetDirection();
+		wLightUB.Direction = glm::mat3(Engine::Get().GetCamera()->GetViewMatrix()) * wLight->GetDirection();
 		wLightUB.isDirectional = true;
 	}
 
@@ -236,11 +236,16 @@ void Renderer::UpdateObjectsUB()
 	uint32_t wUniformStride = sizeof(ObjectUB) * mContext->GetNumFramesInFlight();
 	void* wMappedMem = mObjectsUB->MapMemory(0, 0);
 
+	glm::mat4 wViewMatrix = Engine::Get().GetCamera()->GetViewMatrix();
+
 	for (uint32_t i = 0; i < wModel->GetNumMeshes(); i++)
 	{
+		
+		glm::mat4 wModelMatrix = wModel->GetMesh(i)->GetTransform()->GetMatrix();
 		ObjectUB wObjectUB =
 		{
-			.ModelMatrix = wModel->GetMesh(i)->GetTransform()->GetMatrix(),
+			.ModelMatrix = wModelMatrix,
+			.NormalMatrix = glm::transpose(glm::inverse(glm::mat3(wViewMatrix * wModelMatrix))),
 			.HasUV = wModel->GetMesh(i)->isAttributeEnabled(StaticMesh::MeshAttributes::UV),
 		};
 		

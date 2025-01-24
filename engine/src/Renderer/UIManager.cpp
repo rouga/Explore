@@ -192,10 +192,11 @@ void UIManager::SetupLightDetailsPanel()
 			switch(wLight->GetType())
 			{
 			case Light::LightType::eDirectional:
-				ImGui::DragFloat("Azimuth [Deg]", &wLight->mAzimuth, 1.0f, 0.0f, 180.0f);
+				ImGui::DragFloat("Azimuth [Deg]", &wLight->mAzimuth, 1.0f, 0.0f, 360.0f);
 				ImGui::DragFloat("Elevation [Deg]", &wLight->mElevation, 1.0f, 0.0f, 90.0f);
-				ImGui::DragFloat("Intensity", &wLight->mIntensity, 1.0f, 0.0f, 100.0f);
+				ImGui::DragFloat("Intensity", &wLight->mIntensity, .01f, 0.0f, 1.0f);
 				ImGui::ColorEdit3("color 1", &wLight->mColor.r);
+				ImGui::Text("Light Direction : %.3f | %.3f | %.3f", wLight->GetDirection().x, wLight->GetDirection().y, wLight->GetDirection().z);
 			}
 		};
 }
