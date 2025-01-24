@@ -13,6 +13,7 @@
 
 #include "Scene/Entity.h"
 #include "Scene/Camera.h"
+#include "Scene/Light.h"
 
 UIManager::UIManager(Window* iWindow)
 {
@@ -31,46 +32,8 @@ UIManager::UIManager(Window* iWindow)
 
 	Logger::Get().mLogger->info("UIManager Created.");
 
-	mPropertiesUI[EntityType::eCamera] = [](void* iCamera)
-		{
-			Camera* wCamera = reinterpret_cast<Camera*>(iCamera);
-			if(wCamera->GetMode() == CameraMode::eOrbit)
-			{
-				ImGui::Text("Camera Position : %.3f | %.3f | %.3f", wCamera->GetOrbit()->mPosition.x, wCamera->GetOrbit()->mPosition.y, wCamera->GetOrbit()->mPosition.z);
-				ImGui::DragFloat("FOV", &wCamera->GetOrbit()->mFov, 1.0f, 10.0f, 100.0f);
-				ImGui::DragFloat("Z Near", &wCamera->GetOrbit()->mNear, 0.1f, 0.1f, 100.0f);
-				ImGui::DragFloat("Z Far", &wCamera->GetOrbit()->mFar, 100.0f, 100.f, 10000.0f);
-				ImGui::DragFloat("Orbit Distance", &wCamera->GetOrbit()->mOrbitDistance, 1.0f, 0.1f, 10000.0f);
-			}
-			else
-			{
-				ImGui::Text("Camera Position : %.3f | %.3f | %.3f", wCamera->GetFreeFly()->mPosition.x, wCamera->GetFreeFly()->mPosition.y, wCamera->GetFreeFly()->mPosition.z);
-				ImGui::DragFloat("FOV", &wCamera->GetFreeFly()->mFov, 1.0f, 10.0f, 100.0f);
-				ImGui::DragFloat("Z Near", &wCamera->GetFreeFly()->mNear, 0.1f, 0.1f, 100.0f);
-				ImGui::DragFloat("Z Far", &wCamera->GetFreeFly()->mFar, 100.0f, 100.f, 10000.0f);
-				ImGui::DragFloat("Mouse Sensitivity", &wCamera->GetFreeFly()->mSensitivity, 0.1f, 0.1f, 10.0f);
-				ImGui::DragFloat("Camera Speed", &wCamera->GetFreeFly()->mSpeed, 1.0f, 1.0f, 100.0f);
-			}
-
-			const char* wCameraModes[] = { "FreeFly", "Orbit" };
-			static int wItemSelectedIndex = 0; // Here we store our selection data as an index.
-
-			// Pass in the preview value visible before opening the combo (it could technically be different contents or not pulled from items[])
-			const char* wComboPreviewValue = wCameraModes[wItemSelectedIndex];
-
-			if (ImGui::BeginCombo("Camera Mode", wComboPreviewValue, 0))
-			{
-				for (int n = 0; n < IM_ARRAYSIZE(wCameraModes); n++)
-				{
-					const bool is_selected = (wItemSelectedIndex == n);
-					if (ImGui::Selectable(wCameraModes[n], is_selected))
-						wItemSelectedIndex = n;
-				}
-				ImGui::EndCombo();
-			}
-
-			wCamera->SetMode((CameraMode)wItemSelectedIndex);
-		};
+	SetupCameraDetailsPanel();
+	SetupLightDetailsPanel();
 
 	AddUIElement("Docking", []()
 		{
@@ -117,7 +80,7 @@ UIManager::UIManager(Window* iWindow)
 				// Dock windows into the split spaces
 				ImGui::DockBuilderDockWindow("Scene", SceneDock);
 				ImGui::DockBuilderDockWindow("Statistics", SceneDock);
-				ImGui::DockBuilderDockWindow("Property", PropertiesDock);
+				ImGui::DockBuilderDockWindow("Detail", PropertiesDock);
 				ImGui::DockBuilderDockWindow("Viewport", ViewportDock);
 				ImGui::DockBuilderDockWindow("Logger", LogDock);
 
@@ -176,4 +139,63 @@ void UIManager::ClearUIElements()
 void UIManager::DrawUIProperties(Entity* iEntity)
 {
 	mPropertiesUI[iEntity->GetType()](iEntity);
+}
+
+void UIManager::SetupCameraDetailsPanel()
+{
+	mPropertiesUI[EntityType::eCamera] = [](void* iCamera)
+		{
+			Camera* wCamera = reinterpret_cast<Camera*>(iCamera);
+			if (wCamera->GetMode() == CameraMode::eOrbit)
+			{
+				ImGui::Text("Camera Position : %.3f | %.3f | %.3f", wCamera->GetOrbit()->mPosition.x, wCamera->GetOrbit()->mPosition.y, wCamera->GetOrbit()->mPosition.z);
+				ImGui::DragFloat("FOV", &wCamera->GetOrbit()->mFov, 1.0f, 10.0f, 100.0f);
+				ImGui::DragFloat("Z Near", &wCamera->GetOrbit()->mNear, 0.1f, 0.1f, 100.0f);
+				ImGui::DragFloat("Z Far", &wCamera->GetOrbit()->mFar, 100.0f, 100.f, 10000.0f);
+				ImGui::DragFloat("Orbit Distance", &wCamera->GetOrbit()->mOrbitDistance, 1.0f, 0.1f, 10000.0f);
+			}
+			else
+			{
+				ImGui::Text("Camera Position : %.3f | %.3f | %.3f", wCamera->GetFreeFly()->mPosition.x, wCamera->GetFreeFly()->mPosition.y, wCamera->GetFreeFly()->mPosition.z);
+				ImGui::DragFloat("FOV", &wCamera->GetFreeFly()->mFov, 1.0f, 10.0f, 100.0f);
+				ImGui::DragFloat("Z Near", &wCamera->GetFreeFly()->mNear, 0.1f, 0.1f, 100.0f);
+				ImGui::DragFloat("Z Far", &wCamera->GetFreeFly()->mFar, 100.0f, 100.f, 10000.0f);
+				ImGui::DragFloat("Mouse Sensitivity", &wCamera->GetFreeFly()->mSensitivity, 0.1f, 0.1f, 10.0f);
+				ImGui::DragFloat("Camera Speed", &wCamera->GetFreeFly()->mSpeed, 1.0f, 1.0f, 100.0f);
+			}
+
+			const char* wCameraModes[] = { "FreeFly", "Orbit" };
+			static int wItemSelectedIndex = 0; // Here we store our selection data as an index.
+
+			// Pass in the preview value visible before opening the combo (it could technically be different contents or not pulled from items[])
+			const char* wComboPreviewValue = wCameraModes[wItemSelectedIndex];
+
+			if (ImGui::BeginCombo("Camera Mode", wComboPreviewValue, 0))
+			{
+				for (int n = 0; n < IM_ARRAYSIZE(wCameraModes); n++)
+				{
+					const bool is_selected = (wItemSelectedIndex == n);
+					if (ImGui::Selectable(wCameraModes[n], is_selected))
+						wItemSelectedIndex = n;
+				}
+				ImGui::EndCombo();
+			}
+			wCamera->SetMode((CameraMode)wItemSelectedIndex);
+		};
+}
+
+void UIManager::SetupLightDetailsPanel()
+{
+	mPropertiesUI[EntityType::eLight] = [](void* iLight)
+		{
+			Light* wLight = reinterpret_cast<Light*>(iLight);
+			switch(wLight->GetType())
+			{
+			case Light::LightType::eDirectional:
+				ImGui::DragFloat("Azimuth [Deg]", &wLight->mAzimuth, 1.0f, 0.0f, 180.0f);
+				ImGui::DragFloat("Elevation [Deg]", &wLight->mElevation, 1.0f, 0.0f, 90.0f);
+				ImGui::DragFloat("Intensity", &wLight->mIntensity, 1.0f, 0.0f, 100.0f);
+				ImGui::ColorEdit3("color 1", &wLight->mColor.r);
+			}
+		};
 }

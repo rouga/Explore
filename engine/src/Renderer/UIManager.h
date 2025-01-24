@@ -26,6 +26,8 @@ public:
 	void DrawUIProperties(Entity* iEntity);
 
 private:
+	void SetupCameraDetailsPanel();
+	void SetupLightDetailsPanel();
 	std::unordered_map<std::string, UIElementCallback> mUIElements;
 	std::unordered_map<EntityType, UIPropertiesCallback> mPropertiesUI;
 };

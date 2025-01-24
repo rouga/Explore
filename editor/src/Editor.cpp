@@ -69,7 +69,7 @@ void Editor::SetupUI()
 	mUIManager->AddUIElement("Button", [&]() {
 		ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoMove);
 
-		std::vector<Entity*> wEntites = { Engine::Get().GetCamera() };
+		std::vector<Entity*> wEntites = { Engine::Get().GetCamera(), Engine::Get().GetLight() };
 
 		bool selectedItem = false;
 		static int wItemSelectedID = -1;
@@ -89,7 +89,7 @@ void Editor::SetupUI()
 		ImGui::Text("Renderer Update CPU Time : %.3f ms", mRenderCPU);
 		ImGui::End();
 
-		ImGui::Begin("Property", nullptr, ImGuiWindowFlags_NoMove);
+		ImGui::Begin("Detail", nullptr, ImGuiWindowFlags_NoMove);
 		if(wItemSelectedID >= 0)
 		{
 			ImGui::Text(" === %s Properties ===", wEntites[wItemSelectedID]->GetName().c_str());

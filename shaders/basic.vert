@@ -54,7 +54,7 @@ void main()
     gl_Position = in_FrameUB.ProjectionMatrix * in_FrameUB.ViewMatrix  * in_ObjectUB.ModelMatrix * vec4(vertex.x, vertex.y, vertex.z, 1.0);
 	if(in_ObjectUB.HasUV != 0)
 	{
-		out_UVs = vec2(in_UVs.data[index]) * in_FrameUB.LightData[0].Intensity;
+		out_UVs = vec2(in_UVs.data[index]);
 	}
 	else
 	{
